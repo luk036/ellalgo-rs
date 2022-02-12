@@ -3,10 +3,11 @@ pub type Cut = (Arr, f64);
 pub type CInfo = (bool, u32, CutStatus);
 
 pub struct Options {
-    max_it: u32,
-    tol: f64,
+    pub max_it: u32,
+    pub tol: f64,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum CutStatus {
     Success,
     NoSoln,
@@ -15,22 +16,25 @@ pub enum CutStatus {
 }
 
 pub trait OracleFeas {
-    fn asset_feas(&self, x: &Arr) -> Option<Cut>;
+    fn asset_feas(&mut self, x: &Arr) -> Option<Cut>;
 }
 
-pub trait OracleDC {
-    fn asset_dc(&self, x: &Arr, mut t: f64) -> (Cut, bool);
+pub trait OracleOptim {
+    fn asset_optim(&mut self, x: &Arr, t: &mut f64) -> (Cut, bool);
 }
 
 pub trait OracleQ {
-    fn asset_q(&self, x: &Arr, mut t: f64, retry: bool) -> (Cut, bool, Arr, bool);
+    fn asset_q(&mut self, x: &Arr, t: &mut f64, retry: bool) -> (Cut, bool, Arr, bool);
+}
+
+pub trait OracleBS {
+    fn asset_bs(&mut self, t: f64) -> bool;
 }
 
 pub trait SearchSpace {
     fn xc(&self) -> Arr;
     fn update(&mut self, cut: &(Arr, f64)) -> (CutStatus, f64);
 }
-
 
 /**
  * @brief Find a point in a convex set (defined through a cutting-plane oracle).
@@ -55,7 +59,12 @@ pub trait SearchSpace {
  * @param[in] options   maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
  */
-pub fn cutting_plane_feas<Oracle, Space>(mut omega: &Oracle, mut ss: &Space, options: &Options) -> CInfo
+#[allow(dead_code)]
+pub fn cutting_plane_feas<Oracle, Space>(
+    omega: &mut Oracle,
+    ss: &mut Space,
+    options: &Options,
+) -> CInfo
 where
     Oracle: OracleFeas,
     Space: SearchSpace,
@@ -63,15 +72,19 @@ where
     let mut feasible = false;
     let mut status = CutStatus::NoSoln;
 
-    for niter in 0..options.max_it {
-        let cut = omega.asset_feas(ss.xc());  // query the oracle at ss.xc()
-        if let Some(value) == cut {        // feasible sol'n obtained
-            let (cutstatus, tsq) = ss.update(cut);  // update ss
+    let mut niter = 0;
+    while niter < options.max_it {
+        niter += 1;
+        let cut = omega.asset_feas(&ss.xc()); // query the oracle at &ss.xc()
+        if let Some(value) = cut {
+            // feasible sol'n obtained
+            let (cutstatus, tsq) = ss.update(&value); // update ss
             if cutstatus != CutStatus::Success {
                 status = cutstatus;
                 break;
             }
-            if tsq < options.tol {  // no more
+            if tsq < options.tol {
+                // no more
                 status = CutStatus::SmallEnough;
                 break;
             }
@@ -96,33 +109,43 @@ where
  * @param[in] options   maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
  */
-pub fn cutting_plane_dc<Oracle, Space>(mut omega: &Oracle , mut ss: &Space, mut t: &f64, options: &Options) -> (Arr, CInfo)
+#[allow(dead_code)]
+pub fn cutting_plane_optim<Oracle, Space>(
+    omega: &mut Oracle,
+    ss: &mut Space,
+    t: &mut f64,
+    options: &Options,
+) -> (Option<Arr>, u32, CutStatus)
 where
-    Oracle: OracleDC,
+    Oracle: OracleOptim,
     Space: SearchSpace,
 {
-    let t_orig = t;
-    let mut x_best : Arr;
+    let mut x_best: Option<Arr> = None;
     let mut status = CutStatus::NoSoln;
+    let t_orig = *t;
 
-    for niter in 0..options.max_it {
-        let (cut, shrunk) = omega.asset_dc(ss.xc(), t);  // query the oracle at ss.xc()
-        if shrunk {  // best t obtained
-            x_best = ss.xc();
+    let mut niter = 0;
+    while niter < options.max_it {
+        niter += 1;
+        let (cut, shrunk) = omega.asset_optim(&ss.xc(), t); // query the oracle at &ss.xc()
+        if shrunk {
+            // best t obtained
+            x_best = Some(ss.xc());
             status = CutStatus::Success;
         }
-        let (cutstatus, tsq) = ss.update(cut);  // update ss
+        let (cutstatus, tsq) = ss.update(&cut); // update ss
         if cutstatus != CutStatus::Success {
             status = cutstatus;
             break;
         }
-        if tsq < options.tol {  // no more
+        if tsq < options.tol {
+            // no more
             status = CutStatus::SmallEnough;
             break;
         }
     }
-    (x_best, (t != t_orig, niter, status))
-}  // END
+    (x_best, niter, status)
+} // END
 
 /**
     Cutting-plane method for solving convex discrete optimization problem
@@ -152,40 +175,52 @@ where
  * @param[in] options   maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
  */
-pub fn cutting_plane_q<Oracle, Space>(mut omega: &Oracle , mut ss: &Space, mut t: &f64, options: &Options) -> (Arr, CInfo)
+#[allow(dead_code)]
+pub fn cutting_plane_q<Oracle, Space>(
+    omega: &mut Oracle,
+    ss: &mut Space,
+    t: &mut f64,
+    options: &Options,
+) -> (Option<Arr>, u32, CutStatus)
 where
     Oracle: OracleQ,
     Space: SearchSpace,
 {
-    let t_orig = t;
-    let mut x_best : Arr;
-    let mut status = CutStatus::NoSoln;  // note!!!
-    let mut retry = (status == CutStatus::NoEffect);
+    let mut x_best: Option<Arr> = None;
+    let mut status = CutStatus::NoSoln; // note!!!
+    let mut retry = false;
 
-    for niter in 0..options.max_it {
-        let (cut, shrunk, x0, more_alt) = omega.asset_q(ss.xc(), t, retry);  // query the oracle at ss.xc()
-        if shrunk {  // best t obtained
-            x_best = x0;  // x0
+    let mut niter = 0;
+    while niter < options.max_it {
+        niter += 1;
+        let (cut, shrunk, x0, more_alt) = omega.asset_q(&ss.xc(), t, retry); // query the oracle at &ss.xc()
+        if shrunk {
+            // best t obtained
+            x_best = Some(x0); // x0
         }
-        let (cutstatus, tsq) = ss.update(cut);  // update ss
-        if cutstatus == CutStatus::NoEffect {
-            if !more_alt {  // more alt?
-                break;        // no more alternative cut
+        let (cutstatus, tsq) = ss.update(&cut); // update ss
+        match &cutstatus {
+            CutStatus::NoEffect => {
+                if !more_alt {
+                    // more alt?
+                    break; // no more alternative cut
+                }
+                status = cutstatus;
+                retry = true;
             }
-            status = cutstatus;
-            retry = true;
-        }
-        if cutstatus == CutStatus::NoSoln {
-            status = cutstatus;
-            break;
+            CutStatus::NoSoln => {
+                status = cutstatus;
+                break;
+            }
+            _ => {}
         }
         if tsq < options.tol {
             status = CutStatus::SmallEnough;
             break;
         }
     }
-    (x_best, (t != t_orig, niter, status))
-}  // END
+    (x_best, niter, status)
+} // END
 
 /**
  * @brief
@@ -197,33 +232,36 @@ where
  * @param[in]     options  maximum iteration and error tolerance etc.
  * @return CInfo
  */
-pub fn besearch<Oracle>(mut omega: &Oracle, mut intvl: &(f64, f64), options: &Options) -> CInfo
+#[allow(dead_code)]
+pub fn besearch<Oracle>(omega: &mut Oracle, intvl: &mut (f64, f64), options: &Options) -> CInfo
 where
-    Oracle: OracleFeas<f64>,
+    Oracle: OracleBS,
 {
     // assume monotone
     // auto& [lower, upper] = I;
-    let mut &(lower, upper) = intvl;
+    let &mut (mut lower, mut upper) = intvl;
     assert!(lower <= upper);
     let u_orig = upper;
-    let mut niter = 0U;
     let mut status = CutStatus::NoSoln;
 
-    for (; niter != options.max_it; ++niter) {
-        let mut tau = (upper - lower) / 2.0;
+    let mut niter = 0;
+    while niter < options.max_it {
+        niter += 1;
+        let tau = (upper - lower) / 2.0;
         if tau < options.tol {
             status = CutStatus::SmallEnough;
             break;
         }
-        let mut t = lower;  // l may be `i32` or `Fraction`
+        let mut t = lower; // l may be `i32` or `Fraction`
         t += tau;
-        if let Some(_value) = omega.asset_feas(t) {  // feasible sol'n obtained
+        if omega.asset_bs(t) {
+            // feasible sol'n obtained
             upper = t;
         } else {
             lower = t;
         }
     }
-    (upper != u_orig, niter + 1, status);
+    (upper != u_orig, niter, status)
 }
 
 // /**
@@ -263,7 +301,7 @@ where
 //      *
 //      * @return auto
 //      */
-//     let mut x_best() const { return self.ss.xc(); }
+//     let mut x_best() const { return self.&ss.xc(); }
 
 //     /**
 //      * @brief
@@ -276,7 +314,7 @@ where
 //         self.P.update(t);
 //         let ell_info = cutting_plane_feas(self.P, ss, self.options);
 //         if ell_info.feasible {
-//             self.ss.set_xc(ss.xc());
+//             self.ss.set_xc(&ss.xc());
 //         }
 //         return ell_info.feasible;
 //     }

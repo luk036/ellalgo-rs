@@ -10,6 +10,7 @@ type Arr = [f64; 100];
  *
  * Keep $mq$ symmetric but no promise of positive definite
  */
+#[derive(Debug, Clone, Copy)]
 pub struct ell {
     // using params_t = (f64, f64, f64);
     // using return_t = (i32, params_t);
@@ -41,13 +42,6 @@ pub struct ell {
 }
 
 impl ell {
-    /**
-     * @brief Construct a new ell object
-     *
-     * @param[in] E
-     */
-    let mut operator=(const ell& E) -> ell& = delete;
-
     /**
      * @brief Construct a new ell object
      *
@@ -95,7 +89,7 @@ impl ell {
      *
      * @return Arr
      */
-    pub fn xc(&self) -> &Arr { return _xc; }
+    pub fn xc(&self) -> Arr { return _xc; }
 
     /**
      * @brief Set the xc object
@@ -238,9 +232,7 @@ impl ell {
      */
     template <typename T> let mut update(&mut self, const (Arr, T)& cut)
         -> (CutStatus, f64) {
-        // let [grad, beta] = cut;
-        let grad = std::get<0>(cut);
-        let beta = std::get<1>(cut);
+        let (grad, beta) = cut;
         // n^2
         // let mq_g = Arr(xt::linalg::dot(self.mq, grad));  // n^2
         // let omega = xt::linalg::dot(grad, mq_g)();        // n
@@ -248,7 +240,7 @@ impl ell {
         let mut mq_g = zeros({self.n});  // initial x0
         let mut omega = 0.;
         for i in 0..self.n {
-            for (let mut j = 0; j != self.n; ++j) {
+            for j in 0..self.n {
                 mq_g(i) += self.mq(i, j) * grad(j);
             }
             omega += mq_g(i) * grad(i);
