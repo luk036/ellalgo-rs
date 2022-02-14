@@ -1,13 +1,13 @@
 #include <ellalgo/cut_config.hpp>        // for CutStatus, CutStatus::Success
-#include <ellalgo/ell1d.hpp>             // for ell1d, ell1d::return_t
+#include <ellalgo/ell1d.hpp>             // for ell1d, ell1d::Returns
 
 /**
  * @brief
  *
  * @param[in] cut
- * @return ell1d::return_t
+ * @return ell1d::Returns
  */
-pub fn update(&mut self, const (f64, f64)& cut) -> ell1d::return_t {
+pub fn update(&mut self, const (f64, f64)& cut) -> ell1d::Returns {
     let (g, beta) = cut;
     let temp = self.r * g;
     let tau = if a < 0.0 { -temp } else { temp };

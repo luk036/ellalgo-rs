@@ -1,5 +1,5 @@
 
-#include "ellalgo/ell.hpp"  // for ell::Arr
+#include "ellalgo/Ell.hpp"  // for Ell::Arr
 // #include <xtensor-blas/xlinalg.hpp>
 
 using Arr = xt::xarray<f64, xt::layout_type::row_major>;
@@ -36,7 +36,7 @@ template <typename T> let mut update(&mut self, const (Arr, T)& cut)
 
     // calculate omega: n
     Arr g_mq_g(invDinvLg);  // initially
-    let mut omega = 0.;     // initially
+    let mut omega = 0.0;     // initially
     for i in 0..self.n {
         g_mq_g(i) *= invLg(i);
         omega += g_mq_g(i);

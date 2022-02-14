@@ -6,44 +6,44 @@ type Arr = [f64; 100];
 /**
  * @brief Ellipsoid Search Space
  *
- *        ell = {x | (x - xc)' mq^-1 (x - xc) \le \kappa}
+ *        Ell = {x | (x - xc)' mq^-1 (x - xc) \le \kappa}
  *
  * Keep $mq$ symmetric but no promise of positive definite
  */
-#[derive(Debug, Clone, Copy)]
-pub struct ell {
-    // using params_t = (f64, f64, f64);
-    // using return_t = (i32, params_t);
-    bool use_parallel_cut = true;
-    bool no_defer_trick = false;
+#[derive(Debug, Clone)]
+pub struct Ell {
+    type Params = (f64, f64, f64);
+    type Returns = (i32, Params);
 
-    f64 _mu();
-    f64 _rho();
-    f64 _sigma();
-    f64 _delta();
-    f64 _tsq();
+    pub use_parallel_cut: bool;
+    pub no_defer_trick: bool;
 
-    const i32 _n;
+    mq: Arr;
+    xc: Arr;
 
-    const f64 _nFloat;
-    const f64 _nPlus1;
-    const f64 _nMinus1;
-    const f64 _halfN;
-    const f64 _halfNplus1;
-    const f64 _halfNminus1;
-    const f64 _nSq;
-    const f64 _c1;
-    const f64 _c2;
-    const f64 _c3;
+    kappa: f64,
+    mu: f64,
+    rho: f64,
+    sigma: f64,
+    delta: f64,
+    tsq: f64,
 
-    f64 _kappa;
-    Arr _mq;
-    Arr _xc;
+    usize n: usize,
+    n_float: f64,
+    n_plus_1: f64,
+    n_minus_1: f64,
+    half_n: f64,
+    half_n_plus_1: f64,
+    half_n_minus_1: f64,
+    n_sq: f64,
+    c1: f64,
+    c2: f64,
+    c3: f64,
 }
 
-impl ell {
+impl Ell {
     /**
-     * @brief Construct a new ell object
+     * @brief Construct a new Ell object
      *
      * @tparam V
      * @tparam U
@@ -51,52 +51,77 @@ impl ell {
      * @param mq
      * @param x
      */
-    template <typename V, typename U> ell(V&& kappa, Arr&& mq, U&& x) 
-        : _n{i32(x.size())},
-          _nFloat{f64(_n)},
-          _nPlus1{_nFloat + 1.},
-          _nMinus1{_nFloat - 1.},
-          _halfN{_nFloat / 2.},
-          _halfNplus1{_nPlus1 / 2.},
-          _halfNminus1{_nMinus1 / 2.},
-          _nSq{_nFloat * _nFloat},
-          _c1{_nSq / (_nSq - 1)},
-          _c2{2.0 / _nPlus1},
-          _c3{_nFloat / _nPlus1},
-          _kappa{std::forward<V>(kappa)},
-          _mq{std::move(mq)},
-          _xc{std::forward<U>(x)} {}
+    pub fn new_with_matrix(kappa: f64, mq: Arr, xc: Arr) -> Ell {
+        let n = xc.len(),
+        let n_float = n as f64,
+        let n_plus_1 = n_float + 1.0,
+        let n_minus_1 = n_float - 1.0,
+        let half_n = n_float / 2.0,
+        let half_n_plus_1 = n_plus_1 / 2.0,
+        let half_n_minus_1 = n_minus_1 / 2.0,
+        let n_sq = n_float * n_float,
+        let c1 = n_sq / (n_sq - 1),
+        let c2 = 2.0 / n_plus_1,
+        let c3 = n_float / n_plus_1,
 
-  public:
+        Ell {
+          kappa,
+          mq,
+          xc,
+          n,
+          n_float,
+          n_plus_1,
+          n_minus_1,
+          half_n,
+          half_n_plus_1,
+          half_n_minus_1,
+          n_sq,
+          c1,
+          c2,
+          c3,
+          mu: 0.0,
+          rho: 0.0,
+          sigma: 0.0,
+          delta: 0.0,
+          tsq: 0.0,
+          use_parallel_cut: true;
+          no_defer_trick: false;
+        }
+    }
+
     /**
-     * @brief Construct a new ell object
+     * @brief Construct a new Ell object
      *
      * @param[in] val
      * @param[in] x
      */
-    ell(const Arr& val, Arr x) : ell{1., xt::diag(val), std::move(x)} {}
+    pub fn new(val: Arr, xc: Arr) -> Ell {
+        Ell::new_with_matrix(1.0, nparray::diag(val), xc}
+    }
 
     /**
-     * @brief Construct a new ell object
+     * @brief Construct a new Ell object
      *
      * @param[in] alpha
      * @param[in] x
      */
-    ell(alpha, Arr x: f64) : ell{alpha, xt::eye(x.size()), std::move(x)} {}
+    pub fn new(kappa: Arr, xc: Arr) -> Ell{
+        Ell::new_with_matrix(kappa, nparray::eye(val), xc}
+    }
 
     /**
      * @brief copy the whole array anyway
      *
      * @return Arr
      */
-    pub fn xc(&self) -> Arr { return _xc; }
+    pub fn xc(&self) -> Arr { self.xc }
 
     /**
      * @brief Set the xc object
      *
      * @param[in] xc
      */
-    pub fn set_xc(&mut self, xc: &Arr) { _xc = xc; }
+    pub fn set_xc(&mut self, xc: &Arr) { self.xc = xc; }
 
     /**
      * @brief Update ellipsoid core function using the cut(s)
@@ -108,13 +133,13 @@ impl ell {
     template <typename T> let mut update(const (Arr, T)& cut)
         -> (CutStatus, f64);
 
-    let mut _update_cut(beta: f64) -> CutStatus { return self.calc_dc(beta); }
+    pub fn update_cut(&mut self, beta: f64) -> CutStatus { return self.calc_dc(beta); }
 
-    CutStatus _update_cut(const Arr& beta) {  // parallel cut
-        if beta.shape([0] < 2) {
+    pub fn update_cut_ll(&mut self, beta: Arr) -> CutStatus {  // parallel cut
+        if beta.shape()[0] < 2 {
             return self.calc_dc(beta[0]);
         }
-        return self.calc_ll_core(beta[0], beta[1]);
+        self.calc_ll_core(beta[0], beta[1])
     }
 
     /**
@@ -144,7 +169,7 @@ impl ell {
         }
 
         let b0b1n = b0 * (b1 / self.tsq);
-        if self.nFloat * b0b1n < -1. {
+        if self.n_float * b0b1n < -1.0 {
             return CutStatus::NoEffect;  // no effect
         }
 
@@ -154,11 +179,11 @@ impl ell {
         let bsum = b0 + b1;
         let bsumn = bsum / self.tsq;
         let bav = bsum / 2.;
-        let tempn = self.halfN * bsumn * bdiff;
+        let tempn = self.half_n * bsumn * bdiff;
         let xi = (t0n * t1n + tempn * tempn).sqrt();
-        self.sigma = self.c3 + (1.0 - b0b1n - xi) / (bsumn * bav) / self.nPlus1;
+        self.sigma = self.c3 + (1.0 - b0b1n - xi) / (bsumn * bav) / self.n_plus_1;
         self.rho = self.sigma * bav;
-        self.delta = self.c1 * ((t0n + t1n) / 2.0 + xi / self.nFloat);
+        self.delta = self.c1 * ((t0n + t1n) / 2.0 + xi / self.n_float);
         CutStatus::Success
     }
 
@@ -170,11 +195,11 @@ impl ell {
      * @return void
      */
     pub fn calc_ll_cc(&mut self, b1: f64, b1sqn: f64) {
-        let temp = self.halfN * b1sqn;
+        let temp = self.half_n * b1sqn;
         let xi = (1.0 - b1sqn + temp * temp).sqrt();
         self.sigma = self.c3 + self.c2 * (1.0 - xi) / b1sqn;
         self.rho = self.sigma * b1 / 2;
-        self.delta = self.c1 * (1.0 - b1sqn / 2.0 + xi / self.nFloat);
+        self.delta = self.c1 * (1.0 - b1sqn / 2.0 + xi / self.n_float);
     }
 
     /**
@@ -196,13 +221,13 @@ impl ell {
             return CutStatus::Success;
         }
 
-        let gamma = tau + self.nFloat * beta;
+        let gamma = tau + self.n_float * beta;
         if gamma < 0.0 {
             return CutStatus::NoEffect;  // no effect
         }
 
-        self.mu = (bdiff / gamma) * self.halfNminus1;
-        self.rho = gamma / self.nPlus1;
+        self.mu = (bdiff / gamma) * self.half_n_minus_1;
+        self.rho = gamma / self.n_plus_1;
         self.sigma = 2.0 * self.rho / (tau + beta);
         self.delta = self.c1 * (1.0 - beta * (beta / self.tsq));
         CutStatus::Success
@@ -215,9 +240,9 @@ impl ell {
      * @return i32
      */
     pub fn calc_cc(&mut self, tau: f64) {
-        self.mu = self.halfNminus1;
+        self.mu = self.half_n_minus_1;
         self.sigma = self.c2;
-        self.rho = tau / self.nPlus1;
+        self.rho = tau / self.n_plus_1;
         self.delta = self.c1;
     }
 
@@ -237,8 +262,8 @@ impl ell {
         // let mq_g = Arr(xt::linalg::dot(self.mq, grad));  // n^2
         // let omega = xt::linalg::dot(grad, mq_g)();        // n
 
-        let mut mq_g = zeros({self.n});  // initial x0
-        let mut omega = 0.;
+        let mut mq_g = ndarray::zeros({self.n});  // initial x0
+        let mut omega = 0.0;
         for i in 0..self.n {
             for j in 0..self.n {
                 mq_g(i) += self.mq(i, j) * grad(j);
@@ -273,4 +298,4 @@ impl ell {
         }
         (status, self.tsq)
     }
-}  // } ell
+}  // } Ell

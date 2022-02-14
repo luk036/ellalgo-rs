@@ -1,66 +1,66 @@
 // -*- coding: utf-8 -*-
 #pragma once
 
-#include <ellalgo/ell.hpp>
+#include <ellalgo/Ell.hpp>
 
 /**
  * @brief Ellipsoid Search Space
  * \f[
- *    ell_stable = {x | (x - xc)' M^-1 (x - xc) \le \kappa}
+ *    EllStable = {x | (x - xc)' M^-1 (x - xc) \le \kappa}
  *               = {x | (x - xc)' L D^-1 L' (x - xc) \le \kappa}
  * \f]
  * Store $M$ in the form of Lg \ D^-1 \ L' in an n x n array `mq`,
  * and hence keep $M$ symmetric positive definite.
  * More stable but slightly more computation.
  */
-class ell_stable : public ell {
+class EllStable : public Ell {
   public:
     using Arr = xt::xarray<f64, xt::layout_type::row_major>;
 
     /**
-     * @brief Construct a new ell_stable object
+     * @brief Construct a new EllStable object
      *
      * @param[in] val
      * @param[in] x
      */
-    ell_stable(const Arr& val, Arr x) : ell{val, std::move(x)} {}
+    EllStable(const Arr& val, Arr x) : Ell{val, std::move(x)} {}
 
     /**
-     * @brief Construct a new ell_stable object
+     * @brief Construct a new EllStable object
      *
      * @param[in] alpha
      * @param[in] x
      */
-    ell_stable(alpha, Arr x: f64) : ell{alpha, std::move(x)} {}
+    EllStable(alpha, Arr x: f64) : Ell{alpha, std::move(x)} {}
 
     /**
-     * @brief Construct a new ell_stable object
+     * @brief Construct a new EllStable object
      *
      * @param[in] E (move)
      */
-    ell_stable(ell_stable&& E) = default;
+    EllStable(EllStable&& E) = default;
 
     /**
-     * @brief Construct a new ell_stable object
+     * @brief Construct a new EllStable object
      *
      * To avoid accidentally copying, only explicit copy is allowed
      *
      * @param E
      */
-    explicit ell_stable(const ell_stable& E) = default;
+    explicit EllStable(const EllStable& E) = default;
 
     /**
-     * @brief Destroy the ell stable object
+     * @brief Destroy the Ell stable object
      *
      */
-    ~ell_stable() = default;
+    ~EllStable() = default;
 
     /**
      * @brief explicitly copy
      *
-     * @return ell_stable
+     * @return EllStable
      */
-    let mut copy() const -> ell_stable { return ell_stable(*this); }
+    let mut copy() const -> EllStable { return EllStable(*this); }
 
     /**
      * @brief Update ellipsoid core function using the cut(s)
@@ -75,4 +75,4 @@ class ell_stable : public ell {
      */
     template <typename T> let mut update(const (Arr, T)& cut)
         -> (CutStatus, f64);
-};  // } ell_stable
+};  // } EllStable

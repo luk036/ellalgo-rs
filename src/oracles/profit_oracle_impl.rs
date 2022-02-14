@@ -20,7 +20,7 @@ pub fn profit_oracle::operator()(const Arr& y, f64& t) const -> (Cut, bool) {
     // y0 <= log k
     let f1 = y[0] - self.log_k;
     if f1 > 0.0 {
-        return {{Arr{1., 0.}, f1}, false};
+        return {{Arr{1.0, 0.0}, f1}, false};
     }
 
     let log_Cobb = self.log_pA + self.a(0) * y(0) + self.a(1) * y(1);
@@ -33,7 +33,7 @@ pub fn profit_oracle::operator()(const Arr& y, f64& t) const -> (Cut, bool) {
         te = std::exp(log_Cobb);
         t = te - vx;
         Arr g = (self.v * x) / te - self.a;
-        return {{std::move(g), 0.}, true};
+        return {{std::move(g), 0.0}, true};
     }
     Arr g = (self.v * x) / te - self.a;
     return {{std::move(g), fj}, false};
