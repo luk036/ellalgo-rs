@@ -1,0 +1,46 @@
+    Checking ellalgo-rs v0.1.0 (/home/lubuntu/Documents/github/ellalgo-rs)
+error[E0403]: the name `T` is already used for a generic parameter in this item's generic parameters
+  --> src/main.rs:14:15
+   |
+12 | pub trait TestT<T> {
+   |                 - first use of `T`
+13 |     // add code here
+14 |     fn test_t<T>(&self, f: T) -> T; 
+   |               ^ already used
+
+error[E0404]: expected trait, found builtin type `f64`
+  --> src/main.rs:19:18
+   |
+19 |     fn test_t<T: f64>(&self, i: f64) -> f64 {
+   |                  ^^^ not a trait
+
+error[E0404]: expected trait, found builtin type `i32`
+  --> src/main.rs:25:18
+   |
+25 |     fn test_t<T: i32>(&self, i: i32) -> i32 {
+   |                  ^^^ not a trait
+
+warning: unused import: `crate::cutting_plane::cutting_plane_optim`
+ --> src/main.rs:2:5
+  |
+2 | use crate::cutting_plane::cutting_plane_optim;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `crate::ell_calc::EllCalc`
+ --> src/main.rs:5:5
+  |
+5 | use crate::ell_calc::EllCalc;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::ell::Ell`
+ --> src/main.rs:8:5
+  |
+8 | use crate::ell::Ell;
+  |     ^^^^^^^^^^^^^^^
+
+Some errors have detailed explanations: E0403, E0404.
+For more information about an error, try `rustc --explain E0403`.
+warning: `ellalgo-rs` (bin "ellalgo-rs") generated 3 warnings
+error: could not compile `ellalgo-rs` due to 3 previous errors; 3 warnings emitted
