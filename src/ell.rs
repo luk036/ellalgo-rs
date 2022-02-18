@@ -1,13 +1,11 @@
 // mod cutting_plane;
-use crate::cutting_plane::{CutStatus, SearchSpace, CutChoices, IntroCutChoices};
+use crate::cutting_plane::{CutStatus, IntoCutChoices, SearchSpace};
 use crate::ell_calc::EllCalc;
 // #[macro_use]
 // extern crate ndarray;
 use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
-type Params = (f64, f64, f64);
-type Returns = (i32, Params);
 
 /**
  * @brief Ellipsoid Search Space
@@ -69,7 +67,7 @@ impl Ell {
     // pub fn set_xc(&mut self, xc: Arr) { self.xc = xc; }
 }
 
-impl<T> SearchSpace for Ell {
+impl SearchSpace for Ell {
     /**
      * @brief copy the whole array anyway
      *
@@ -88,7 +86,7 @@ impl<T> SearchSpace for Ell {
      * @param[in] cut
      * @return (i32, f64)
      */
-    fn update<T>(&mut self, cut: &(Arr, T)) -> (CutStatus, f64) {
+    fn update<T: IntoCutChoices>(&mut self, cut: (Arr, T)) -> (CutStatus, f64) {
         let (grad, beta) = cut;
         let mut mq_g = Array1::zeros(self.n); // initial x0
         let mut omega = 0.0;
@@ -100,8 +98,7 @@ impl<T> SearchSpace for Ell {
         }
 
         self.helper.tsq = self.kappa * omega;
-        let mut status = self.helper.update::<T>(beta);
-        let status = CutStatus::Success;
+        let status = self.helper.update::<T>(beta);
         if status != CutStatus::Success {
             return (status, self.helper.tsq);
         }

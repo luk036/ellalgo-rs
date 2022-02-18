@@ -19,7 +19,8 @@ trait IntoCutChoices {
 
 impl CutChoices {
     fn new<A>(args: A) -> CutChoices
-        where A: IntoCutChoices
+    where
+        A: IntoCutChoices,
     {
         args.into()
     }

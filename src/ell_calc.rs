@@ -1,5 +1,5 @@
 // mod cutting_plane;
-use crate::cutting_plane::CutStatus;
+use crate::cutting_plane::{CutChoices, CutStatus, IntoCutChoices};
 
 /**
  * @brief Ellipsoid Search Space
@@ -178,13 +178,23 @@ impl EllCalc {
     // pub fn update(&mut self, beta: f64) -> CutStatus {
     //     self.calc_dc(beta)
     // }
+}
 
-    pub fn update(&mut self, beta: (f64, Option<f64>)) -> CutStatus {
-        let (b0, b1_opt) = beta;
-        if let Some(b1) = b1_opt {
-            return self.calc_ll_core(b0, b1);
-        } else {
-            return self.calc_dc(b0);
+impl EllCalc {
+    pub fn update<T>(&mut self, beta: T) -> CutStatus
+    where
+        T: IntoCutChoices,
+    {
+        let choice = CutChoices::new(beta);
+        match choice {
+            CutChoices::Single(b0) => self.calc_dc(b0),
+            CutChoices::Parallel(b0, b1_opt) => {
+                if let Some(b1) = b1_opt {
+                    self.calc_ll_core(b0, b1)
+                } else {
+                    self.calc_dc(b0)
+                }
+            }
         }
     }
 }

@@ -1,25 +1,4 @@
     Checking ellalgo-rs v0.1.0 (/home/lubuntu/Documents/github/ellalgo-rs)
-error[E0403]: the name `T` is already used for a generic parameter in this item's generic parameters
-  --> src/main.rs:14:15
-   |
-12 | pub trait TestT<T> {
-   |                 - first use of `T`
-13 |     // add code here
-14 |     fn test_t<T>(&self, f: T) -> T; 
-   |               ^ already used
-
-error[E0404]: expected trait, found builtin type `f64`
-  --> src/main.rs:19:18
-   |
-19 |     fn test_t<T: f64>(&self, i: f64) -> f64 {
-   |                  ^^^ not a trait
-
-error[E0404]: expected trait, found builtin type `i32`
-  --> src/main.rs:25:18
-   |
-25 |     fn test_t<T: i32>(&self, i: i32) -> i32 {
-   |                  ^^^ not a trait
-
 warning: unused import: `crate::cutting_plane::cutting_plane_optim`
  --> src/main.rs:2:5
   |
@@ -34,13 +13,104 @@ warning: unused import: `crate::ell_calc::EllCalc`
 5 | use crate::ell_calc::EllCalc;
   |     ^^^^^^^^^^^^^^^^^^^^^^^^
 
+warning: unused import: `CutChoices`
+ --> src/ell.rs:2:28
+  |
+2 | use crate::cutting_plane::{CutChoices, CutStatus, IntoCutChoices, SearchSpace};
+  |                            ^^^^^^^^^^
+
 warning: unused import: `crate::ell::Ell`
  --> src/main.rs:8:5
   |
 8 | use crate::ell::Ell;
   |     ^^^^^^^^^^^^^^^
 
-Some errors have detailed explanations: E0403, E0404.
-For more information about an error, try `rustc --explain E0403`.
-warning: `ellalgo-rs` (bin "ellalgo-rs") generated 3 warnings
-error: could not compile `ellalgo-rs` due to 3 previous errors; 3 warnings emitted
+warning: unused variable: `status`
+   --> src/ell.rs:103:17
+    |
+103 |         let mut status = self.helper.update::<T>(beta);
+    |                 ^^^^^^ help: if this is intentional, prefix it with an underscore: `_status`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: variable does not need to be mutable
+   --> src/ell.rs:103:13
+    |
+103 |         let mut status = self.helper.update::<T>(beta);
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: type alias is never used: `Cut`
+ --> src/cutting_plane.rs:4:1
+  |
+4 | pub type Cut = (Arr, f64);
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(dead_code)]` on by default
+
+warning: type alias is never used: `ParallelCut`
+ --> src/cutting_plane.rs:5:1
+  |
+5 | pub type ParallelCut = (Arr, (f64, Option<f64>));
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function is never used: `new`
+  --> src/ell_calc.rs:42:12
+   |
+42 |     pub fn new(n_float: f64) -> EllCalc {
+   |            ^^^
+
+warning: type alias is never used: `Params`
+ --> src/ell.rs:9:1
+  |
+9 | type Params = (f64, f64, f64);
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type alias is never used: `Returns`
+  --> src/ell.rs:10:1
+   |
+10 | type Returns = (i32, Params);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function is never used: `new_with_matrix`
+  --> src/ell.rs:40:12
+   |
+40 |     pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Arr) -> Ell {
+   |            ^^^^^^^^^^^^^^^
+
+warning: associated function is never used: `new`
+  --> src/ell.rs:60:12
+   |
+60 |     pub fn new(val: &Arr, xc: Arr) -> Ell {
+   |            ^^^
+
+warning: unneeded `return` statement
+   --> src/ell_calc.rs:190:39
+    |
+190 |             CutChoices::Single(b0) => return self.calc_dc(b0),
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^ help: remove `return`: `self.calc_dc(b0)`
+    |
+    = note: `#[warn(clippy::needless_return)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: unneeded `return` statement
+   --> src/ell_calc.rs:193:21
+    |
+193 |                     return self.calc_ll_core(b0, b1);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: remove `return`: `self.calc_ll_core(b0, b1)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: unneeded `return` statement
+   --> src/ell_calc.rs:195:21
+    |
+195 |                     return self.calc_dc(b0);
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^ help: remove `return`: `self.calc_dc(b0)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: `ellalgo-rs` (bin "ellalgo-rs") generated 16 warnings
+    Finished dev [unoptimized + debuginfo] target(s) in 0.14s

@@ -1,8 +1,6 @@
 use ndarray::prelude::*;
 
 pub type Arr = Array1<f64>;
-pub type Cut = (Arr, f64);
-pub type ParallelCut = (Arr, (f64, Option<f64>));
 pub type CInfo = (bool, u32, CutStatus);
 
 pub struct Options {
@@ -10,7 +8,7 @@ pub struct Options {
     pub tol: f64,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 pub enum CutChoices {
     Single(f64),
     Parallel(f64, Option<f64>),
@@ -21,8 +19,9 @@ pub trait IntoCutChoices {
 }
 
 impl CutChoices {
-    fn new<A>(args: A) -> CutChoices
-        where A: IntoCutChoices
+    pub fn new<A>(args: A) -> CutChoices
+    where
+        A: IntoCutChoices,
     {
         args.into()
     }
@@ -49,15 +48,15 @@ pub enum CutStatus {
 }
 
 pub trait OracleFeas {
-    fn asset_feas<T: IntroCutChoices>(&mut self, x: &Arr) -> Option<(Arr, T)>;
+    fn asset_feas<T>(&mut self, x: &Arr) -> Option<(Arr, T)>;
 }
 
 pub trait OracleOptim {
-    fn asset_optim<T: IntroCutChoices>(&mut self, x: &Arr, t: &mut f64) -> ((Arr, T), bool);
+    fn asset_optim<T>(&mut self, x: &Arr, t: &mut f64) -> ((Arr, T), bool);
 }
 
 pub trait OracleQ {
-    fn asset_q<T: IntroCutChoices>(&mut self, x: &Arr, t: &mut f64, retry: bool) -> ((Arr, T), bool, Arr, bool);
+    fn asset_q<T>(&mut self, x: &Arr, t: &mut f64, retry: bool) -> ((Arr, T), bool, Arr, bool);
 }
 
 pub trait OracleBS {
@@ -66,7 +65,7 @@ pub trait OracleBS {
 
 pub trait SearchSpace {
     fn xc(&self) -> Arr;
-    fn update<T: IntroCutChoices>(&mut self, cut: &(Arr, T)) -> (CutStatus, f64);
+    fn update<T: IntoCutChoices>(&mut self, cut: (Arr, T)) -> (CutStatus, f64);
 }
 
 /**
@@ -99,7 +98,7 @@ pub fn cutting_plane_feas<T, Oracle, Space>(
     options: &Options,
 ) -> CInfo
 where
-    T: IntroCutChoices,
+    T: IntoCutChoices,
     Oracle: OracleFeas,
     Space: SearchSpace,
 {
@@ -109,10 +108,10 @@ where
     let mut niter = 0;
     while niter < options.max_it {
         niter += 1;
-        let cut = omega.asset_feas::<T>(&ss.xc()); // query the oracle at &ss.xc()
-        if let Some(value) = cut {
+        let cut_option = omega.asset_feas::<T>(&ss.xc()); // query the oracle at &ss.xc()
+        if let Some(cut) = cut_option {
             // feasible sol'n obtained
-            let (cutstatus, tsq) = ss.update::<T>(&value); // update ss
+            let (cutstatus, tsq) = ss.update::<T>(cut); // update ss
             if cutstatus != CutStatus::Success {
                 status = cutstatus;
                 break;
@@ -151,7 +150,7 @@ pub fn cutting_plane_optim<T, Oracle, Space>(
     options: &Options,
 ) -> (Option<Arr>, u32, CutStatus)
 where
-    T: IntroCutChoices,
+    T: IntoCutChoices,
     Oracle: OracleOptim,
     Space: SearchSpace,
 {
@@ -167,7 +166,7 @@ where
             x_best = Some(ss.xc());
             status = CutStatus::Success;
         }
-        let (cutstatus, tsq) = ss.update::<T>(&cut); // update ss
+        let (cutstatus, tsq) = ss.update::<T>(cut); // update ss
         if cutstatus != CutStatus::Success {
             status = cutstatus;
             break;
@@ -213,7 +212,7 @@ pub fn cutting_plane_q<T, Oracle, Space>(
     options: &Options,
 ) -> (Option<Arr>, u32, CutStatus)
 where
-    T: IntroCutChoices,
+    T: IntoCutChoices,
     Oracle: OracleQ,
     Space: SearchSpace,
 {
@@ -230,7 +229,7 @@ where
             // best t obtained
             x_best = Some(x0); // x0
         }
-        let (cutstatus, tsq) = ss.update::<T>(&cut); // update ss
+        let (cutstatus, tsq) = ss.update::<T>(cut); // update ss
         match &cutstatus {
             CutStatus::NoEffect => {
                 if !more_alt {
