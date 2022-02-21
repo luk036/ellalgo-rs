@@ -1,13 +1,7 @@
-// -*- coding: utf-8 -*-
-#pragma once
+use ndarray::prelude::*;
 
-#include <cmath>                        // for log
-#include <tuple>                        // for tuple
-#include <xtensor/xaccessible.hpp>      // for xconst_accessible, xaccessible
-#include <xtensor/xarray.hpp>           // for xarray_container
-#include <xtensor/xlayout.hpp>          // for layout_type, layout_type::row...
-#include <xtensor/xoperation.hpp>       // for xfunction_type_t, operator+
-#include <xtensor/xtensor_forward.hpp>  // for xarray
+type Arr = Array1<f64>;
+type Cut = (Arr, f64);
 
 /**
  * @brief Oracle for a profit maximization problem.
@@ -27,11 +21,7 @@
  *        v: output price
  *        k: a given constant that restricts the quantity of x1
  */
-class profit_oracle {
-    using Arr = xt::xarray<f64, xt::layout_type::row_major>;
-    using Cut = (Arr, f64);
-
-  private:
+pub struct profit_oracle {
     const f64 _log_pA;
     const f64 _log_k;
     const Arr _v;
@@ -64,7 +54,7 @@ class profit_oracle {
      * @param[in,out] t the best-so-far optimal value
      * @return (Cut, f64) Cut and the updated best-so-far value
      */
-    let mut operator()(const Arr& y, f64& t) const -> (Cut, bool);
+    pub fn asset_optim<f64>(const Arr& y, f64& t) const -> (Cut, bool);
 };
 
 /**
@@ -84,7 +74,7 @@ class profit_oracle {
  *
  * @see profit_oracle
  */
-class profit_rb_oracle {
+pub struct profit_rb_oracle {
     using Arr = xt::xarray<f64, xt::layout_type::row_major>;
 
   private:
@@ -117,8 +107,8 @@ class profit_rb_oracle {
      *
      * @see cutting_plane_dc
      */
-    let mut operator()(const Arr& y, f64& t) {
-        let mut a_rb = self.a;
+    pub fn asset_optim<f64>(const Arr& y, f64& t) {
+        pub fn a_rb = self.a;
         a_rb[0] += y[0] > 0.0 ? -self.uie[0] : self.uie[0];
         a_rb[1] += y[1] > 0.0 ? -self.uie[1] : self.uie[1];
         self.P._a = a_rb;
@@ -146,7 +136,7 @@ class profit_rb_oracle {
  *
  * @see profit_oracle
  */
-class profit_q_oracle {
+pub struct profit_q_oracle {
     using Arr = xt::xarray<f64, xt::layout_type::row_major>;
     using Cut = (Arr, f64);
 
@@ -176,5 +166,5 @@ class profit_q_oracle {
      *
      * @see cutting_plane_q
      */
-    let mut operator()(const Arr& y, f64& t, bool retry) -> (Cut, bool, Arr, bool);
+    pub fn asset_optim<f64>(const Arr& y, f64& t, bool retry) -> (Cut, bool, Arr, bool);
 };

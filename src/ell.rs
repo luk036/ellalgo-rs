@@ -1,6 +1,6 @@
 // mod cutting_plane;
-use crate::cutting_plane::{CutStatus, IntoCutChoices, SearchSpace};
-use crate::ell_calc::EllCalc;
+use crate::cutting_plane::{CutStatus, SearchSpace};
+use crate::ell_calc::{EllCalc, UpdateByCutChoices};
 // #[macro_use]
 // extern crate ndarray;
 use ndarray::prelude::*;
@@ -86,7 +86,7 @@ impl SearchSpace for Ell {
      * @param[in] cut
      * @return (i32, f64)
      */
-    fn update<T: IntoCutChoices>(&mut self, cut: (Arr, T)) -> (CutStatus, f64) {
+    fn update<T: UpdateByCutChoices>(&mut self, cut: (Arr, T)) -> (CutStatus, f64) {
         let (grad, beta) = cut;
         let mut mq_g = Array1::zeros(self.n); // initial x0
         let mut omega = 0.0;
@@ -104,8 +104,9 @@ impl SearchSpace for Ell {
         }
 
         self.xc -= &((self.helper.rho / omega) * &mq_g); // n
-                                                         // n*(n+1)/2 + n
-                                                         // self.mq -= (self.sigma / omega) * xt::linalg::outer(mq_g, mq_g);
+
+        // n*(n+1)/2 + n
+        // self.mq -= (self.sigma / omega) * xt::linalg::outer(mq_g, mq_g);
 
         let r = self.helper.sigma / omega;
         for i in 0..self.n {

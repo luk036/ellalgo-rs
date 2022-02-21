@@ -1,3 +1,4 @@
+use crate::ell_calc::UpdateByCutChoices;
 use ndarray::prelude::*;
 
 pub type Arr = Array1<f64>;
@@ -8,36 +9,13 @@ pub struct Options {
     pub tol: f64,
 }
 
+/*
 #[derive(Debug, Clone, Copy)]
 pub enum CutChoices {
     Single(f64),
     Parallel(f64, Option<f64>),
 }
-
-pub trait IntoCutChoices {
-    fn into(self) -> CutChoices;
-}
-
-impl CutChoices {
-    pub fn new<A>(args: A) -> CutChoices
-    where
-        A: IntoCutChoices,
-    {
-        args.into()
-    }
-}
-
-impl IntoCutChoices for f64 {
-    fn into(self) -> CutChoices {
-        CutChoices::Single(self)
-    }
-}
-
-impl IntoCutChoices for (f64, Option<f64>) {
-    fn into(self) -> CutChoices {
-        CutChoices::Parallel(self.0, self.1)
-    }
-}
+*/
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum CutStatus {
@@ -65,7 +43,7 @@ pub trait OracleBS {
 
 pub trait SearchSpace {
     fn xc(&self) -> Arr;
-    fn update<T: IntoCutChoices>(&mut self, cut: (Arr, T)) -> (CutStatus, f64);
+    fn update<T: UpdateByCutChoices>(&mut self, cut: (Arr, T)) -> (CutStatus, f64);
 }
 
 /**
@@ -98,7 +76,7 @@ pub fn cutting_plane_feas<T, Oracle, Space>(
     options: &Options,
 ) -> CInfo
 where
-    T: IntoCutChoices,
+    T: UpdateByCutChoices,
     Oracle: OracleFeas,
     Space: SearchSpace,
 {
@@ -150,7 +128,7 @@ pub fn cutting_plane_optim<T, Oracle, Space>(
     options: &Options,
 ) -> (Option<Arr>, u32, CutStatus)
 where
-    T: IntoCutChoices,
+    T: UpdateByCutChoices,
     Oracle: OracleOptim,
     Space: SearchSpace,
 {
@@ -212,7 +190,7 @@ pub fn cutting_plane_q<T, Oracle, Space>(
     options: &Options,
 ) -> (Option<Arr>, u32, CutStatus)
 where
-    T: IntoCutChoices,
+    T: UpdateByCutChoices,
     Oracle: OracleQ,
     Space: SearchSpace,
 {

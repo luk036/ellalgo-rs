@@ -1,5 +1,5 @@
 // mod cutting_plane;
-use crate::cutting_plane::{CutChoices, CutStatus, IntoCutChoices};
+use crate::cutting_plane::CutStatus;
 
 /**
  * @brief Ellipsoid Search Space
@@ -19,11 +19,7 @@ pub struct EllCalc {
 
     n_float: f64,
     n_plus_1: f64,
-    // n_minus_1: f64,
     half_n: f64,
-    // half_n_plus_1: f64,
-    // half_n_minus_1: f64,
-    // n_sq: f64,
     c1: f64,
     c2: f64,
     c3: f64,
@@ -41,10 +37,7 @@ impl EllCalc {
      */
     pub fn new(n_float: f64) -> EllCalc {
         let n_plus_1 = n_float + 1.0;
-        // let n_minus_1 = n_float - 1.0;
         let half_n = n_float / 2.0;
-        // let half_n_plus_1 = n_plus_1 / 2.0;
-        // let half_n_minus_1 = n_minus_1 / 2.0;
         let n_sq = n_float * n_float;
         let c1 = n_sq / (n_sq - 1.0);
         let c2 = 2.0 / n_plus_1;
@@ -53,11 +46,7 @@ impl EllCalc {
         EllCalc {
             n_float,
             n_plus_1,
-            // n_minus_1,
             half_n,
-            // half_n_plus_1,
-            // half_n_minus_1,
-            // n_sq,
             c1,
             c2,
             c3,
@@ -174,27 +163,34 @@ impl EllCalc {
         self.rho = tau / self.n_plus_1;
         self.delta = self.c1;
     }
+}
 
-    // pub fn update(&mut self, beta: f64) -> CutStatus {
-    //     self.calc_dc(beta)
-    // }
+pub trait UpdateByCutChoices {
+    fn update_by(self, ell: &mut EllCalc) -> CutStatus;
 }
 
 impl EllCalc {
-    pub fn update<T>(&mut self, beta: T) -> CutStatus
+    pub fn update<A>(&mut self, args: A) -> CutStatus
     where
-        T: IntoCutChoices,
+        A: UpdateByCutChoices,
     {
-        let choice = CutChoices::new(beta);
-        match choice {
-            CutChoices::Single(b0) => self.calc_dc(b0),
-            CutChoices::Parallel(b0, b1_opt) => {
-                if let Some(b1) = b1_opt {
-                    self.calc_ll_core(b0, b1)
-                } else {
-                    self.calc_dc(b0)
-                }
-            }
+        args.update_by(self)
+    }
+}
+
+impl UpdateByCutChoices for f64 {
+    fn update_by(self, ell: &mut EllCalc) -> CutStatus {
+        ell.calc_dc(self)
+    }
+}
+
+impl UpdateByCutChoices for (f64, Option<f64>) {
+    fn update_by(self, ell: &mut EllCalc) -> CutStatus {
+        let (b0, b1_opt) = self;
+        if let Some(b1) = b1_opt {
+            ell.calc_ll_core(b0, b1)
+        } else {
+            ell.calc_dc(b0)
         }
     }
 }

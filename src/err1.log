@@ -1,0 +1,73 @@
+warning: unused import: `crate::cutting_plane::cutting_plane_optim`
+ --> src/main.rs:2:5
+  |
+2 | use crate::cutting_plane::cutting_plane_optim;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `crate::ell_calc::EllCalc`
+ --> src/main.rs:5:5
+  |
+5 | use crate::ell_calc::EllCalc;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::ell_stable::EllStable`
+ --> src/main.rs:8:5
+  |
+8 | use crate::ell_stable::EllStable;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function is never used: `new`
+  --> src/ell_calc.rs:38:12
+   |
+38 |     pub fn new(n_float: f64) -> EllCalc {
+   |            ^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: associated function is never used: `new_with_matrix`
+  --> src/ell_stable.rs:38:12
+   |
+38 |     pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Arr) -> EllStable {
+   |            ^^^^^^^^^^^^^^^
+
+warning: associated function is never used: `new`
+  --> src/ell_stable.rs:58:12
+   |
+58 |     pub fn new(val: &Arr, xc: Arr) -> EllStable {
+   |            ^^^
+
+warning: unneeded `return` statement
+   --> src/ell_calc.rs:191:13
+    |
+191 |             return ell.calc_ll_core(b0, b1);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: remove `return`: `ell.calc_ll_core(b0, b1)`
+    |
+    = note: `#[warn(clippy::needless_return)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: unneeded `return` statement
+   --> src/ell_calc.rs:193:13
+    |
+193 |             return ell.calc_dc(b0);
+    |             ^^^^^^^^^^^^^^^^^^^^^^^ help: remove `return`: `ell.calc_dc(b0)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_return
+
+warning: redundant clone
+  --> src/ell_stable.rs:83:32
+   |
+83 |         let mut inv_ml_g = grad.clone(); // initial x0
+   |                                ^^^^^^^^ help: remove this
+   |
+   = note: `#[warn(clippy::redundant_clone)]` on by default
+note: this value is dropped without further use
+  --> src/ell_stable.rs:83:28
+   |
+83 |         let mut inv_ml_g = grad.clone(); // initial x0
+   |                            ^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: `ellalgo-rs` (bin "ellalgo-rs") generated 9 warnings
+    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
