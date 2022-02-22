@@ -1,53 +1,52 @@
-/* -*- coding: utf-8 -*- */
-#include <doctest/doctest.h>  // for ResultBuilder, TestCase, CHECK
+use super::cutting_plane::OracleFeas;
+use ndarray::prelude::*;
 
-#include <ellalgo/cutting_plane.hpp>    // for cutting_plane_feas
-#include <ellalgo/ell_stable.hpp>       // for ell_stable
-#include <tuple>                        // for get, tuple
-#include <xtensor/xaccessible.hpp>      // for xconst_accessible
-#include <xtensor/xlayout.hpp>          // for layout_type, layout_type::row...
-#include <xtensor/xtensor_forward.hpp>  // for xarray
+type Arr = Array1<f64>;
 
-#include "ellalgo/cut_config.hpp"  // for CInfo
-// #include <optional>
+#[derive(Debug)]
+struct MyOracle {}
 
-using Arr = xt::xarray<double, xt::layout_type::row_major>;
-using Cut = std::tuple<Arr, double>;
+impl OracleFeas for MyOracle {
+    type CutChoices = f64;
 
-/**
- * @brief
- *
- * @param[in] z
- * @return std::optional<Cut>
- */
-auto my_oracle2(const Arr& z) -> Cut* {
-    static auto cut1 = Cut{Arr{1.0, 1.0}, 0.0};
-    static auto cut2 = Cut{Arr{-1.0, 1.0}, 0.0};
+    /**
+     * @brief
+     *
+     * @param[in] z
+     * @return std::optional<Cut>
+     */
+    fn asset_feas(&mut self, z: &Arr) -> Option<(Arr, f64)> {
+        let x = z[0];
+        let y = z[1];
 
-    auto x = z[0];
-    auto y = z[1];
-
-    // constraint 1: x + y <= 3
-    auto fj = x + y - 3.0;
-    if (fj > 0.0) {
-        std::get<1>(cut1) = fj;
-        return &cut1;
+        // constraint 1: x + y <= 3
+        let fj = x + y - 3.0;
+        if fj > 0.0 {
+            return Some((array![1.0, 1.0], fj));
+        }
+        // constraint 2: x - y >= 1
+        let fj = -x + y + 1.0;
+        if fj > 0.0 {
+            return Some((array![-1.0, 1.0], fj));
+        }
+        return None;
     }
-
-    // constraint 2: x - y >= 1
-    fj = -x + y + 1.0;
-    if (fj > 0.0) {
-        std::get<1>(cut2) = fj;
-        return &cut2;
-    }
-
-    return nullptr;
 }
 
-TEST_CASE("Example 2") {
-    ell_stable E{10.0, Arr{0.0, 0.0}};
+mod tests {
+    use super::*;
+    use ndarray::array;
+    use crate::cutting_plane::{cutting_plane_feas, Options};
+    use crate::ell::Ell;
 
-    const auto P = my_oracle2;
-    auto ell_info = cutting_plane_feas(P, E);
-    CHECK(ell_info.feasible);
+    // use super::ell_stable::EllStable;
+
+    #[test]
+    pub fn test_example2() {
+        let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut oracle = MyOracle {};
+        let options = Options { max_it: 2000, tol: 1e-12};
+        let (feasible, _niter, _status) = cutting_plane_feas(&mut oracle, &mut ell, &options);
+        assert!(feasible); 
+    }
 }

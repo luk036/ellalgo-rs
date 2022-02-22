@@ -122,7 +122,7 @@ pub fn calc_cc(&mut self, tau: f64) {
 /**
  * @brief Update ellipsoid core function using the cut
  *
- *        grad' * (x - xc) + beta <= 0
+ *        grad^T * (x - xc) + beta <= 0
  *
  * @tparam T
  * @param[in] cut

@@ -62,15 +62,15 @@ pub struct profit_oracle {
  *
  *    This example is taken from [Aliabadi and Salahi, 2013]:
  *
- *        max     p'(A x1^alpha' x2^beta') - v1'*x1 - v2'*x2
- *        s.t.    x1 \le k'
+ *        max     p0(A x1^alpha0 x2^beta0) - v1*x1 - v2*x2
+ *        s.t.    x1 \le k0
  *
  *    where:
- *        alpha' = alpha \pm e1
- *        beta' = beta \pm e2
- *        p' = p \pm e3
- *        k' = k \pm e4
- *        v' = v \pm e5
+ *        alpha0 = alpha \pm e1
+ *        beta0 = beta \pm e2
+ *        p0 = p \pm e3
+ *        k0 = k \pm e4
+ *        v0 = v \pm e5
  *
  * @see profit_oracle
  */

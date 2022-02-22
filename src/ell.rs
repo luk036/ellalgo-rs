@@ -10,7 +10,7 @@ type Arr = Array1<f64>;
 /**
  * @brief Ellipsoid Search Space
  *
- *        Ell = {x | (x - xc)' mq^-1 (x - xc) \le \kappa}
+ *        Ell = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
  *
  * Keep $mq$ symmetric but no promise of positive definite
  */
@@ -55,8 +55,8 @@ impl Ell {
      * @param[in] val
      * @param[in] x
      */
-    pub fn new(val: &Arr, xc: Arr) -> Ell {
-        Ell::new_with_matrix(1.0, Array2::from_diag(val), xc)
+    pub fn new(val: Arr, xc: Arr) -> Ell {
+        Ell::new_with_matrix(1.0, Array2::from_diag(&val), xc)
     }
 
     // /**
@@ -80,7 +80,7 @@ impl SearchSpace for Ell {
     /**
      * @brief Update ellipsoid core function using the cut
      *
-     *        grad' * (x - xc) + beta <= 0
+     *        grad^T * (x - xc) + beta <= 0
      *
      * @tparam T
      * @param[in] cut

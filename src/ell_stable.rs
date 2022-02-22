@@ -10,7 +10,7 @@ type Arr = Array1<f64>;
 /**
  * @brief Ellipsoid Search Space
  *
- *        EllStable = {x | (x - xc)' mq^-1 (x - xc) \le \kappa}
+ *        EllStable = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
  *
  * Keep $mq$ symmetric but no promise of positive definite
  */
@@ -55,8 +55,8 @@ impl EllStable {
      * @param[in] val
      * @param[in] x
      */
-    pub fn new(val: &Arr, xc: Arr) -> EllStable {
-        EllStable::new_with_matrix(1.0, Array2::from_diag(val), xc)
+    pub fn new(val: Arr, xc: Arr) -> EllStable {
+        EllStable::new_with_matrix(1.0, Array2::from_diag(&val), xc)
     }
 
     /**

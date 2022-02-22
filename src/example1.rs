@@ -1,5 +1,4 @@
 use super::cutting_plane::OracleOptim;
-use super::ell_stable::EllStable;
 use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
@@ -8,6 +7,8 @@ type Arr = Array1<f64>;
 pub struct MyOracle {}
 
 impl OracleOptim for MyOracle {
+    type CutChoices = f64;
+
     /**
      * @brief
      *
@@ -43,47 +44,50 @@ impl OracleOptim for MyOracle {
 mod tests {
     use super::*;
     use ndarray::array;
+    use crate::cutting_plane::{cutting_plane_optim, Options, CutStatus};
+    use crate::ell::Ell;
+    // use super::ell_stable::EllStable;
 
     #[test]
     pub fn test_feasible() {
-        let mut ell = EllStable::new_wtih_scalar(10.0, array![0.0, 0.0]);
-        let oracle = MyOracle {};
-        let mut t = -1.e100;  // std::numeric_limits<double>::min()
-        let (x_opt, _niter, _status) = cutting_plane_optim(&oracle, &mut ell, &mut t);
+        let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut oracle = MyOracle {};
+        let mut t = -1.0e100; // std::numeric_limits<double>::min()
+        let options = Options { max_it: 2000, tol: 1e-10 };
+        let (x_opt, _niter, _status) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
         if let Some(x) = x_opt {
             assert!(x[0] >= 0.0);
-        }
-        else {
+        } else {
             assert!(false); // not feasible
         }
     }
 
     #[test]
     pub fn test_infeasible1() {
-        let mut ell = EllStable::new_wtih_scalar(10.0, array![100.0, 100.0]);  // wrong initial guess
-                                             // or ellipsoid is too small
-        let oracle = MyOracle {};
-        let t = -1.e100;  // std::numeric_limits<double>::min()
-        let (x_opt, _niter, status) = cutting_plane_optim(&oracle, &mut ell, &mut t);
+        let mut ell = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
+                                                                              // or ellipsoid is too small
+        let mut oracle = MyOracle {};
+        let mut t = -1.0e100; // std::numeric_limits<double>::min()
+        let options = Options { max_it: 2000, tol: 1e-12 };
+        let (x_opt, _niter, status) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
         if let Some(_x) = x_opt {
             assert!(false);
-        }
-        else {
-            assert_eq!(status, CutStatus::NoSoln);  // no sol'n
+        } else {
+            assert_eq!(status, CutStatus::NoSoln); // no sol'n
         }
     }
 
     #[test]
     pub fn test_infeasible2() {
-        let mut ell = EllStable::new_wtih_scalar(10.0, array![0.0, 0.0]);
+        let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
         // wrong initial guess
-        let (x_opt, _niter, status) = cutting_plane_optim(&oracle, &mut ell, &mut 100);
+        let options = Options { max_it: 2000, tol: 1e-12 };
+        let (x_opt, _niter, status) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100.0, &options);
         if let Some(_x) = x_opt {
             assert!(false);
-        }
-        else {
-            assert_eq!(status, CutStatus::NoSoln);  // no sol'n
+        } else {
+            assert_eq!(status, CutStatus::NoSoln); // no sol'n
         }
     }
 }

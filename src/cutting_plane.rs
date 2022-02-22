@@ -25,15 +25,23 @@ pub enum CutStatus {
 }
 
 pub trait OracleFeas {
-    fn asset_feas<T>(&mut self, x: &Arr) -> Option<(Arr, T)>;
+    type CutChoices;
+    fn asset_feas(&mut self, x: &Arr) -> Option<(Arr, Self::CutChoices)>;
 }
 
 pub trait OracleOptim {
-    fn asset_optim<T>(&mut self, x: &Arr, t: &mut f64) -> ((Arr, T), bool);
+    type CutChoices;
+    fn asset_optim(&mut self, x: &Arr, t: &mut f64) -> ((Arr, Self::CutChoices), bool);
 }
 
 pub trait OracleQ {
-    fn asset_q<T>(&mut self, x: &Arr, t: &mut f64, retry: bool) -> ((Arr, T), bool, Arr, bool);
+    type CutChoices;
+    fn asset_q(
+        &mut self,
+        x: &Arr,
+        t: &mut f64,
+        retry: bool,
+    ) -> ((Arr, Self::CutChoices), bool, Arr, bool);
 }
 
 pub trait OracleBS {
@@ -49,9 +57,9 @@ pub trait SearchSpace {
  * @brief Find a point in a convex set (defined through a cutting-plane oracle).
  *
  *     A function f(x) is *convex* if there always exist a g(x)
- *     such that f(z) >= f(x) + g(x)' * (z - x), forall z, x in dom f.
+ *     such that f(z) >= f(x) + g(x)^T * (z - x), forall z, x in dom f.
  *     Note that dom f does not need to be a convex set in our definition.
- *     The affine function g' (x - xc) + beta is called a cutting-plane,
+ *     The affine function g^T (x - xc) + beta is called a cutting-plane,
  *     or a ``cut'' for short.
  *     This algorithm solves the following feasibility problem:
  *
@@ -76,7 +84,7 @@ pub fn cutting_plane_feas<T, Oracle, Space>(
 ) -> CInfo
 where
     T: UpdateByCutChoices,
-    Oracle: OracleFeas,
+    Oracle: OracleFeas<CutChoices = T>,
     Space: SearchSpace,
 {
     let mut feasible = false;
@@ -85,7 +93,7 @@ where
     let mut niter = 0;
     while niter < options.max_it {
         niter += 1;
-        let cut_option = omega.asset_feas::<T>(&ss.xc()); // query the oracle at &ss.xc()
+        let cut_option = omega.asset_feas(&ss.xc()); // query the oracle at &ss.xc()
         if let Some(cut) = cut_option {
             // feasible sol'n obtained
             let (cutstatus, tsq) = ss.update::<T>(cut); // update ss
@@ -128,7 +136,7 @@ pub fn cutting_plane_optim<T, Oracle, Space>(
 ) -> (Option<Arr>, usize, CutStatus)
 where
     T: UpdateByCutChoices,
-    Oracle: OracleOptim,
+    Oracle: OracleOptim<CutChoices = T>,
     Space: SearchSpace,
 {
     let mut x_best: Option<Arr> = None;
@@ -137,7 +145,7 @@ where
     let mut niter = 0;
     while niter < options.max_it {
         niter += 1;
-        let (cut, shrunk) = omega.asset_optim::<T>(&ss.xc(), t); // query the oracle at &ss.xc()
+        let (cut, shrunk) = omega.asset_optim(&ss.xc(), t); // query the oracle at &ss.xc()
         if shrunk {
             // best t obtained
             x_best = Some(ss.xc());
@@ -190,7 +198,7 @@ pub fn cutting_plane_q<T, Oracle, Space>(
 ) -> (Option<Arr>, usize, CutStatus)
 where
     T: UpdateByCutChoices,
-    Oracle: OracleQ,
+    Oracle: OracleQ<CutChoices = T>,
     Space: SearchSpace,
 {
     let mut x_best: Option<Arr> = None;
@@ -201,7 +209,7 @@ where
     while niter < options.max_it {
         niter += 1;
 
-        let (cut, shrunk, x0, more_alt) = omega.asset_q::<T>(&ss.xc(), t, retry); // query the oracle at &ss.xc()
+        let (cut, shrunk, x0, more_alt) = omega.asset_q(&ss.xc(), t, retry); // query the oracle at &ss.xc()
         if shrunk {
             // best t obtained
             x_best = Some(x0); // x0
