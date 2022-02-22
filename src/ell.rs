@@ -10,7 +10,7 @@ type Arr = Array1<f64>;
 /**
  * @brief Ellipsoid Search Space
  *
- *        Ell = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
+ *  Ell = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
  *
  * Keep $mq$ symmetric but no promise of positive definite
  */
@@ -80,7 +80,7 @@ impl SearchSpace for Ell {
     /**
      * @brief Update ellipsoid core function using the cut
      *
-     *        grad^T * (x - xc) + beta <= 0
+     *  $grad^T * (x - xc) + beta <= 0$
      *
      * @tparam T
      * @param[in] cut

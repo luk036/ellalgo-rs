@@ -1,11 +1,11 @@
 use super::ell_calc::UpdateByCutChoices;
 use ndarray::prelude::*;
 
-pub type Arr = Array1<f64>;
-pub type CInfo = (bool, usize, CutStatus);
+type Arr = Array1<f64>;
+type CInfo = (bool, usize, CutStatus);
 
 pub struct Options {
-    pub max_it: usize,
+    pub max_iter: usize,
     pub tol: f64,
 }
 
@@ -24,18 +24,23 @@ pub enum CutStatus {
     SmallEnough,
 }
 
+/// TODO: support 1D problems
+
+/// Oracle for feasibility problems
 pub trait OracleFeas {
-    type CutChoices;
+    type CutChoices; // f64: single cut; (f64, Option<f64): parallel cut
     fn asset_feas(&mut self, x: &Arr) -> Option<(Arr, Self::CutChoices)>;
 }
 
+/// Oracle for optimization problems
 pub trait OracleOptim {
-    type CutChoices;
+    type CutChoices; // f64: single cut; (f64, Option<f64): parallel cut
     fn asset_optim(&mut self, x: &Arr, t: &mut f64) -> ((Arr, Self::CutChoices), bool);
 }
 
+/// Oracle for quantized optimization problems
 pub trait OracleQ {
-    type CutChoices;
+    type CutChoices; // f64: single cut; (f64, Option<f64): parallel cut
     fn asset_q(
         &mut self,
         x: &Arr,
@@ -44,6 +49,7 @@ pub trait OracleQ {
     ) -> ((Arr, Self::CutChoices), bool, Arr, bool);
 }
 
+/// Oracle for binary search
 pub trait OracleBS {
     fn asset_bs(&mut self, t: f64) -> bool;
 }
@@ -56,23 +62,23 @@ pub trait SearchSpace {
 /**
  * @brief Find a point in a convex set (defined through a cutting-plane oracle).
  *
- *     A function f(x) is *convex* if there always exist a g(x)
- *     such that f(z) >= f(x) + g(x)^T * (z - x), forall z, x in dom f.
- *     Note that dom f does not need to be a convex set in our definition.
- *     The affine function g^T (x - xc) + beta is called a cutting-plane,
- *     or a ``cut'' for short.
- *     This algorithm solves the following feasibility problem:
+ * A function f(x) is *convex* if there always exist a g(x)
+ * such that f(z) >= f(x) + g(x)^T * (z - x), forall z, x in dom f.
+ * Note that dom f does not need to be a convex set in our definition.
+ * The affine function g^T (x - xc) + beta is called a cutting-plane,
+ * or a "cut" for short.
+ * This algorithm solves the following feasibility problem:
  *
- *             find x
- *             s.t. f(x) <= 0,
+ *   find x
+ *   s.t. f(x) <= 0,
  *
- *     A *separation oracle* asserts that an evalution point x0 is feasible,
- *     or provide a cut that separates the feasible region and x0.
+ * A *separation oracle* asserts that an evalution point x0 is feasible,
+ * or provide a cut that separates the feasible region and x0.
  *
  * @tparam Oracle
  * @tparam Space
  * @param[in,out] omega perform assessment on x0
- * @param[in,out] ss     search Space containing x*
+ * @param[in,out] ss    search Space containing x*
  * @param[in] options   maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
  */
@@ -91,7 +97,7 @@ where
     let mut status = CutStatus::NoSoln;
 
     let mut niter = 0;
-    while niter < options.max_it {
+    while niter < options.max_iter {
         niter += 1;
         let cut_option = omega.asset_feas(&ss.xc()); // query the oracle at &ss.xc()
         if let Some(cut) = cut_option {
@@ -122,7 +128,7 @@ where
  * @tparam Space
  * @tparam opt_type
  * @param[in,out] omega perform assessment on x0
- * @param[in,out] ss     search Space containing x*
+ * @param[in,out] ss    search Space containing x*
  * @param[in,out] t     best-so-far optimal sol'n
  * @param[in] options   maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
@@ -143,7 +149,7 @@ where
     let mut status = CutStatus::NoSoln;
 
     let mut niter = 0;
-    while niter < options.max_it {
+    while niter < options.max_iter {
         niter += 1;
         let (cut, shrunk) = omega.asset_optim(&ss.xc(), t); // query the oracle at &ss.xc()
         if shrunk {
@@ -169,13 +175,13 @@ where
     Cutting-plane method for solving convex discrete optimization problem
     input
              oracle        perform assessment on x0
-             ss(xc)         Search space containing x*
+             ss(xc)        Search space containing x*
              t             best-so-far optimal sol'n
-             max_it        maximum number of iterations
+             max_iter      maximum number of iterations
              tol           error tolerance
     output
              x             solution vector
-             niter          number of iterations performed
+             niter         number of iterations performed
 **/
 
 /**
@@ -206,7 +212,7 @@ where
     let mut retry = false;
 
     let mut niter = 0;
-    while niter < options.max_it {
+    while niter < options.max_iter {
         niter += 1;
 
         let (cut, shrunk, x0, more_alt) = omega.asset_q(&ss.xc(), t, retry); // query the oracle at &ss.xc()
@@ -261,7 +267,7 @@ where
     let mut status = CutStatus::NoSoln;
 
     let mut niter = 0;
-    while niter < options.max_it {
+    while niter < options.max_iter {
         niter += 1;
         let tau = (upper - lower) / 2.0;
         if tau < options.tol {

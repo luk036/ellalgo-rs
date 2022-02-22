@@ -7,7 +7,7 @@ type Arr = Array1<f64>;
 pub struct MyOracle {}
 
 impl OracleOptim for MyOracle {
-    type CutChoices = f64;
+    type CutChoices = f64; // single cut
 
     /**
      * @brief
@@ -53,7 +53,7 @@ mod tests {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
         let mut t = -1.0e100; // std::numeric_limits<double>::min()
-        let options = Options { max_it: 2000, tol: 1e-10 };
+        let options = Options { max_iter: 2000, tol: 1e-10 };
         let (x_opt, _niter, _status) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
         if let Some(x) = x_opt {
             assert!(x[0] >= 0.0);
@@ -68,7 +68,7 @@ mod tests {
                                                                               // or ellipsoid is too small
         let mut oracle = MyOracle {};
         let mut t = -1.0e100; // std::numeric_limits<double>::min()
-        let options = Options { max_it: 2000, tol: 1e-12 };
+        let options = Options { max_iter: 2000, tol: 1e-12 };
         let (x_opt, _niter, status) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
         if let Some(_x) = x_opt {
             assert!(false);
@@ -82,7 +82,7 @@ mod tests {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
         // wrong initial guess
-        let options = Options { max_it: 2000, tol: 1e-12 };
+        let options = Options { max_iter: 2000, tol: 1e-12 };
         let (x_opt, _niter, status) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100.0, &options);
         if let Some(_x) = x_opt {
             assert!(false);

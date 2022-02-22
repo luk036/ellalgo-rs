@@ -10,7 +10,7 @@ type Arr = Array1<f64>;
 /**
  * @brief Ellipsoid Search Space
  *
- *        EllStable = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
+ *  EllStable = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
  *
  * Keep $mq$ symmetric but no promise of positive definite
  */

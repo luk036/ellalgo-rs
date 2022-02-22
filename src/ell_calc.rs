@@ -4,7 +4,7 @@ use crate::cutting_plane::CutStatus;
 /**
  * @brief Ellipsoid Search Space
  *
- *        EllCalc = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
+ *  EllCalc = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
  *
  * Keep $mq$ symmetric but no promise of positive definite
  */
