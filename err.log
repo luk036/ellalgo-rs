@@ -1,0 +1,63 @@
+    Checking ellalgo-rs v0.1.0 (/home/lubuntu/Documents/github/ellalgo-rs)
+warning: unused import: `super::ell_stable::EllStable`
+ --> src/example1.rs:2:5
+  |
+2 | use super::ell_stable::EllStable;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `super::*`
+  --> src/example1.rs:44:9
+   |
+44 |     use super::*;
+   |         ^^^^^^^^
+
+warning: unused import: `ndarray::array`
+  --> src/example1.rs:45:9
+   |
+45 |     use ndarray::array;
+   |         ^^^^^^^^^^^^^^
+
+error[E0049]: method `asset_optim` has 0 type parameters but its trait declaration has 1 type parameter
+  --> src/example1.rs:18:19
+   |
+18 |     fn asset_optim(&mut self, z: &Arr, t: &mut f64) -> ((Arr, f64), bool) {
+   |                   ^ found 0 type parameters
+   |
+  ::: src/cutting_plane.rs:32:20
+   |
+32 |     fn asset_optim<T>(&mut self, x: &Arr, t: &mut f64) -> ((Arr, T), bool);
+   |                    - expected 1 type parameter
+
+error[E0369]: cannot subtract `f64` from `&mut f64`
+  --> src/example1.rs:34:20
+   |
+34 |         let fj = t - f0;
+   |                  - ^ -- f64
+   |                  |
+   |                  &mut f64
+   |
+help: `-` can be used on `f64`, you can dereference `t`
+   |
+34 |         let fj = *t - f0;
+   |                  +
+
+error[E0308]: mismatched types
+  --> src/example1.rs:36:17
+   |
+18 |     fn asset_optim(&mut self, z: &Arr, t: &mut f64) -> ((Arr, f64), bool) {
+   |                                           -------- expected due to this parameter type
+...
+36 |             t = f0;
+   |                 ^^ expected `&mut f64`, found `f64`
+   |
+help: consider dereferencing here to assign to the mutable borrowed piece of memory
+   |
+36 |             *t = f0;
+   |             +
+
+Some errors have detailed explanations: E0049, E0308, E0369.
+For more information about an error, try `rustc --explain E0049`.
+warning: `ellalgo-rs` (lib) generated 3 warnings
+error: could not compile `ellalgo-rs` due to 3 previous errors; 3 warnings emitted

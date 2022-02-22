@@ -1,11 +1,11 @@
-use crate::ell_calc::UpdateByCutChoices;
+use super::ell_calc::UpdateByCutChoices;
 use ndarray::prelude::*;
 
 pub type Arr = Array1<f64>;
-pub type CInfo = (bool, u32, CutStatus);
+pub type CInfo = (bool, usize, CutStatus);
 
 pub struct Options {
-    pub max_it: u32,
+    pub max_it: usize,
     pub tol: f64,
 }
 
@@ -16,7 +16,6 @@ pub enum CutChoices {
     Parallel(f64, Option<f64>),
 }
 */
-
 #[derive(Debug, PartialEq, Eq)]
 pub enum CutStatus {
     Success,
@@ -126,7 +125,7 @@ pub fn cutting_plane_optim<T, Oracle, Space>(
     ss: &mut Space,
     t: &mut f64,
     options: &Options,
-) -> (Option<Arr>, u32, CutStatus)
+) -> (Option<Arr>, usize, CutStatus)
 where
     T: UpdateByCutChoices,
     Oracle: OracleOptim,
@@ -188,7 +187,7 @@ pub fn cutting_plane_q<T, Oracle, Space>(
     ss: &mut Space,
     t: &mut f64,
     options: &Options,
-) -> (Option<Arr>, u32, CutStatus)
+) -> (Option<Arr>, usize, CutStatus)
 where
     T: UpdateByCutChoices,
     Oracle: OracleQ,

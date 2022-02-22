@@ -1,6 +1,6 @@
 // mod cutting_plane;
-use crate::cutting_plane::{CutStatus, SearchSpace};
-use crate::ell_calc::{EllCalc, UpdateByCutChoices};
+use super::cutting_plane::{CutStatus, SearchSpace};
+use super::ell_calc::{EllCalc, UpdateByCutChoices};
 // #[macro_use]
 // extern crate ndarray;
 use ndarray::prelude::*;
@@ -57,6 +57,16 @@ impl EllStable {
      */
     pub fn new(val: &Arr, xc: Arr) -> EllStable {
         EllStable::new_with_matrix(1.0, Array2::from_diag(val), xc)
+    }
+
+    /**
+     * @brief Construct a new EllStable object
+     *
+     * @param[in] val
+     * @param[in] x
+     */
+    pub fn new_with_scalar(val: f64, xc: Arr) -> EllStable {
+        EllStable::new_with_matrix(val, Array2::eye(xc.len()), xc)
     }
 
     // /**
