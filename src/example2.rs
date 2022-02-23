@@ -7,6 +7,7 @@ type Arr = Array1<f64>;
 struct MyOracle {}
 
 impl OracleFeas for MyOracle {
+    type ArrayType = Arr;
     type CutChoices = f64;
 
     /**

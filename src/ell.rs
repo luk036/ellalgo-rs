@@ -68,6 +68,8 @@ impl Ell {
 }
 
 impl SearchSpace for Ell {
+    type ArrayType = Arr;
+
     /**
      * @brief copy the whole array anyway
      *

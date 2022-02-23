@@ -78,6 +78,8 @@ impl EllStable {
 }
 
 impl SearchSpace for EllStable {
+    type ArrayType = Arr;
+
     /**
      * @brief copy the whole array anyway
      *

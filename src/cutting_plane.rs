@@ -1,7 +1,7 @@
 use super::ell_calc::UpdateByCutChoices;
-use ndarray::prelude::*;
+// use ndarray::prelude::*;
+// type Arr = Array1<f64>;
 
-type Arr = Array1<f64>;
 type CInfo = (bool, usize, CutStatus);
 
 pub struct Options {
@@ -28,25 +28,28 @@ pub enum CutStatus {
 
 /// Oracle for feasibility problems
 pub trait OracleFeas {
-    type CutChoices; // f64: single cut; (f64, Option<f64): parallel cut
-    fn asset_feas(&mut self, x: &Arr) -> Option<(Arr, Self::CutChoices)>;
+    type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
+    type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
+    fn asset_feas(&mut self, x: &Self::ArrayType) -> Option<(Self::ArrayType, Self::CutChoices)>;
 }
 
 /// Oracle for optimization problems
 pub trait OracleOptim {
-    type CutChoices; // f64: single cut; (f64, Option<f64): parallel cut
-    fn asset_optim(&mut self, x: &Arr, t: &mut f64) -> ((Arr, Self::CutChoices), bool);
+    type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
+    type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
+    fn asset_optim(&mut self, x: &Self::ArrayType, t: &mut f64) -> ((Self::ArrayType, Self::CutChoices), bool);
 }
 
 /// Oracle for quantized optimization problems
 pub trait OracleQ {
-    type CutChoices; // f64: single cut; (f64, Option<f64): parallel cut
+    type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
+    type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
     fn asset_q(
         &mut self,
-        x: &Arr,
+        x: &Self::ArrayType,
         t: &mut f64,
         retry: bool,
-    ) -> ((Arr, Self::CutChoices), bool, Arr, bool);
+    ) -> ((Self::ArrayType, Self::CutChoices), bool, Self::ArrayType, bool);
 }
 
 /// Oracle for binary search
@@ -55,8 +58,9 @@ pub trait OracleBS {
 }
 
 pub trait SearchSpace {
-    fn xc(&self) -> Arr;
-    fn update<T: UpdateByCutChoices>(&mut self, cut: (Arr, T)) -> (CutStatus, f64);
+    type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
+    fn xc(&self) -> Self::ArrayType;
+    fn update<T: UpdateByCutChoices>(&mut self, cut: (Self::ArrayType, T)) -> (CutStatus, f64);
 }
 
 /**
@@ -83,15 +87,15 @@ pub trait SearchSpace {
  * @return Information of Cutting-plane method
  */
 #[allow(dead_code)]
-pub fn cutting_plane_feas<T, Oracle, Space>(
+pub fn cutting_plane_feas<D, T, Oracle, Space>(
     omega: &mut Oracle,
     ss: &mut Space,
     options: &Options,
 ) -> CInfo
 where
     T: UpdateByCutChoices,
-    Oracle: OracleFeas<CutChoices = T>,
-    Space: SearchSpace,
+    Oracle: OracleFeas<ArrayType = D, CutChoices = T>,
+    Space: SearchSpace<ArrayType = D>,
 {
     let mut feasible = false;
     let mut status = CutStatus::NoSoln;
@@ -134,18 +138,18 @@ where
  * @return Information of Cutting-plane method
  */
 #[allow(dead_code)]
-pub fn cutting_plane_optim<T, Oracle, Space>(
+pub fn cutting_plane_optim<D, T, Oracle, Space>(
     omega: &mut Oracle,
     ss: &mut Space,
     t: &mut f64,
     options: &Options,
-) -> (Option<Arr>, usize, CutStatus)
+) -> (Option<D>, usize, CutStatus)
 where
     T: UpdateByCutChoices,
-    Oracle: OracleOptim<CutChoices = T>,
-    Space: SearchSpace,
+    Oracle: OracleOptim<ArrayType = D, CutChoices = T>,
+    Space: SearchSpace<ArrayType = D>,
 {
-    let mut x_best: Option<Arr> = None;
+    let mut x_best: Option<D> = None;
     let mut status = CutStatus::NoSoln;
 
     let mut niter = 0;
@@ -196,18 +200,18 @@ where
  * @return Information of Cutting-plane method
  */
 #[allow(dead_code)]
-pub fn cutting_plane_q<T, Oracle, Space>(
+pub fn cutting_plane_q<D, T, Oracle, Space>(
     omega: &mut Oracle,
     ss: &mut Space,
     t: &mut f64,
     options: &Options,
-) -> (Option<Arr>, usize, CutStatus)
+) -> (Option<D>, usize, CutStatus)
 where
     T: UpdateByCutChoices,
-    Oracle: OracleQ<CutChoices = T>,
-    Space: SearchSpace,
+    Oracle: OracleQ<ArrayType = D, CutChoices = T>,
+    Space: SearchSpace<ArrayType = D>,
 {
-    let mut x_best: Option<Arr> = None;
+    let mut x_best: Option<D> = None;
     let mut status = CutStatus::NoSoln; // note!!!
     let mut retry = false;
 
