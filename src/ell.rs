@@ -191,7 +191,7 @@ impl SearchSpace for Ell {
 
     fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> (CutStatus, f64)
     where
-        T: UpdateByCutChoices<Ell, SS = Self, ArrayType = Self::ArrayType>,
+        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
         beta.update_by(self, grad)
@@ -199,21 +199,19 @@ impl SearchSpace for Ell {
 }
 
 impl UpdateByCutChoices<Ell> for f64 {
-    type SS = Ell;
     type ArrayType = Arr;
 
-    fn update_by(&self, ell: &mut Self::SS, grad: &Self::ArrayType) -> (CutStatus, f64) {
+    fn update_by(&self, ell: &mut Ell, grad: &Self::ArrayType) -> (CutStatus, f64) {
         let beta = self;
-        ell.update_single(grad, &beta)
+        ell.update_single(grad, beta)
     }
 }
 
 impl UpdateByCutChoices<Ell> for (f64, Option<f64>) {
-    type SS = Ell;
     type ArrayType = Arr;
 
-    fn update_by(&self, ell: &mut Self::SS, grad: &Self::ArrayType) -> (CutStatus, f64) {
+    fn update_by(&self, ell: &mut Ell, grad: &Self::ArrayType) -> (CutStatus, f64) {
         let beta = self;
-        ell.update_parallel(grad, &beta)
+        ell.update_parallel(grad, beta)
     }
 }

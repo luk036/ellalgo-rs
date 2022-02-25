@@ -25,11 +25,10 @@ pub enum CutStatus {
 
 /// TODO: support 1D problems
 
-pub trait UpdateByCutChoices<T> {
-    type SS; // what search space is?
+pub trait UpdateByCutChoices<SS> {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
 
-    fn update_by(&self, ss: &mut T, grad: &Self::ArrayType) -> (CutStatus, f64);
+    fn update_by(&self, ss: &mut SS, grad: &Self::ArrayType) -> (CutStatus, f64);
 }
 
 /// Oracle for feasibility problems
@@ -77,7 +76,7 @@ pub trait SearchSpace {
     fn xc(&self) -> Self::ArrayType;
     fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> (CutStatus, f64)
     where
-        T: UpdateByCutChoices<Self, SS = Self, ArrayType = Self::ArrayType>,
+        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
         Self: Sized;
 }
 
@@ -111,7 +110,7 @@ pub fn cutting_plane_feas<D, T, Oracle, Space>(
     options: &Options,
 ) -> CInfo
 where
-    T: UpdateByCutChoices<Space, SS = Space, ArrayType = D>,
+    T: UpdateByCutChoices<Space, ArrayType = D>,
     Oracle: OracleFeas<ArrayType = D, CutChoices = T>,
     Space: SearchSpace<ArrayType = D>,
 {
@@ -163,7 +162,7 @@ pub fn cutting_plane_optim<D, T, Oracle, Space>(
     options: &Options,
 ) -> (Option<D>, usize, CutStatus)
 where
-    T: UpdateByCutChoices<Space, SS = Space, ArrayType = D>,
+    T: UpdateByCutChoices<Space, ArrayType = D>,
     Oracle: OracleOptim<ArrayType = D, CutChoices = T>,
     Space: SearchSpace<ArrayType = D>,
 {
@@ -225,7 +224,7 @@ pub fn cutting_plane_q<D, T, Oracle, Space>(
     options: &Options,
 ) -> (Option<D>, usize, CutStatus)
 where
-    T: UpdateByCutChoices<Space, SS = Space, ArrayType = D>,
+    T: UpdateByCutChoices<Space, ArrayType = D>,
     Oracle: OracleQ<ArrayType = D, CutChoices = T>,
     Space: SearchSpace<ArrayType = D>,
 {
