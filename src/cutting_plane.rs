@@ -1,4 +1,3 @@
-use super::ell_calc::UpdateByCutChoices;
 // use ndarray::prelude::*;
 // type Arr = Array1<f64>;
 
@@ -26,6 +25,13 @@ pub enum CutStatus {
 
 /// TODO: support 1D problems
 
+pub trait UpdateByCutChoices<T> {
+    type SS; // what search space is?
+    type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
+
+    fn update_by(&self, ss: &mut T, grad: &Self::ArrayType) -> (CutStatus, f64);
+}
+
 /// Oracle for feasibility problems
 pub trait OracleFeas {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
@@ -37,7 +43,11 @@ pub trait OracleFeas {
 pub trait OracleOptim {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
     type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
-    fn asset_optim(&mut self, x: &Self::ArrayType, t: &mut f64) -> ((Self::ArrayType, Self::CutChoices), bool);
+    fn asset_optim(
+        &mut self,
+        x: &Self::ArrayType,
+        t: &mut f64,
+    ) -> ((Self::ArrayType, Self::CutChoices), bool);
 }
 
 /// Oracle for quantized optimization problems
@@ -49,7 +59,12 @@ pub trait OracleQ {
         x: &Self::ArrayType,
         t: &mut f64,
         retry: bool,
-    ) -> ((Self::ArrayType, Self::CutChoices), bool, Self::ArrayType, bool);
+    ) -> (
+        (Self::ArrayType, Self::CutChoices),
+        bool,
+        Self::ArrayType,
+        bool,
+    );
 }
 
 /// Oracle for binary search
@@ -60,7 +75,10 @@ pub trait OracleBS {
 pub trait SearchSpace {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
     fn xc(&self) -> Self::ArrayType;
-    fn update<T: UpdateByCutChoices>(&mut self, cut: (Self::ArrayType, T)) -> (CutStatus, f64);
+    fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> (CutStatus, f64)
+    where
+        T: UpdateByCutChoices<Self, SS = Self, ArrayType = Self::ArrayType>,
+        Self: Sized;
 }
 
 /**
@@ -93,7 +111,7 @@ pub fn cutting_plane_feas<D, T, Oracle, Space>(
     options: &Options,
 ) -> CInfo
 where
-    T: UpdateByCutChoices,
+    T: UpdateByCutChoices<Space, SS = Space, ArrayType = D>,
     Oracle: OracleFeas<ArrayType = D, CutChoices = T>,
     Space: SearchSpace<ArrayType = D>,
 {
@@ -106,7 +124,7 @@ where
         let cut_option = omega.asset_feas(&ss.xc()); // query the oracle at &ss.xc()
         if let Some(cut) = cut_option {
             // feasible sol'n obtained
-            let (cutstatus, tsq) = ss.update::<T>(cut); // update ss
+            let (cutstatus, tsq) = ss.update::<T>(&cut); // update ss
             if cutstatus != CutStatus::Success {
                 status = cutstatus;
                 break;
@@ -145,7 +163,7 @@ pub fn cutting_plane_optim<D, T, Oracle, Space>(
     options: &Options,
 ) -> (Option<D>, usize, CutStatus)
 where
-    T: UpdateByCutChoices,
+    T: UpdateByCutChoices<Space, SS = Space, ArrayType = D>,
     Oracle: OracleOptim<ArrayType = D, CutChoices = T>,
     Space: SearchSpace<ArrayType = D>,
 {
@@ -161,7 +179,7 @@ where
             x_best = Some(ss.xc());
             status = CutStatus::Success;
         }
-        let (cutstatus, tsq) = ss.update::<T>(cut); // update ss
+        let (cutstatus, tsq) = ss.update::<T>(&cut); // update ss
         if cutstatus != CutStatus::Success {
             status = cutstatus;
             break;
@@ -207,7 +225,7 @@ pub fn cutting_plane_q<D, T, Oracle, Space>(
     options: &Options,
 ) -> (Option<D>, usize, CutStatus)
 where
-    T: UpdateByCutChoices,
+    T: UpdateByCutChoices<Space, SS = Space, ArrayType = D>,
     Oracle: OracleQ<ArrayType = D, CutChoices = T>,
     Space: SearchSpace<ArrayType = D>,
 {
@@ -224,7 +242,7 @@ where
             // best t obtained
             x_best = Some(x0); // x0
         }
-        let (cutstatus, tsq) = ss.update::<T>(cut); // update ss
+        let (cutstatus, tsq) = ss.update::<T>(&cut); // update ss
         match &cutstatus {
             CutStatus::NoEffect => {
                 if !more_alt {

@@ -36,9 +36,9 @@ impl OracleFeas for MyOracle {
 
 mod tests {
     use super::*;
-    use ndarray::array;
     use crate::cutting_plane::{cutting_plane_feas, Options};
     use crate::ell::Ell;
+    use ndarray::array;
 
     // use super::ell_stable::EllStable;
 
@@ -46,8 +46,11 @@ mod tests {
     pub fn test_example2() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
-        let options = Options { max_iter: 2000, tol: 1e-12 };
+        let options = Options {
+            max_iter: 2000,
+            tol: 1e-12,
+        };
         let (feasible, _niter, _status) = cutting_plane_feas(&mut oracle, &mut ell, &options);
-        assert!(feasible); 
+        assert!(feasible);
     }
 }

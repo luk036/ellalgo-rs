@@ -1,5 +1,5 @@
 // mod cutting_plane;
-use crate::cutting_plane::CutStatus;
+use crate::cutting_plane::{CutStatus, UpdateByCutChoices};
 
 /**
  * @brief Ellipsoid Search Space
@@ -163,34 +163,12 @@ impl EllCalc {
         self.rho = tau / self.n_plus_1;
         self.delta = self.c1;
     }
-}
 
-pub trait UpdateByCutChoices {
-    fn update_by(self, ell: &mut EllCalc) -> CutStatus;
-}
-
-impl EllCalc {
-    pub fn update<A>(&mut self, args: A) -> CutStatus
-    where
-        A: UpdateByCutChoices,
-    {
-        args.update_by(self)
+    pub fn get_results(&self) -> [f64; 4] {
+        [self.rho, self.sigma, self.delta, self.tsq]
     }
 }
 
-impl UpdateByCutChoices for f64 {
-    fn update_by(self, ell: &mut EllCalc) -> CutStatus {
-        ell.calc_dc(self)
-    }
-}
-
-impl UpdateByCutChoices for (f64, Option<f64>) {
-    fn update_by(self, ell: &mut EllCalc) -> CutStatus {
-        let (b0, b1_opt) = self;
-        if let Some(b1) = b1_opt {
-            ell.calc_ll_core(b0, b1)
-        } else {
-            ell.calc_dc(b0)
-        }
-    }
-}
+// pub trait UpdateByCutChoices {
+//     fn update_by(self, ell: &mut EllCalc) -> CutStatus;
+// }
