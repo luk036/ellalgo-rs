@@ -16,7 +16,7 @@ impl OracleFeas for MyOracle {
      * @param[in] z
      * @return std::optional<Cut>
      */
-    fn asset_feas(&mut self, z: &Arr) -> Option<(Arr, f64)> {
+    fn assess_feas(&mut self, z: &Arr) -> Option<(Arr, f64)> {
         let x = z[0];
         let y = z[1];
 

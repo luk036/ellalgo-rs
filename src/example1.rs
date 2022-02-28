@@ -17,7 +17,7 @@ impl OracleOptim for MyOracle {
      * @param[in,out] t
      * @return std::tuple<Cut, double>
      */
-    fn asset_optim(&mut self, z: &Arr, t: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, z: &Arr, t: &mut f64) -> ((Arr, f64), bool) {
         let x = z[0];
         let y = z[1];
 

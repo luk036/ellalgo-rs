@@ -1,9 +1,6 @@
 use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoices};
 // #[macro_use]
 // extern crate ndarray;
-use ndarray::prelude::*;
-
-type Arr = Array1<f64>;
 
 /**
  * @brief Ellipsoid Method for special 1D case

@@ -54,7 +54,7 @@ pub struct profit_oracle {
      * @param[in,out] t the best-so-far optimal value
      * @return (Cut, f64) Cut and the updated best-so-far value
      */
-    pub fn asset_optim<f64>(const Arr& y, f64& t) const -> (Cut, bool);
+    pub fn assess_optim<f64>(const Arr& y, f64& t) const -> (Cut, bool);
 };
 
 /**
@@ -107,7 +107,7 @@ pub struct profit_rb_oracle {
      *
      * @see cutting_plane_dc
      */
-    pub fn asset_optim<f64>(const Arr& y, f64& t) {
+    pub fn assess_optim<f64>(const Arr& y, f64& t) {
         pub fn a_rb = self.a;
         a_rb[0] += y[0] > 0.0 ? -self.uie[0] : self.uie[0];
         a_rb[1] += y[1] > 0.0 ? -self.uie[1] : self.uie[1];
@@ -166,5 +166,5 @@ pub struct profit_q_oracle {
      *
      * @see cutting_plane_q
      */
-    pub fn asset_optim<f64>(const Arr& y, f64& t, bool retry) -> (Cut, bool, Arr, bool);
+    pub fn assess_optim<f64>(const Arr& y, f64& t, bool retry) -> (Cut, bool, Arr, bool);
 };
