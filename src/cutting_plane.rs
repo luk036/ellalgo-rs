@@ -257,7 +257,7 @@ where
  * @return CInfo
  */
 #[allow(dead_code)]
-pub fn besearch<Oracle>(omega: &mut Oracle, intvl: &mut (f64, f64), options: &Options) -> CInfo
+pub fn bsearch<Oracle>(omega: &mut Oracle, intvl: &mut (f64, f64), options: &Options) -> CInfo
 where
     Oracle: OracleBS,
 {
