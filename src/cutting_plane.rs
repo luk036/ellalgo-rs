@@ -218,7 +218,6 @@ where
     let mut retry = false;
 
     for niter in 1..options.max_iter {
-
         let (cut, shrunk, x0, more_alt) = omega.assess_q(&ss.xc(), t, retry); // query the oracle at &ss.xc()
         if shrunk {
             // best t obtained

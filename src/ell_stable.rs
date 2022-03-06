@@ -80,7 +80,7 @@ impl EllStable {
         // let (grad, beta) = cut;
         // calculate inv(L)*grad: (n-1)*n/2 multiplications
         let mut inv_ml_g = grad.clone(); // initial x0
-        for i in 0..self.n {
+        for i in 1..self.n {
             for j in 0..i {
                 self.mq[[i, j]] = self.mq[[j, i]] * inv_ml_g[j];
                 // keep for rank-one update
@@ -162,7 +162,7 @@ impl EllStable {
         // let (grad, beta) = cut;
         // calculate inv(L)*grad: (n-1)*n/2 multiplications
         let mut inv_ml_g = grad.clone(); // initial x0
-        for i in 0..self.n {
+        for i in 1..self.n {
             for j in 0..i {
                 self.mq[[i, j]] = self.mq[[j, i]] * inv_ml_g[j];
                 // keep for rank-one update

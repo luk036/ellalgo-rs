@@ -33,7 +33,9 @@ impl Ell1D {
      *
      * @param[in] xc
      */
-    fn set_xc(&mut self, xc: f64) { self.xc = xc; }
+    fn set_xc(&mut self, xc: f64) {
+        self.xc = xc;
+    }
 
     /**
      * @brief Update ellipsoid core function using the cut
@@ -57,10 +59,10 @@ impl Ell1D {
             return (CutStatus::Success, tsq);
         }
         if beta > tau {
-            return (CutStatus::NoSoln, tsq);  // no sol'n
+            return (CutStatus::NoSoln, tsq); // no sol'n
         }
         if beta < -tau {
-            return (CutStatus::NoEffect, tsq);  // no effect
+            return (CutStatus::NoEffect, tsq); // no effect
         }
 
         let bound = self.xc - beta / g;
@@ -81,7 +83,9 @@ impl SearchSpace for Ell1D {
      *
      * @return f64
      */
-    fn xc(&self) -> f64 { self.xc }
+    fn xc(&self) -> f64 {
+        self.xc
+    }
 
     fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> (CutStatus, f64)
     where
@@ -109,4 +113,3 @@ impl UpdateByCutChoices<Ell1D> for f64 {
 //         ell.update_parallel(grad, &beta)
 //     }
 // }
-

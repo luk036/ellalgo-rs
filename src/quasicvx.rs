@@ -1,73 +1,87 @@
-// -*- coding: utf-8 -*-
-#include <doctest/doctest.h>  // for ResultBuilder, Approx, CHECK
+use super::cutting_plane::OracleOptim;
+use ndarray::prelude::*;
 
-#include <cmath>                        // for exp
-#include <ellalgo/cutting_plane.hpp>    // for cutting_plane_dc
-#include <ellalgo/ell.hpp>              // for ell
-#include <ellalgo/ell_stable.hpp>       // for ell_stable
-#include <tuple>                        // for get, tuple
-#include <xtensor/xaccessible.hpp>      // for xconst_accessible
-#include <xtensor/xarray.hpp>           // for xarray_container
-#include <xtensor/xlayout.hpp>          // for layout_type, layout_type::row...
-#include <xtensor/xtensor_forward.hpp>  // for xarray
+type Arr = Array1<f64>;
 
-#include "ellalgo/cut_config.hpp"  // for CInfo
+#[derive(Debug)]
+pub struct MyOracle {}
 
-using Arr = xt::xarray<double, xt::layout_type::row_major>;
-using Cut = std::tuple<Arr, double>;
+impl OracleOptim for MyOracle {
+    type ArrayType = Arr;
+    type CutChoices = f64; // single cut
 
-/**
- * @brief
- *
- * @param[in] z
- * @param[in,out] t
- * @return std::tuple<Cut, double>
- */
-auto my_quasicvx_oracle(const Arr& z, double& t) -> std::tuple<Cut, bool> {
-    auto sqrtx = z[0];
-    auto ly = z[1];
+    /**
+     * @brief
+     *
+     * @param[in] z
+     * @param[in,out] t
+     * @return std::tuple<Cut, double>
+     */
+    fn assess_optim(&mut self, z: &Arr, t: &mut f64) -> ((Arr, f64), bool) {
+        let sqrtx = z[0];
+        let ly = z[1];
 
-    // constraint 1: exp(x) <= y, or sqrtx**2 <= ly
-    auto fj = sqrtx * sqrtx - ly;
-    if (fj > 0.0) {
-        return {{Arr{2 * sqrtx, -1.0}, fj}, false};
+        // constraint 1: exp(x) <= y, or sqrtx**2 <= ly
+        let fj = sqrtx * sqrtx - ly;
+        if fj > 0.0 {
+            return ((array![2.0 * sqrtx, -1.0], fj), false);
+        }
+
+        // constraint 2: x - y >= 1
+        let tmp2 = ly.exp();
+        let tmp3 = *t * tmp2;
+        let fj = -sqrtx + tmp3;
+        if fj < 0.0
+        // feasible
+        {
+            *t = sqrtx / tmp2;
+            return ((array![-1.0, sqrtx], 0.0), true);
+        }
+        ((array![-1.0, tmp3], fj), false)
     }
-
-    // constraint 2: x - y >= 1
-    auto tmp2 = std::exp(ly);
-    auto tmp3 = t * tmp2;
-    fj = -sqrtx + tmp3;
-    if (fj < 0.0)  // feasible
-    {
-        t = sqrtx / tmp2;
-        return {{Arr{-1.0, sqrtx}, 0}, true};
-    }
-
-    return {{Arr{-1.0, tmp3}, fj}, false};
 }
 
-TEST_CASE("Quasiconvex 1, test feasible") {
-    ell E{10.0, Arr{0.0, 0.0}};
+mod tests {
+    use super::*;
+    use crate::cutting_plane::{cutting_plane_optim, CutStatus, Options};
+    use crate::ell::Ell;
+    use crate::ell_stable::EllStable;
+    use ndarray::array;
+    // use super::ell_stable::EllStable;
 
-    const auto P = my_quasicvx_oracle;
-    auto t = 0.0;
-    const auto result = cutting_plane_dc(P, E, t);
-    const auto& x = std::get<0>(result);
-    const auto& ell_info = std::get<1>(result);
-    CHECK(ell_info.feasible);
-    CHECK(-t == doctest::Approx(-0.4288673397));
-    CHECK(x[0] * x[0] == doctest::Approx(0.5029823096));
-    CHECK(std::exp(x[1]) == doctest::Approx(1.6536872635));
-}
+    #[test]
+    pub fn test_feasible() {
+        let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut oracle = MyOracle {};
+        let mut t = 0.0;
+        let options = Options {
+            max_iter: 2000,
+            tol: 1e-10,
+        };
+        let (x_opt, _niter, _status) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
+        if let Some(x) = x_opt {
+            assert!(x[0] * x[0] >= 0.49 && x[0] * x[0] <= 0.51);
+            assert!(x[1].exp() >= 1.6 && x[1].exp() <= 1.7);
+        } else {
+            assert!(false); // not feasible
+        }
+    }
 
-TEST_CASE("Quasiconvex 1, test feasible (stable)") {
-    ell_stable E{10.0, Arr{0.0, 0.0}};
-    const auto P = my_quasicvx_oracle;
-    auto t = 0.0;
-    const auto result = cutting_plane_dc(P, E, t);
-    const auto& ell_info = std::get<1>(result);
-    CHECK(ell_info.feasible);
-    // CHECK(-t == doctest::Approx(-0.4288673397));
-    // CHECK(x[0] * x[0] == doctest::Approx(0.5029823096));
-    // CHECK(std::exp(x[1]) == doctest::Approx(1.6536872635));
+    #[test]
+    pub fn test_feasible_stable() {
+        let mut ell = EllStable::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut oracle = MyOracle {};
+        let mut t = 0.0;
+        let options = Options {
+            max_iter: 2000,
+            tol: 1e-10,
+        };
+        let (x_opt, _niter, _status) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
+        if let Some(x) = x_opt {
+            assert!(x[0] * x[0] >= 0.49 && x[0] * x[0] <= 0.51);
+            assert!(x[1].exp() >= 1.6 && x[1].exp() <= 1.7);
+        } else {
+            assert!(false); // not feasible
+        }
+    }
 }
