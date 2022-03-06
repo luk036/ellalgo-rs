@@ -1,4 +1,4 @@
-use super::cutting_plane::OracleFeas;
+use super::lib::OracleFeas;
 use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
@@ -36,7 +36,7 @@ impl OracleFeas for MyOracle {
 
 mod tests {
     use super::*;
-    use crate::cutting_plane::{cutting_plane_feas, Options};
+    use crate::lib::{cutting_plane_feas, Options};
     use crate::ell::Ell;
     use ndarray::array;
 

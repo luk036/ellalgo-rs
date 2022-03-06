@@ -1,4 +1,4 @@
-mod cutting_plane;
+mod lib;
 mod ell;
 mod ell1d;
 mod ell_calc;

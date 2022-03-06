@@ -98,9 +98,9 @@ pub trait SearchSpace {
  *
  * @tparam Oracle
  * @tparam Space
- * @param[in,out] omega perform assessment on x0
- * @param[in,out] ss    search Space containing x*
- * @param[in] options   maximum iteration and error tolerance etc.
+ * @param omega perform assessment on x0
+ * @param ss    search Space containing x*
+ * @param options   maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
  */
 #[allow(dead_code)]
@@ -138,10 +138,10 @@ where
  * @tparam Oracle
  * @tparam Space
  * @tparam opt_type
- * @param[in,out] omega perform assessment on x0
- * @param[in,out] ss    search Space containing x*
- * @param[in,out] t     best-so-far optimal sol'n
- * @param[in] options   maximum iteration and error tolerance etc.
+ * @param omega perform assessment on x0
+ * @param ss    search Space containing x*
+ * @param t     best-so-far optimal sol'n
+ * @param options   maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
  */
 #[allow(dead_code)]
@@ -195,10 +195,10 @@ where
  *
  * @tparam Oracle
  * @tparam Space
- * @param[in,out] omega perform assessment on x0
- * @param[in,out] ss     search Space containing x*
- * @param[in,out] t     best-so-far optimal sol'n
- * @param[in] options   maximum iteration and error tolerance etc.
+ * @param omega perform assessment on x0
+ * @param ss     search Space containing x*
+ * @param t     best-so-far optimal sol'n
+ * @param options   maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
  */
 #[allow(dead_code)]
@@ -250,9 +250,9 @@ where
  *
  * @tparam Oracle
  * @tparam Space
- * @param[in,out] omega    perform assessment on x0
- * @param[in,out] I        interval containing x*
- * @param[in]     options  maximum iteration and error tolerance etc.
+ * @param omega    perform assessment on x0
+ * @param I        interval containing x*
+ * @param     options  maximum iteration and error tolerance etc.
  * @return CInfo
  */
 #[allow(dead_code)]
@@ -304,17 +304,17 @@ where
 //     /**
 //      * @brief Construct a new bsearch adaptor object
 //      *
-//      * @param[in,out] P perform assessment on x0
-//      * @param[in,out] ss search Space containing x*
+//      * @param P perform assessment on x0
+//      * @param ss search Space containing x*
 //      */
 //     bsearch_adaptor(Oracle& P, Space& ss) : bsearch_adaptor{P, ss, Options()} {}
 
 //     /**
 //      * @brief Construct a new bsearch adaptor object
 //      *
-//      * @param[in,out] P perform assessment on x0
-//      * @param[in,out] ss search Space containing x*
-//      * @param[in] options maximum iteration and error tolerance etc.
+//      * @param P perform assessment on x0
+//      * @param ss search Space containing x*
+//      * @param options maximum iteration and error tolerance etc.
 //      */
 //     bsearch_adaptor(Oracle& P, Space& ss, const Options& options)
 //         : _P{P}, _S{ss}, _options{options} {}
@@ -329,7 +329,7 @@ where
 //     /**
 //      * @brief
 //      *
-//      * @param[in,out] t the best-so-far optimal value
+//      * @param t the best-so-far optimal value
 //      * @return bool
 //      */
 //     template <typename opt_type> let mut operator()(const opt_type& t) -> bool {

@@ -1,4 +1,4 @@
-use super::cutting_plane::OracleOptim;
+use super::lib::OracleOptim;
 use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
@@ -43,7 +43,7 @@ impl OracleOptim for MyOracle {
 
 mod tests {
     use super::*;
-    use crate::cutting_plane::{cutting_plane_optim, CutStatus, Options};
+    use crate::lib::{cutting_plane_optim, CutStatus, Options};
     use crate::ell::Ell;
     use crate::ell_stable::EllStable;
     use ndarray::array;

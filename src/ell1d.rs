@@ -1,4 +1,4 @@
-use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoices};
+use crate::lib::{CutStatus, SearchSpace, UpdateByCutChoices};
 // #[macro_use]
 // extern crate ndarray;
 
