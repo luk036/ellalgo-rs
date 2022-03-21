@@ -1,0 +1,36 @@
+    Checking ellalgo-rs v0.1.0 (/home/lubuntu/Documents/github/ellalgo-rs)
+warning: unused import: `UpdateByCutChoices`
+ --> src/ell_calc.rs:2:39
+  |
+2 | use crate::cutting_plane::{CutStatus, UpdateByCutChoices};
+  |                                       ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `super::*`
+  --> src/quasicvx.rs:45:9
+   |
+45 |     use super::*;
+   |         ^^^^^^^^
+
+warning: unused imports: `CutStatus`, `Options`, `cutting_plane_optim`
+  --> src/quasicvx.rs:46:32
+   |
+46 |     use crate::cutting_plane::{cutting_plane_optim, CutStatus, Options};
+   |                                ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^
+
+warning: unused import: `crate::ell::Ell`
+  --> src/quasicvx.rs:47:9
+   |
+47 |     use crate::ell::Ell;
+   |         ^^^^^^^^^^^^^^^
+
+warning: unused import: `ndarray::array`
+  --> src/quasicvx.rs:49:9
+   |
+49 |     use ndarray::array;
+   |         ^^^^^^^^^^^^^^
+
+warning: `ellalgo-rs` (lib) generated 5 warnings
+warning: `ellalgo-rs` (bin "ellalgo-rs") generated 5 warnings (5 duplicates)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.84s

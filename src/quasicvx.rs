@@ -1,4 +1,4 @@
-use super::lib::OracleOptim;
+use super::cutting_plane::OracleOptim;
 use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
@@ -43,9 +43,9 @@ impl OracleOptim for MyOracle {
 
 mod tests {
     use super::*;
-    use crate::lib::{cutting_plane_optim, CutStatus, Options};
+    use crate::cutting_plane::{cutting_plane_optim, CutStatus, Options};
     use crate::ell::Ell;
-    use crate::ell_stable::EllStable;
+    // use crate::ell_stable::EllStable;
     use ndarray::array;
     // use super::ell_stable::EllStable;
 
@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     pub fn test_feasible_stable() {
-        let mut ell = EllStable::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
         let mut t = 0.0;
         let options = Options {

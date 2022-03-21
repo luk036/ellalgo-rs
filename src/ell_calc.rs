@@ -1,5 +1,5 @@
 // mod lib;
-use crate::lib::{CutStatus, UpdateByCutChoices};
+use crate::cutting_plane::CutStatus;
 
 /**
  * @brief Ellipsoid Search Space

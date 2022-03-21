@@ -1,3 +1,4 @@
+use super::lib::OracleOptim;
 use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
@@ -6,29 +7,30 @@ type Cut = (Arr, f64);
 /**
  * @brief Oracle for a profit maximization problem.
  *
- *    This example is taken from [Aliabadi and Salahi, 2013]:
+ *  This example is taken from [Aliabadi and Salahi, 2013]:
  *
- *        max     p(A x1^alpha x2^beta) - v1*x1 - v2*x2
- *        s.t.    x1 \le k
+ *    max     p(A x1^alpha x2^beta) - v1*x1 - v2*x2
+ *    s.t.    x1 \le k
  *
- *    where:
+ *  where:
  *
- *        p(A x1^alpha x2^beta): Cobb-Douglas production function
- *        p: the market price per unit
- *        A: the scale of production
- *        alpha, beta: the output elasticities
- *        x: input quantity
- *        v: output price
- *        k: a given constant that restricts the quantity of x1
+ *    p(A x1^alpha x2^beta): Cobb-Douglas production function
+ *    p: the market price per unit
+ *    A: the scale of production
+ *    alpha, beta: the output elasticities
+ *    x: input quantity
+ *    v: output price
+ *    k: a given constant that restricts the quantity of x1
  */
-pub struct profit_oracle {
-    const f64 _log_pA;
-    const f64 _log_k;
-    const Arr _v;
+#[derive(Debug)]
+pub struct ProfitOracle {
+    log_pA: f64,
+    log_k: f64,
+    v: Arr,
+    a: Arr
+}
 
-  public:
-    Arr _a;
-
+impl ProfitOracle {
     /**
      * @brief Construct a new profit oracle object
      *
@@ -38,23 +40,23 @@ pub struct profit_oracle {
      * @param[in] a the output elasticities
      * @param[in] v output price
      */
-    profit_oracle(f64 p, f64 A, f64 k, const Arr& a, const Arr& v)
+    pub fn new(p: f64, A: f64, k: f64, const Arr& a, const Arr& v)
         : _log_pA{std::log(p * A)}, _log_k{std::log(k)}, _v{v}, _a{a} {}
 
-    /**
-     * @brief Construct a new profit oracle object (only explicitly)
-     *
-     */
-    profit_oracle(const profit_oracle&) = delete;
+}
+
+impl OracleOptim for ProfitOracle {
+    type ArrayType = Arr;
+    type CutChoices = f64; // single cut
 
     /**
      * @brief
      *
-     * @param[in] y input quantity (in log scale)
-     * @param[in,out] t the best-so-far optimal value
-     * @return (Cut, f64) Cut and the updated best-so-far value
+     * @param[in] z
+     * @param[in,out] t
+     * @return std::tuple<Cut, double>
      */
-    pub fn assess_optim<f64>(const Arr& y, f64& t) const -> (Cut, bool);
+    fn assess_optim(&mut self, z: &Arr, t: &mut f64) -> ((Arr, f64), bool) {
 };
 
 /**
@@ -72,15 +74,15 @@ pub struct profit_oracle {
  *        k0 = k \pm e4
  *        v0 = v \pm e5
  *
- * @see profit_oracle
+ * @see ProfitOracle
  */
-pub struct profit_rb_oracle {
+pub struct ProfitOracleRB {
     using Arr = xt::xarray<f64, xt::layout_type::row_major>;
 
   private:
     const Arr _uie;
     Arr _a;
-    profit_oracle _P;
+    ProfitOracle _P;
 
   public:
     /**
@@ -94,7 +96,7 @@ pub struct profit_rb_oracle {
      * @param[in] e paramters for uncertainty
      * @param[in] e3 paramters for uncertainty
      */
-    profit_rb_oracle(f64 p, f64 A, f64 k, const Arr& a, const Arr& v, const Arr& e,
+    ProfitOracleRB(p: f64, A: f64, k: f64, const Arr& a, const Arr& v, const Arr& e,
                      f64 e3)
         : _uie{e}, _a{a}, _P(p - e3, A, k - e3, a, v + e3) {}
 
@@ -134,14 +136,14 @@ pub struct profit_rb_oracle {
  *        v: output price
  *        k: a given constant that restricts the quantity of x1
  *
- * @see profit_oracle
+ * @see ProfitOracle
  */
-pub struct profit_q_oracle {
+pub struct ProfitOracleQ {
     using Arr = xt::xarray<f64, xt::layout_type::row_major>;
     using Cut = (Arr, f64);
 
   private:
-    profit_oracle _P;
+    ProfitOracle _P;
     Arr _yd;
 
   public:
@@ -154,7 +156,7 @@ pub struct profit_q_oracle {
      * @param[in] a the output elasticities
      * @param[in] v output price
      */
-    profit_q_oracle(f64 p, f64 A, f64 k, const Arr& a, const Arr& v) : _P{p, A, k, a, v} {}
+    ProfitOracleQ(p: f64, A: f64, k: f64, const Arr& a, const Arr& v) : _P{p, A, k, a, v} {}
 
     /**
      * @brief Make object callable for cutting_plane_q()

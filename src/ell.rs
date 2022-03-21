@@ -1,5 +1,5 @@
 // mod lib;
-use crate::lib::{CutStatus, SearchSpace, UpdateByCutChoices};
+use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoices};
 use crate::ell_calc::EllCalc;
 // #[macro_use]
 // extern crate ndarray;
