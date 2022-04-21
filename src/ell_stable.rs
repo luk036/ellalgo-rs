@@ -76,6 +76,8 @@ impl EllStable {
     //  */
     // pub fn set_xc(&mut self, xc: Arr) { self.xc = xc; }
 
+    // Reference: Gill, Murray, and Wright, "Practical Optimization", p43.
+    // Author: Brian Borchers (borchers@nmt.edu)
     fn update_single(&mut self, grad: &Array1<f64>, beta: &f64) -> (CutStatus, f64) {
         // let (grad, beta) = cut;
         // calculate inv(L)*grad: (n-1)*n/2 multiplications

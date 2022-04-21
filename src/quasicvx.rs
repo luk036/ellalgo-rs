@@ -27,13 +27,11 @@ impl OracleOptim for MyOracle {
             return ((array![2.0 * sqrtx, -1.0], fj), false);
         }
 
-        // constraint 2: x - y >= 1
+        // objective: minimize -sqrt(x) / y
         let tmp2 = ly.exp();
         let tmp3 = *t * tmp2;
         let fj = -sqrtx + tmp3;
-        if fj < 0.0
-        // feasible
-        {
+        if fj < 0.0 { // feasible
             *t = sqrtx / tmp2;
             return ((array![-1.0, sqrtx], 0.0), true);
         }
