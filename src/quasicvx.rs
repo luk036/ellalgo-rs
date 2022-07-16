@@ -31,7 +31,8 @@ impl OracleOptim for MyOracle {
         let tmp2 = ly.exp();
         let tmp3 = *t * tmp2;
         let fj = -sqrtx + tmp3;
-        if fj < 0.0 { // feasible
+        if fj < 0.0 {
+            // feasible
             *t = sqrtx / tmp2;
             return ((array![-1.0, sqrtx], 0.0), true);
         }
