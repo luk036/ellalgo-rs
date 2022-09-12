@@ -41,11 +41,9 @@ impl OracleOptim for MyOracle {
 }
 
 mod tests {
-    use super::*;
-    use crate::cutting_plane::{cutting_plane_optim, CutStatus, Options};
-    use crate::ell::Ell;
+
     // use crate::ell_stable::EllStable;
-    use ndarray::array;
+
     // use super::ell_stable::EllStable;
 
     #[test]
