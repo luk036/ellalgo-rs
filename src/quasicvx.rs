@@ -41,10 +41,10 @@ impl OracleOptim for MyOracle {
 }
 
 mod tests {
-
-    // use crate::ell_stable::EllStable;
-
-    // use super::ell_stable::EllStable;
+    use super::MyOracle;
+    use crate::cutting_plane::{cutting_plane_optim, Options};
+    use crate::ell::Ell;
+    use ndarray::array;
 
     #[test]
     pub fn test_feasible() {

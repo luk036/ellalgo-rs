@@ -1,24 +1,15 @@
-// use ndarray::prelude::*;
-// type Arr = Array1<f64>;
-
-pub struct Options {
-    pub max_iter: usize,
-    pub tol: f64,
-}
-
-/*
-#[derive(Debug, Clone, Copy)]
-pub enum CutChoices {
-    Single(f64),
-    Parallel(f64, Option<f64>),
-}
-*/
 #[derive(Debug, PartialEq, Eq)]
 pub enum CutStatus {
     Success,
     NoSoln,
     NoEffect,
     SmallEnough,
+    Unknown,
+}
+
+pub struct Options {
+    pub max_iter: usize,
+    pub tol: f64,
 }
 
 type CInfo = (bool, usize, CutStatus);
@@ -114,19 +105,17 @@ where
     Oracle: OracleFeas<CutChoices = T>,
     Space: SearchSpace<ArrayType = Oracle::ArrayType>,
 {
-    for niter in 1..options.max_iter {
-        let cut_option = omega.assess_feas(&ss.xc()); // query the oracle at &ss.xc()
-        if let Some(cut) = cut_option {
-            // feasible sol'n obtained
-            let (cutstatus, tsq) = ss.update::<T>(&cut); // update ss
-            if cutstatus != CutStatus::Success {
-                return (false, niter, cutstatus);
-            }
-            if tsq < options.tol {
-                return (false, niter, CutStatus::SmallEnough);
-            }
-        } else {
+    for niter in 0..options.max_iter {
+        let cut = omega.assess_feas(&ss.xc()); // query the oracle at &ss.xc()
+        if cut.is_none() { // feasible sol'n obtained
             return (true, niter, CutStatus::Success);
+        }
+        let (cutstatus, tsq) = ss.update::<T>(&cut.unwrap()); // update ss
+        if cutstatus != CutStatus::Success {
+            return (false, niter, cutstatus);
+        }
+        if tsq < options.tol {
+            return (false, niter, CutStatus::SmallEnough);
         }
     }
     (false, options.max_iter, CutStatus::NoSoln)
@@ -159,7 +148,7 @@ where
     let mut x_best: Option<Oracle::ArrayType> = None;
     let mut status = CutStatus::NoSoln;
 
-    for niter in 1..options.max_iter {
+    for niter in 0..options.max_iter {
         let (cut, shrunk) = omega.assess_optim(&ss.xc(), t); // query the oracle at &ss.xc()
         if shrunk {
             // best t obtained
