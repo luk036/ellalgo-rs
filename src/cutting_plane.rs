@@ -32,7 +32,7 @@ pub trait OracleFeas {
 /// Oracle for optimization problems
 pub trait OracleOptim {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
-    type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
+    type CutChoices; // f64 for single cut; (f64, Option<f64>) for parallel cut
     fn assess_optim(
         &mut self,
         x: &Self::ArrayType,
@@ -107,7 +107,8 @@ where
 {
     for niter in 0..options.max_iter {
         let cut = omega.assess_feas(&ss.xc()); // query the oracle at &ss.xc()
-        if cut.is_none() { // feasible sol'n obtained
+        if cut.is_none() {
+            // feasible sol'n obtained
             return (true, niter, CutStatus::Success);
         }
         let (cutstatus, tsq) = ss.update::<T>(&cut.unwrap()); // update ss
@@ -203,23 +204,23 @@ where
     Space: SearchSpace<ArrayType = Oracle::ArrayType>,
 {
     let mut x_best: Option<Oracle::ArrayType> = None;
-    let mut status = CutStatus::NoSoln; // note!!!
+    // let mut status = CutStatus::NoSoln; // note!!!
     let mut retry = false;
 
-    for niter in 1..options.max_iter {
+    for niter in 0..options.max_iter {
         let (cut, shrunk, x0, more_alt) = omega.assess_q(&ss.xc(), t, retry); // query the oracle at &ss.xc()
         if shrunk {
             // best t obtained
             x_best = Some(x0); // x0
         }
-        let (cutstatus, tsq) = ss.update::<T>(&cut); // update ss
-        match &cutstatus {
+        let (status, tsq) = ss.update::<T>(&cut); // update ss
+        match &status {
             CutStatus::NoEffect => {
                 if !more_alt {
                     // more alt?
                     return (x_best, niter, status);
                 }
-                status = cutstatus;
+                // status = cutstatus;
                 retry = true;
             }
             CutStatus::NoSoln => {
@@ -231,7 +232,7 @@ where
             return (x_best, niter, CutStatus::SmallEnough);
         }
     }
-    (x_best, options.max_iter, status)
+    (x_best, options.max_iter, CutStatus::Success)
 } // END
 
 /**
@@ -254,15 +255,11 @@ where
     let &mut (mut lower, mut upper) = intvl;
     assert!(lower <= upper);
     let u_orig = upper;
-    let mut status = CutStatus::NoSoln;
 
-    let mut niter = 0;
-    while niter < options.max_iter {
-        niter += 1;
+    for niter in 0..options.max_iter {
         let tau = (upper - lower) / 2.0;
         if tau < options.tol {
-            status = CutStatus::SmallEnough;
-            break;
+            return (upper != u_orig, niter, CutStatus::SmallEnough);
         }
         let mut t = lower; // l may be `i32` or `Fraction`
         t += tau;
@@ -273,7 +270,7 @@ where
             lower = t;
         }
     }
-    (upper != u_orig, niter, status)
+    (upper != u_orig, options.max_iter, CutStatus::Unknown)
 }
 
 // /**
