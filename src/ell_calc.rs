@@ -172,3 +172,103 @@ impl EllCalc {
 // pub trait UpdateByCutChoices {
 //     fn update_by(self, ell: &mut EllCalc) -> CutStatus;
 // }
+mod tests {
+    use super::*;
+    use approx_eq::assert_approx_eq;
+
+    #[test]
+    pub fn test_construct() {
+        let mut ell_calc = EllCalc::new(4.0);
+        assert_eq!(ell_calc.use_parallel_cut, true);
+        assert_eq!(ell_calc.n_f, 4.0);
+        assert_eq!(ell_calc.half_n, 2.0);
+        assert_approx_eq!(ell_calc.cst0, 0.2);
+        assert_approx_eq!(ell_calc.cst1, 16.0 / 15.0);
+        assert_approx_eq!(ell_calc.cst2, 0.4);
+        assert_approx_eq!(ell_calc.cst3, 0.8);
+    }
+
+
+    #[test]
+    pub fn test_calc_cc() {
+        let mut ell_calc = EllCalc::new(4.0);
+        ell_calc.calc_cc(0.1);
+        assert_approx_eq!(ell_calc.sigma, 0.4);
+        assert_approx_eq!(ell_calc.rho, 0.02);
+        assert_approx_eq!(ell_calc.delta, 16.0 / 15.0);
+    }
+
+
+    #[test]
+    pub fn test_calc_dc() {
+        let mut ell_calc = EllCalc::new(4.0);
+        let status = ell_calc.calc_dc(0.11, 0.1);
+        assert_eq!(status, CutStatus.NoSoln);
+        let status = ell_calc.calc_dc(0.0, 0.1);
+        assert_eq!(status, CutStatus.Success);
+        let status = ell_calc.calc_dc(-0.05, 0.1);
+        assert_eq!(status, CutStatus.NoEffect);
+
+        let ell_calc.tsq = 0.01;
+        let status = ell_calc.calc_dc(0.05, 0.1);
+        assert_eq!(status, CutStatus.Success);
+        assert_approx_eq!(ell_calc.sigma, 0.8);
+        assert_approx_eq!(ell_calc.rho, 0.06);
+        assert_approx_eq!(ell_calc.delta, 0.8);
+    }
+
+
+    #[test]
+    pub fn test_calc_ll_cc() {
+        let mut ell_calc = EllCalc::new(4.0);
+        let ell_calc.tsq = 0.01;
+        let status = ell_calc.calc_ll_cc(0.11);
+        assert_eq!(status, CutStatus.Success);
+        // Central cut
+        assert_approx_eq!(ell_calc.sigma, 0.4);
+        assert_approx_eq!(ell_calc.rho, 0.02);
+        assert_approx_eq!(ell_calc.delta, 16.0 / 15.0);
+
+        let status = ell_calc.calc_ll_cc(0.05);
+        assert_eq!(status, CutStatus.Success);
+        assert_approx_eq!(ell_calc.sigma, 0.8);
+        assert_approx_eq!(ell_calc.rho, 0.02);
+        assert_approx_eq!(ell_calc.delta, 1.2);
+    }
+
+
+    #[test]
+    pub fn test_calc_ll() {
+        let mut ell_calc = EllCalc::new(4.0);
+        let ell_calc.tsq = 0.01;
+        let status = ell_calc.calc_ll(0.07, 0.03);
+        assert_eq!(status, CutStatus.NoSoln);
+
+        let status = ell_calc.calc_ll(0.0, 0.05);
+        assert_eq!(status, CutStatus.Success);
+        assert_approx_eq!(ell_calc.sigma, 0.8);
+        assert_approx_eq!(ell_calc.rho, 0.02);
+        assert_approx_eq!(ell_calc.delta, 1.2);
+
+        let status = ell_calc.calc_ll(0.05, 0.11);
+        assert_eq!(status, CutStatus.Success);
+        assert_approx_eq!(ell_calc.sigma, 0.8);
+        assert_approx_eq!(ell_calc.rho, 0.06);
+        assert_approx_eq!(ell_calc.delta, 0.8);
+
+        let status = ell_calc.calc_ll(-0.07, 0.07);
+        assert_eq!(status, CutStatus.NoEffect);
+
+        let status = ell_calc.calc_ll(0.01, 0.04);
+        assert_eq!(status, CutStatus.Success);
+        assert_approx_eq!(ell_calc.sigma, 0.8);
+        assert_approx_eq!(ell_calc.rho, 0.02);
+        assert_approx_eq!(ell_calc.delta, 1.232);
+
+        let status = ell_calc.calc_ll(-0.04, 0.0625);
+        assert_eq!(status, CutStatus.Success);
+        assert_approx_eq!(ell_calc.sigma, 3.950617283950619);
+        assert_approx_eq!(ell_calc.rho, 0.04444444444444446);
+        assert_approx_eq!(ell_calc.delta, 1.0);
+    }
+}

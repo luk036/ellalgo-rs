@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 ndarray = "0.15.4"
+
+[dev-dependencies]
+approx_eq = "0.1.8"
