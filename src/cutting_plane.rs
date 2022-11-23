@@ -18,7 +18,6 @@ type CInfo = (bool, usize, CutStatus);
 
 pub trait UpdateByCutChoices<SS> {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
-
     fn update_by(&self, ss: &mut SS, grad: &Self::ArrayType) -> (CutStatus, f64);
 }
 
@@ -97,7 +96,7 @@ pub trait SearchSpace {
 #[allow(dead_code)]
 pub fn cutting_plane_feas<T, Oracle, Space>(
     omega: &mut Oracle,
-    ss: &mut Space,
+    space: &mut Space,
     options: &Options,
 ) -> CInfo
 where
@@ -106,12 +105,12 @@ where
     Space: SearchSpace<ArrayType = Oracle::ArrayType>,
 {
     for niter in 0..options.max_iter {
-        let cut = omega.assess_feas(&ss.xc()); // query the oracle at &ss.xc()
+        let cut = omega.assess_feas(&space.xc()); // query the oracle at &space.xc()
         if cut.is_none() {
             // feasible sol'n obtained
             return (true, niter, CutStatus::Success);
         }
-        let (cutstatus, tsq) = ss.update::<T>(&cut.unwrap()); // update ss
+        let (cutstatus, tsq) = space.update::<T>(&cut.unwrap()); // update space
         if cutstatus != CutStatus::Success {
             return (false, niter, cutstatus);
         }
@@ -137,7 +136,7 @@ where
 #[allow(dead_code)]
 pub fn cutting_plane_optim<T, Oracle, Space>(
     omega: &mut Oracle,
-    ss: &mut Space,
+    space: &mut Space,
     t: &mut f64,
     options: &Options,
 ) -> (Option<Oracle::ArrayType>, usize, CutStatus)
@@ -150,13 +149,13 @@ where
     let mut status = CutStatus::NoSoln;
 
     for niter in 0..options.max_iter {
-        let (cut, shrunk) = omega.assess_optim(&ss.xc(), t); // query the oracle at &ss.xc()
+        let (cut, shrunk) = omega.assess_optim(&space.xc(), t); // query the oracle at &space.xc()
         if shrunk {
             // best t obtained
-            x_best = Some(ss.xc());
+            x_best = Some(space.xc());
             status = CutStatus::Success;
         }
-        let (cutstatus, tsq) = ss.update::<T>(&cut); // update ss
+        let (cutstatus, tsq) = space.update::<T>(&cut); // update ss
         if cutstatus != CutStatus::Success {
             return (x_best, niter, cutstatus);
         }
@@ -194,7 +193,7 @@ where
 #[allow(dead_code)]
 pub fn cutting_plane_q<T, Oracle, Space>(
     omega: &mut Oracle,
-    ss: &mut Space,
+    space: &mut Space,
     t: &mut f64,
     options: &Options,
 ) -> (Option<Oracle::ArrayType>, usize, CutStatus)
@@ -208,12 +207,12 @@ where
     let mut retry = false;
 
     for niter in 0..options.max_iter {
-        let (cut, shrunk, x0, more_alt) = omega.assess_q(&ss.xc(), t, retry); // query the oracle at &ss.xc()
+        let (cut, shrunk, x0, more_alt) = omega.assess_q(&space.xc(), t, retry); // query the oracle at &space.xc()
         if shrunk {
             // best t obtained
             x_best = Some(x0); // x0
         }
-        let (status, tsq) = ss.update::<T>(&cut); // update ss
+        let (status, tsq) = space.update::<T>(&cut); // update space
         match &status {
             CutStatus::NoEffect => {
                 if !more_alt {

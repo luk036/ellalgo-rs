@@ -46,7 +46,7 @@ mod tests {
     use super::*;
     use crate::cutting_plane::{cutting_plane_optim, CutStatus, Options};
     use crate::ell::Ell;
-    use ndarray::array;
+    // use ndarray::array;
     // use super::ell_stable::EllStable;
 
     #[test]

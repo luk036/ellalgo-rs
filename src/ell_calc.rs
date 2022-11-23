@@ -101,7 +101,7 @@ impl EllCalc {
         let bav = bsum / 2.0;
         let tempn = self.half_n * bsumn * bdiff;
         let xi = (t0n * t1n + tempn * tempn).sqrt();
-        self.sigma = self.cst3 + (1.0 - b0b1n - xi) / (bsumn * bav) / self.n_plus_1;
+        self.sigma = self.cst3 + (1.0 + b0b1n - xi) / (bsumn * bav) / self.n_plus_1;
         self.rho = self.sigma * bav;
         self.delta = self.cst1 * ((t0n + t1n) / 2.0 + xi / self.n_f);
         CutStatus::Success
@@ -268,14 +268,14 @@ mod tests {
 
         let status = ell_calc.calc_ll_core(0.01, 0.04);
         assert_eq!(status, CutStatus::Success);
-        assert_approx_eq!(ell_calc.sigma, 0.8);
-        assert_approx_eq!(ell_calc.rho, 0.02);
+        assert_approx_eq!(ell_calc.sigma, 0.928);
+        assert_approx_eq!(ell_calc.rho, 0.0232);
         assert_approx_eq!(ell_calc.delta, 1.232);
 
         let status = ell_calc.calc_ll_core(-0.04, 0.0625);
         assert_eq!(status, CutStatus::Success);
-        assert_approx_eq!(ell_calc.sigma, 3.950617283950619);
-        assert_approx_eq!(ell_calc.rho, 0.04444444444444446);
+        assert_approx_eq!(ell_calc.sigma, 0.0);
+        assert_approx_eq!(ell_calc.rho, 0.0);
         assert_approx_eq!(ell_calc.delta, 1.0);
     }
 }
