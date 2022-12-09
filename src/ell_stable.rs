@@ -97,11 +97,11 @@ impl EllStable {
         }
 
         // calculate omega: n
-        let mut g_mq_g = inv_md_inv_ml_g.clone(); // initially
+        let mut gg_t = inv_md_inv_ml_g.clone(); // initially
         let mut omega = 0.0; // initially
         for i in 0..self.n {
-            g_mq_g[i] *= inv_ml_g[i];
-            omega += g_mq_g[i];
+            gg_t[i] *= inv_ml_g[i];
+            omega += gg_t[i];
         }
 
         self.helper.tsq = self.kappa * omega;
@@ -111,16 +111,16 @@ impl EllStable {
         }
 
         // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad : (n-1)*n/2
-        let mut mq_g = inv_md_inv_ml_g.clone(); // initially
+        let mut g_t = inv_md_inv_ml_g.clone(); // initially
         for i in (1..self.n).rev() {
             // backward subsituition
             for j in i..self.n {
-                mq_g[i - 1] -= self.mq[[i, j]] * mq_g[j]; // ???
+                g_t[i - 1] -= self.mq[[i - 1, j]] * g_t[j]; // ???
             }
         }
 
         // calculate xc: n
-        self.xc -= &((self.helper.rho / omega) * &mq_g); // n
+        self.xc -= &((self.helper.rho / omega) * &g_t); // n
 
         // rank-one update: 3*n + (n-1)*n/2
         // let r = self.sigma / omega;
@@ -131,7 +131,7 @@ impl EllStable {
             // p=sqrt(k)*vv[j];
             // let p = inv_ml_g[j];
             // let mup = mu * p;
-            let t = oldt + g_mq_g[j];
+            let t = oldt + gg_t[j];
             // self.mq[[j, j]] /= t; // update invD
             let beta2 = inv_md_inv_ml_g[j] / t;
             self.mq[[j, j]] *= oldt / t; // update invD
@@ -144,7 +144,7 @@ impl EllStable {
 
         // let p = inv_ml_g(n1);
         // let mup = mu * p;
-        let t = oldt + g_mq_g[m];
+        let t = oldt + gg_t[m];
         self.mq[[m, m]] *= oldt / t; // update invD
         self.kappa *= self.helper.delta;
 
@@ -179,11 +179,11 @@ impl EllStable {
         }
 
         // calculate omega: n
-        let mut g_mq_g = inv_md_inv_ml_g.clone(); // initially
+        let mut gg_t = inv_md_inv_ml_g.clone(); // initially
         let mut omega = 0.0; // initially
         for i in 0..self.n {
-            g_mq_g[i] *= inv_ml_g[i];
-            omega += g_mq_g[i];
+            gg_t[i] *= inv_ml_g[i];
+            omega += gg_t[i];
         }
 
         self.helper.tsq = self.kappa * omega;
@@ -198,16 +198,16 @@ impl EllStable {
         }
 
         // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad : (n-1)*n/2
-        let mut mq_g = inv_md_inv_ml_g.clone(); // initially
+        let mut g_t = inv_md_inv_ml_g.clone(); // initially
         for i in (1..self.n).rev() {
             // backward subsituition
             for j in i..self.n {
-                mq_g[i - 1] -= self.mq[[i, j]] * mq_g[j]; // ???
+                g_t[i - 1] -= self.mq[[i - 1, j]] * g_t[j]; // ???
             }
         }
 
         // calculate xc: n
-        self.xc -= &((self.helper.rho / omega) * &mq_g); // n
+        self.xc -= &((self.helper.rho / omega) * &g_t); // n
 
         // rank-one update: 3*n + (n-1)*n/2
         // let r = self.sigma / omega;
@@ -215,11 +215,7 @@ impl EllStable {
         let mut oldt = omega / mu; // initially
         let m = self.n - 1;
         for j in 0..m {
-            // p=sqrt(k)*vv[j];
-            // let p = inv_ml_g[j];
-            // let mup = mu * p;
-            let t = oldt + g_mq_g[j];
-            // self.mq[[j, j]] /= t; // update invD
+            let t = oldt + gg_t[j];
             let beta2 = inv_md_inv_ml_g[j] / t;
             self.mq[[j, j]] *= oldt / t; // update invD
             for l in (j + 1)..self.n {
@@ -231,7 +227,7 @@ impl EllStable {
 
         // let p = inv_ml_g(n1);
         // let mup = mu * p;
-        let t = oldt + g_mq_g[m];
+        let t = oldt + gg_t[m];
         self.mq[[m, m]] *= oldt / t; // update invD
         self.kappa *= self.helper.delta;
 
