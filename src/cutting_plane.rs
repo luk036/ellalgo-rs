@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum CutStatus {
     Success,
