@@ -20,7 +20,7 @@ type CInfo = (bool, usize, CutStatus);
 
 pub trait UpdateByCutChoices<SS> {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
-    fn update_by(&self, ss: &mut SS, grad: &Self::ArrayType) -> (CutStatus, f64);
+    fn update_by(&self, space: &mut SS, grad: &Self::ArrayType) -> (CutStatus, f64);
 }
 
 /// Oracle for feasibility problems
@@ -37,7 +37,7 @@ pub trait OracleOptim {
     fn assess_optim(
         &mut self,
         x: &Self::ArrayType,
-        t: &mut f64,
+        target: &mut f64,
     ) -> ((Self::ArrayType, Self::CutChoices), bool);
 }
 
@@ -48,7 +48,7 @@ pub trait OracleQ {
     fn assess_q(
         &mut self,
         x: &Self::ArrayType,
-        t: &mut f64,
+        target: &mut f64,
         retry: bool,
     ) -> (
         (Self::ArrayType, Self::CutChoices),
@@ -60,7 +60,7 @@ pub trait OracleQ {
 
 /// Oracle for binary search
 pub trait OracleBS {
-    fn assess_bs(&mut self, t: f64) -> bool;
+    fn assess_bs(&mut self, target: f64) -> bool;
 }
 
 pub trait SearchSpace {
@@ -91,8 +91,8 @@ pub trait SearchSpace {
  * @tparam Oracle
  * @tparam Space
  * @param omega perform assessment on x0
- * @param ss    search Space containing x*
- * @param options   maximum iteration and error tolerance etc.
+ * @param space search Space containing x*
+ * @param options maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
  */
 #[allow(dead_code)]
@@ -130,16 +130,16 @@ where
  * @tparam Space
  * @tparam opt_type
  * @param omega perform assessment on x0
- * @param ss    search Space containing x*
- * @param t     best-so-far optimal sol'n
- * @param options   maximum iteration and error tolerance etc.
+ * @param space search Space containing x*
+ * @param target best-so-far optimal sol'n
+ * @param options maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
  */
 #[allow(dead_code)]
 pub fn cutting_plane_optim<T, Oracle, Space>(
     omega: &mut Oracle,
     space: &mut Space,
-    t: &mut f64,
+    target: &mut f64,
     options: &Options,
 ) -> (Option<Oracle::ArrayType>, usize, CutStatus)
 where
@@ -151,13 +151,13 @@ where
     let mut status = CutStatus::NoSoln;
 
     for niter in 0..options.max_iter {
-        let (cut, shrunk) = omega.assess_optim(&space.xc(), t); // query the oracle at &space.xc()
+        let (cut, shrunk) = omega.assess_optim(&space.xc(), target); // query the oracle at &space.xc()
         if shrunk {
-            // best t obtained
+            // best target obtained
             x_best = Some(space.xc());
             status = CutStatus::Success;
         }
-        let (cutstatus, tsq) = space.update::<T>(&cut); // update ss
+        let (cutstatus, tsq) = space.update::<T>(&cut); // update space
         if cutstatus != CutStatus::Success {
             return (x_best, niter, cutstatus);
         }
@@ -169,34 +169,21 @@ where
 } // END
 
 /**
-    Cutting-plane method for solving convex discrete optimization problem
-    input
-             oracle        perform assessment on x0
-             ss(xc)        Search space containing x*
-             t             best-so-far optimal sol'n
-             max_iter      maximum number of iterations
-             tol           error tolerance
-    output
-             x             solution vector
-             niter         number of iterations performed
-**/
-
-/**
  * @brief Cutting-plane method for solving convex discrete optimization problem
  *
  * @tparam Oracle
  * @tparam Space
  * @param omega perform assessment on x0
- * @param ss     search Space containing x*
- * @param t     best-so-far optimal sol'n
- * @param options   maximum iteration and error tolerance etc.
+ * @param space search Space containing x*
+ * @param target best-so-far optimal sol'n
+ * @param options maximum iteration and error tolerance etc.
  * @return Information of Cutting-plane method
  */
 #[allow(dead_code)]
 pub fn cutting_plane_q<T, Oracle, Space>(
     omega: &mut Oracle,
     space: &mut Space,
-    t: &mut f64,
+    target: &mut f64,
     options: &Options,
 ) -> (Option<Oracle::ArrayType>, usize, CutStatus)
 where
@@ -209,9 +196,9 @@ where
     let mut retry = false;
 
     for niter in 0..options.max_iter {
-        let (cut, shrunk, x0, more_alt) = omega.assess_q(&space.xc(), t, retry); // query the oracle at &space.xc()
+        let (cut, shrunk, x0, more_alt) = omega.assess_q(&space.xc(), target, retry); // query the oracle at &space.xc()
         if shrunk {
-            // best t obtained
+            // best target obtained
             x_best = Some(x0); // x0
         }
         let (status, tsq) = space.update::<T>(&cut); // update space
@@ -262,13 +249,13 @@ where
         if tau < options.tol {
             return (upper != u_orig, niter, CutStatus::SmallEnough);
         }
-        let mut t = lower; // l may be `i32` or `Fraction`
-        t += tau;
-        if omega.assess_bs(t) {
+        let mut target = lower; // l may be `i32` or `Fraction`
+        target += tau;
+        if omega.assess_bs(target) {
             // feasible sol'n obtained
-            upper = t;
+            upper = target;
         } else {
-            lower = t;
+            lower = target;
         }
     }
     (upper != u_orig, options.max_iter, CutStatus::Unknown)
@@ -283,7 +270,7 @@ where
 // template <typename Oracle, typename Space>  //
 // class bsearch_adaptor {
 //   private:
-//     Oracle& _P;
+//     Oracle& _omega;
 //     Space& _S;
 //     const Options _options;
 
@@ -291,40 +278,40 @@ where
 //     /**
 //      * @brief Construct a new bsearch adaptor object
 //      *
-//      * @param P perform assessment on x0
-//      * @param ss search Space containing x*
+//      * @param omega perform assessment on x0
+//      * @param space search Space containing x*
 //      */
-//     bsearch_adaptor(Oracle& P, Space& ss) : bsearch_adaptor{P, ss, Options()} {}
+//     bsearch_adaptor(Oracle& omega, Space& space) : bsearch_adaptor{omega, space, Options()} {}
 
 //     /**
 //      * @brief Construct a new bsearch adaptor object
 //      *
-//      * @param P perform assessment on x0
-//      * @param ss search Space containing x*
+//      * @param omega perform assessment on x0
+//      * @param space search Space containing x*
 //      * @param options maximum iteration and error tolerance etc.
 //      */
-//     bsearch_adaptor(Oracle& P, Space& ss, const Options& options)
-//         : _P{P}, _S{ss}, _options{options} {}
+//     bsearch_adaptor(Oracle& omega, Space& space, const Options& options)
+//         : _omega{omega}, _S{space}, _options{options} {}
 
 //     /**
 //      * @brief get best x
 //      *
 //      * @return auto
 //      */
-//     let mut x_best() const { return self.&ss.xc(); }
+//     let mut x_best() const { return self.&space.xc(); }
 
 //     /**
 //      * @brief
 //      *
-//      * @param t the best-so-far optimal value
+//      * @param target the best-so-far optimal value
 //      * @return bool
 //      */
-//     template <typename opt_type> let mut operator()(const opt_type& t) -> bool {
-//         Space ss = self.ss.copy();
-//         self.P.update(t);
-//         let ell_info = cutting_plane_feas(self.P, ss, self.options);
+//     template <typename opt_type> let mut operator()(const opt_type& target) -> bool {
+//         Space space = self.space.copy();
+//         self.omega.update(target);
+//         let ell_info = cutting_plane_feas(self.omega, space, self.options);
 //         if ell_info.feasible {
-//             self.ss.set_xc(&ss.xc());
+//             self.space.set_xc(&space.xc());
 //         }
 //         return ell_info.feasible;
 //     }
