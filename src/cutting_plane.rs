@@ -14,7 +14,7 @@ pub struct Options {
     pub tol: f64,
 }
 
-type CInfo = (bool, usize, CutStatus);
+type CInfo = (bool, usize);
 
 /// TODO: support 1D problems
 
@@ -110,17 +110,14 @@ where
         let cut = omega.assess_feas(&space.xc()); // query the oracle at &space.xc()
         if cut.is_none() {
             // feasible sol'n obtained
-            return (true, niter, CutStatus::Success);
+            return (true, niter);
         }
         let (cutstatus, tsq) = space.update::<T>(&cut.unwrap()); // update space
-        if cutstatus != CutStatus::Success {
-            return (false, niter, cutstatus);
-        }
-        if tsq < options.tol {
-            return (false, niter, CutStatus::SmallEnough);
+        if cutstatus != CutStatus::Success || tsq < options.tol {
+            return (false, niter);
         }
     }
-    (false, options.max_iter, CutStatus::NoSoln)
+    (false, options.max_iter)
 }
 
 /**
@@ -141,31 +138,29 @@ pub fn cutting_plane_optim<T, Oracle, Space>(
     space: &mut Space,
     target: &mut f64,
     options: &Options,
-) -> (Option<Oracle::ArrayType>, usize, CutStatus)
+) -> (Option<Oracle::ArrayType>, usize)
 where
     T: UpdateByCutChoices<Space, ArrayType = Oracle::ArrayType>,
     Oracle: OracleOptim<CutChoices = T>,
     Space: SearchSpace<ArrayType = Oracle::ArrayType>,
 {
     let mut x_best: Option<Oracle::ArrayType> = None;
-    let mut status = CutStatus::NoSoln;
 
     for niter in 0..options.max_iter {
         let (cut, shrunk) = omega.assess_optim(&space.xc(), target); // query the oracle at &space.xc()
         if shrunk {
             // best target obtained
             x_best = Some(space.xc());
-            status = CutStatus::Success;
         }
         let (cutstatus, tsq) = space.update::<T>(&cut); // update space
         if cutstatus != CutStatus::Success {
-            return (x_best, niter, cutstatus);
+            return (x_best, niter);
         }
         if tsq < options.tol {
-            return (x_best, niter, CutStatus::SmallEnough);
+            return (x_best, niter);
         }
     }
-    (x_best, options.max_iter, status)
+    (x_best, options.max_iter)
 } // END
 
 /**
@@ -185,7 +180,7 @@ pub fn cutting_plane_q<T, Oracle, Space>(
     space: &mut Space,
     target: &mut f64,
     options: &Options,
-) -> (Option<Oracle::ArrayType>, usize, CutStatus)
+) -> (Option<Oracle::ArrayType>, usize)
 where
     T: UpdateByCutChoices<Space, ArrayType = Oracle::ArrayType>,
     Oracle: OracleQ<CutChoices = T>,
@@ -206,21 +201,21 @@ where
             CutStatus::NoEffect => {
                 if !more_alt {
                     // more alt?
-                    return (x_best, niter, status);
+                    return (x_best, niter);
                 }
                 // status = cutstatus;
                 retry = true;
             }
             CutStatus::NoSoln => {
-                return (x_best, niter, CutStatus::NoSoln);
+                return (x_best, niter);
             }
             _ => {}
         }
         if tsq < options.tol {
-            return (x_best, niter, CutStatus::SmallEnough);
+            return (x_best, niter);
         }
     }
-    (x_best, options.max_iter, CutStatus::Success)
+    (x_best, options.max_iter)
 } // END
 
 /**
@@ -247,7 +242,7 @@ where
     for niter in 0..options.max_iter {
         let tau = (upper - lower) / 2.0;
         if tau < options.tol {
-            return (upper != u_orig, niter, CutStatus::SmallEnough);
+            return (upper != u_orig, niter);
         }
         let mut target = lower; // l may be `i32` or `Fraction`
         target += tau;
@@ -258,7 +253,7 @@ where
             lower = target;
         }
     }
-    (upper != u_orig, options.max_iter, CutStatus::Unknown)
+    (upper != u_orig, options.max_iter)
 }
 
 // /**

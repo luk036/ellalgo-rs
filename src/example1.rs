@@ -44,7 +44,7 @@ impl OracleOptim for MyOracle {
 
 mod tests {
     use super::*;
-    use crate::cutting_plane::{cutting_plane_optim, CutStatus, Options};
+    use crate::cutting_plane::{cutting_plane_optim, Options};
     use crate::ell::Ell;
     // use ndarray::array;
     // use super::ell_stable::EllStable;
@@ -58,7 +58,7 @@ mod tests {
             max_iter: 2000,
             tol: 1e-10,
         };
-        let (x_opt, _niter, _status) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
         if let Some(x) = x_opt {
             assert!(x[0] >= 0.0);
         } else {
@@ -76,12 +76,14 @@ mod tests {
             max_iter: 2000,
             tol: 1e-12,
         };
-        let (x_opt, _niter, status) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
-        if let Some(_x) = x_opt {
-            assert!(false);
-        } else {
-            assert_eq!(status, CutStatus::NoSoln); // no sol'n
-        }
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
+        assert_eq!(x_opt, None);
+
+        // if let Some(_x) = x_opt {
+        //     assert!(false);
+        // } else {
+        //     assert_eq!(status, CutStatus::NoSoln); // no sol'n
+        // }
     }
 
     #[test]
@@ -93,12 +95,12 @@ mod tests {
             max_iter: 2000,
             tol: 1e-12,
         };
-        let (x_opt, _niter, status) =
-            cutting_plane_optim(&mut oracle, &mut ell, &mut 100.0, &options);
-        if let Some(_x) = x_opt {
-            assert!(false);
-        } else {
-            assert_eq!(status, CutStatus::NoSoln); // no sol'n
-        }
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100.0, &options);
+        assert_eq!(x_opt, None);
+        // if let Some(_x) = x_opt {
+        //     assert!(false);
+        // } else {
+        //     assert_eq!(status, CutStatus::NoSoln); // no sol'n
+        // }
     }
 }

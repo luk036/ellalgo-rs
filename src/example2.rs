@@ -50,7 +50,7 @@ mod tests {
             max_iter: 2000,
             tol: 1e-12,
         };
-        let (feasible, _niter, _status) = cutting_plane_feas(&mut oracle, &mut ell, &options);
+        let (feasible, _niter) = cutting_plane_feas(&mut oracle, &mut ell, &options);
         assert!(feasible);
     }
 }
