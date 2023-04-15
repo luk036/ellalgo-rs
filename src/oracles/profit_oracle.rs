@@ -53,10 +53,10 @@ impl OracleOptim for ProfitOracle {
      * @brief
      *
      * @param[in] z
-     * @param[in,out] t
+     * @param[in,out] target
      * @return std::tuple<Cut, double>
      */
-    fn assess_optim(&mut self, z: &Arr, t: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, z: &Arr, target: &mut f64) -> ((Arr, f64), bool) {
 };
 
 /**
@@ -82,7 +82,7 @@ pub struct ProfitOracleRB {
   private:
     const Arr _uie;
     Arr _a;
-    ProfitOracle _P;
+    ProfitOracle _omega;
 
   public:
     /**
@@ -98,23 +98,23 @@ pub struct ProfitOracleRB {
      */
     ProfitOracleRB(p: f64, A: f64, k: f64, const Arr& a, const Arr& v, const Arr& e,
                      f64 e3)
-        : _uie{e}, _a{a}, _P(p - e3, A, k - e3, a, v + e3) {}
+        : _uie{e}, _a{a}, _omega(p - e3, A, k - e3, a, v + e3) {}
 
     /**
      * @brief Make object callable for cutting_plane_dc()
      *
      * @param[in] y input quantity (in log scale)
-     * @param[in,out] t the best-so-far optimal value
+     * @param[in,out] target the best-so-far optimal value
      * @return Cut and the updated best-so-far value
      *
      * @see cutting_plane_dc
      */
-    pub fn assess_optim<f64>(const Arr& y, f64& t) {
+    pub fn assess_optim<f64>(const Arr& y, f64& target) {
         pub fn a_rb = self.a;
         a_rb[0] += y[0] > 0.0 ? -self.uie[0] : self.uie[0];
         a_rb[1] += y[1] > 0.0 ? -self.uie[1] : self.uie[1];
-        self.P._a = a_rb;
-        return self.P(y, t);
+        self.omega._a = a_rb;
+        return self.omega(y, target);
     }
 };
 
@@ -143,7 +143,7 @@ pub struct ProfitOracleQ {
     using Cut = (Arr, f64);
 
   private:
-    ProfitOracle _P;
+    ProfitOracle _omega;
     Arr _yd;
 
   public:
@@ -156,17 +156,17 @@ pub struct ProfitOracleQ {
      * @param[in] a the output elasticities
      * @param[in] v output price
      */
-    ProfitOracleQ(p: f64, A: f64, k: f64, const Arr& a, const Arr& v) : _P{p, A, k, a, v} {}
+    ProfitOracleQ(p: f64, A: f64, k: f64, const Arr& a, const Arr& v) : _omega{p, A, k, a, v} {}
 
     /**
      * @brief Make object callable for cutting_plane_q()
      *
      * @param[in] y input quantity (in log scale)
-     * @param[in,out] t the best-so-far optimal value
+     * @param[in,out] target the best-so-far optimal value
      * @param[in] retry whether it is a retry
      * @return Cut and the updated best-so-far value
      *
      * @see cutting_plane_q
      */
-    pub fn assess_optim<f64>(const Arr& y, f64& t, bool retry) -> (Cut, bool, Arr, bool);
+    pub fn assess_optim<f64>(const Arr& y, f64& target, bool retry) -> (Cut, bool, Arr, bool);
 };

@@ -14,10 +14,10 @@ impl OracleOptim for MyOracle {
      * @brief
      *
      * @param[in] z
-     * @param[in,out] t
+     * @param[in,out] target
      * @return std::tuple<Cut, double>
      */
-    fn assess_optim(&mut self, z: &Arr, t: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, z: &Arr, target: &mut f64) -> ((Arr, f64), bool) {
         let x = z[0];
         let y = z[1];
 
@@ -33,9 +33,9 @@ impl OracleOptim for MyOracle {
         }
         // objective: maximize x + y
         let f0 = x + y;
-        let fj = *t - f0;
+        let fj = *target - f0;
         if fj < 0.0 {
-            *t = f0;
+            *target = f0;
             return ((array![-1.0, -1.0], 0.0), true);
         }
         ((array![-1.0, -1.0], fj), false)
@@ -53,12 +53,12 @@ mod tests {
     pub fn test_feasible() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
-        let mut t = -1.0e100; // std::numeric_limits<double>::min()
+        let mut target = -1.0e100; // std::numeric_limits<double>::min()
         let options = Options {
             max_iter: 2000,
             tol: 1e-10,
         };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
         if let Some(x) = x_opt {
             assert!(x[0] >= 0.0);
         } else {
@@ -71,12 +71,12 @@ mod tests {
         let mut ell = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
                                                                           // or ellipsoid is too small
         let mut oracle = MyOracle {};
-        let mut t = -1.0e100; // std::numeric_limits<double>::min()
+        let mut target = -1.0e100; // std::numeric_limits<double>::min()
         let options = Options {
             max_iter: 2000,
             tol: 1e-12,
         };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut t, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
         assert_eq!(x_opt, None);
 
         // if let Some(_x) = x_opt {

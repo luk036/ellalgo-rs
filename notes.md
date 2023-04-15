@@ -6,23 +6,23 @@ Python
 - All objects are optional (None)
 
 ```python
-def update(t):
+def update(target):
     if condition:
         return None  # no update
     ...
-    t += ... # update t
-    return t
+    target += ... # update target
+    return target
 ```
 
 C++
 
 ```cpp
 template <typename T>
-auto update(T& t) -> bool {
+auto update(T& target) -> bool {
     if (condition) {
         return false;  // no update
     }
-    t += ...; // update t
+    target += ...; // update target
     return true;
 }
 ```
@@ -30,11 +30,11 @@ auto update(T& t) -> bool {
 Rust:
 
 ```rust
-fn update(t: &mut T) -> bool {
+fn update(target: &mut T) -> bool {
     if condition {
         return false;
     }
-    t += ... // update t 
+    target += ... // update target 
     true
 }
 ```
