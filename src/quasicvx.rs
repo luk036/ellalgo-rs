@@ -57,11 +57,10 @@ mod tests {
             tol: 1e-10,
         };
         let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
+        assert!(!x_opt.is_none());
         if let Some(x) = x_opt {
             assert!(x[0] * x[0] >= 0.49 && x[0] * x[0] <= 0.51);
             assert!(x[1].exp() >= 1.6 && x[1].exp() <= 1.7);
-        } else {
-            assert!(false); // not feasible
         }
     }
 
@@ -75,11 +74,10 @@ mod tests {
             tol: 1e-10,
         };
         let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
+        assert!(!x_opt.is_none());
         if let Some(x) = x_opt {
             assert!(x[0] * x[0] >= 0.49 && x[0] * x[0] <= 0.51);
             assert!(x[1].exp() >= 1.6 && x[1].exp() <= 1.7);
-        } else {
-            assert!(false); // not feasible
         }
     }
 }

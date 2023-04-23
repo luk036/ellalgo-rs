@@ -52,8 +52,7 @@ pub trait OracleQ {
         retry: bool,
     ) -> (
         (Self::ArrayType, Self::CutChoices),
-        bool,
-        Self::ArrayType,
+        Option<Self::ArrayType>,
         bool,
     );
 }
@@ -191,8 +190,8 @@ where
     let mut retry = false;
 
     for niter in 0..options.max_iter {
-        let (cut, shrunk, x0, more_alt) = omega.assess_q(&space.xc(), target, retry); // query the oracle at &space.xc()
-        if shrunk {
+        let (cut, x_opt, more_alt) = omega.assess_q(&space.xc(), target, retry); // query the oracle at &space.xc()
+        if let Some(x0) = x_opt {
             // best target obtained
             x_best = Some(x0); // x0
         }
