@@ -60,7 +60,7 @@ mod tests {
             tol: 1e-10,
         };
         let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
-        assert!(!x_opt.is_none());
+        assert!(x_opt.is_some());
         if let Some(x) = x_opt {
             assert!(x[0] >= 0.0);
         }
