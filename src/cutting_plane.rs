@@ -125,7 +125,7 @@ where
  *
  * @tparam Oracle
  * @tparam Space
- * @tparam opt_type
+ * @tparam Num
  * @param omega perform assessment on x0
  * @param space search Space containing x*
  * @param target best-so-far optimal sol'n
@@ -301,7 +301,7 @@ where
 //      * @param target the best-so-far optimal value
 //      * @return bool
 //      */
-//     template <typename opt_type> let mut operator()(const opt_type& target) -> bool {
+//     template <typename Num> let mut operator()(const Num& target) -> bool {
 //         Space space = self.space.copy();
 //         self.omega.update(target);
 //         let ell_info = cutting_plane_feas(self.omega, space, self.options);
