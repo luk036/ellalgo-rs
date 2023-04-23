@@ -75,7 +75,7 @@ impl Ell {
      * @param[in] cut
      * @return (i32, f64)
      */
-    fn update_single(&mut self, grad: &Array1<f64>, beta: &f64) -> (CutStatus, f64) {
+    fn update_single(&mut self, grad: &Array1<f64>, beta: &f64) -> CutStatus {
         // let (grad, beta) = cut;
         let mut mq_g = Array1::zeros(self.n); // initial x0
         let mut omega = 0.0;
@@ -89,7 +89,7 @@ impl Ell {
         self.helper.tsq = self.kappa * omega;
         let status = self.helper.calc_dc(*beta);
         if status != CutStatus::Success {
-            return (status, self.helper.tsq);
+            return status;
         }
 
         self.xc -= &((self.helper.rho / omega) * &mq_g); // n
@@ -113,7 +113,7 @@ impl Ell {
             self.mq *= self.kappa;
             self.kappa = 1.0;
         }
-        (status, self.helper.tsq)
+        status
     }
 
     /**
@@ -129,7 +129,7 @@ impl Ell {
         &mut self,
         grad: &Array1<f64>,
         beta: &(f64, Option<f64>),
-    ) -> (CutStatus, f64) {
+    ) -> CutStatus {
         // let (grad, beta) = cut;
         let mut mq_g = Array1::zeros(self.n); // initial x0
         let mut omega = 0.0;
@@ -149,7 +149,7 @@ impl Ell {
             self.helper.calc_dc(b0)
         };
         if status != CutStatus::Success {
-            return (status, self.helper.tsq);
+            return status;
         }
 
         self.xc -= &((self.helper.rho / omega) * &mq_g); // n
@@ -173,7 +173,7 @@ impl Ell {
             self.mq *= self.kappa;
             self.kappa = 1.0;
         }
-        (status, self.helper.tsq)
+        status
     }
 }
 
@@ -189,7 +189,11 @@ impl SearchSpace for Ell {
         self.xc.clone()
     }
 
-    fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> (CutStatus, f64)
+    fn tsq(&self) -> f64 {
+        self.helper.tsq
+    }
+
+    fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
     {
@@ -201,7 +205,7 @@ impl SearchSpace for Ell {
 impl UpdateByCutChoices<Ell> for f64 {
     type ArrayType = Arr;
 
-    fn update_by(&self, ell: &mut Ell, grad: &Self::ArrayType) -> (CutStatus, f64) {
+    fn update_by(&self, ell: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         ell.update_single(grad, beta)
     }
@@ -210,7 +214,7 @@ impl UpdateByCutChoices<Ell> for f64 {
 impl UpdateByCutChoices<Ell> for (f64, Option<f64>) {
     type ArrayType = Arr;
 
-    fn update_by(&self, ell: &mut Ell, grad: &Self::ArrayType) -> (CutStatus, f64) {
+    fn update_by(&self, ell: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         ell.update_parallel(grad, beta)
     }

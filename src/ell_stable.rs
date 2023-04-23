@@ -78,7 +78,7 @@ impl EllStable {
 
     // Reference: Gill, Murray, and Wright, "Practical Optimization", p43.
     // Author: Brian Borchers (borchers@nmt.edu)
-    fn update_single(&mut self, grad: &Array1<f64>, beta: &f64) -> (CutStatus, f64) {
+    fn update_single(&mut self, grad: &Array1<f64>, beta: &f64) -> CutStatus {
         // let (grad, beta) = cut;
         // calculate inv(L)*grad: (n-1)*n/2 multiplications
         let mut inv_ml_g = grad.clone(); // initial x0
@@ -107,7 +107,7 @@ impl EllStable {
         self.helper.tsq = self.kappa * omega;
         let status = self.helper.calc_dc(*beta);
         if status != CutStatus::Success {
-            return (status, self.helper.tsq);
+            return status;
         }
 
         // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad : (n-1)*n/2
@@ -160,7 +160,7 @@ impl EllStable {
         &mut self,
         grad: &Array1<f64>,
         beta: &(f64, Option<f64>),
-    ) -> (CutStatus, f64) {
+    ) -> CutStatus {
         // let (grad, beta) = cut;
         // calculate inv(L)*grad: (n-1)*n/2 multiplications
         let mut inv_ml_g = grad.clone(); // initial x0
@@ -194,7 +194,7 @@ impl EllStable {
             self.helper.calc_dc(b0)
         };
         if status != CutStatus::Success {
-            return (status, self.helper.tsq);
+            return status;
         }
 
         // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad : (n-1)*n/2
@@ -236,7 +236,7 @@ impl EllStable {
         //     self.mq *= self.kappa;
         //     self.kappa = 1.;
         // }
-        (status, self.helper.tsq)
+        status
     }
 }
 
@@ -252,7 +252,11 @@ impl SearchSpace for EllStable {
         self.xc.clone()
     }
 
-    fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> (CutStatus, f64)
+    fn tsq(&self) -> f64 {
+        self.helper.tsq
+    }
+
+    fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
     {
@@ -264,7 +268,7 @@ impl SearchSpace for EllStable {
 impl UpdateByCutChoices<EllStable> for f64 {
     type ArrayType = Array1<f64>;
 
-    fn update_by(&self, ell: &mut EllStable, grad: &Self::ArrayType) -> (CutStatus, f64) {
+    fn update_by(&self, ell: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         ell.update_single(grad, &beta)
     }
@@ -273,7 +277,7 @@ impl UpdateByCutChoices<EllStable> for f64 {
 impl UpdateByCutChoices<EllStable> for (f64, Option<f64>) {
     type ArrayType = Array1<f64>;
 
-    fn update_by(&self, ell: &mut EllStable, grad: &Self::ArrayType) -> (CutStatus, f64) {
+    fn update_by(&self, ell: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         ell.update_parallel(grad, &beta)
     }
