@@ -5,8 +5,6 @@ use crate::ell_calc::EllCalc;
 // extern crate ndarray;
 use ndarray::prelude::*;
 
-type Arr = Array1<f64>;
-
 /**
  * @brief Ellipsoid Search Space
  *
@@ -153,7 +151,7 @@ impl EllStable {
         //     self.mq *= self.kappa;
         //     self.kappa = 1.;
         // }
-        (status, self.helper.tsq)
+        status
     }
 
     fn update_parallel(

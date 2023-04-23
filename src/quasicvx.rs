@@ -6,8 +6,7 @@ type Arr = Array1<f64>;
 #[derive(Debug)]
 pub struct MyOracle {}
 
-impl OracleOptim for MyOracle {
-    type ArrayType = Arr;
+impl OracleOptim<Arr> for MyOracle {
     type CutChoices = f64; // single cut
 
     /**
