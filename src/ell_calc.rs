@@ -20,7 +20,6 @@ pub struct EllCalc {
     n_f: f64,
     n_plus_1: f64,
     half_n: f64,
-    cst0: f64,
     cst1: f64,
     cst2: f64,
     cst3: f64,
@@ -49,7 +48,6 @@ impl EllCalc {
             n_f,
             n_plus_1,
             half_n,
-            cst0,
             cst1,
             cst2,
             cst3,
@@ -126,7 +124,7 @@ impl EllCalc {
         self.sigma = self.cst3 + self.cst2 * (1.0 - xi) / b1sqn;
         self.rho = self.sigma * b1 / 2.0;
         self.delta = self.cst1 * (1.0 - b1sqn / 2.0 + xi / self.n_f);
-        return CutStatus::Success;
+        CutStatus::Success
     }
 
     /**
@@ -189,10 +187,9 @@ mod tests {
     #[test]
     pub fn test_construct() {
         let ell_calc = EllCalc::new(4.0);
-        assert_eq!(ell_calc.use_parallel_cut, true);
+        assert!(ell_calc.use_parallel_cut);
         assert_eq!(ell_calc.n_f, 4.0);
         assert_eq!(ell_calc.half_n, 2.0);
-        assert_approx_eq!(ell_calc.cst0, 0.2);
         assert_approx_eq!(ell_calc.cst1, 16.0 / 15.0);
         assert_approx_eq!(ell_calc.cst2, 0.4);
         assert_approx_eq!(ell_calc.cst3, 0.8);

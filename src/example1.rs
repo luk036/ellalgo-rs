@@ -42,6 +42,7 @@ impl OracleOptim for MyOracle {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::cutting_plane::{cutting_plane_optim, Options};
