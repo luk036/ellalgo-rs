@@ -29,7 +29,7 @@ impl OracleFeas<Arr> for MyOracle {
         if fj > 0.0 {
             return Some((array![-1.0, 1.0], fj));
         }
-        return None;
+        None
     }
 }
 

@@ -259,7 +259,7 @@ impl SearchSpace for EllStable {
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
-        beta.update_by(self, &grad)
+        beta.update_by(self, grad)
     }
 }
 
@@ -268,7 +268,7 @@ impl UpdateByCutChoices<EllStable> for f64 {
 
     fn update_by(&self, ell: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
-        ell.update_single(grad, &beta)
+        ell.update_single(grad, beta)
     }
 }
 
@@ -277,6 +277,6 @@ impl UpdateByCutChoices<EllStable> for (f64, Option<f64>) {
 
     fn update_by(&self, ell: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
-        ell.update_parallel(grad, &beta)
+        ell.update_parallel(grad, beta)
     }
 } // } Ell

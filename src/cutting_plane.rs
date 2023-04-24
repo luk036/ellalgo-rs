@@ -4,19 +4,17 @@
 pub enum CutStatus {
     Success,
     NoSoln,
-    NoEffect,
     SmallEnough,
+    NoEffect,
     Unknown,
 }
 
 pub struct Options {
-    pub max_iter: usize,
-    pub tol: f64,
+    pub max_iter: usize, // maximum number of iterations
+    pub tol: f64,        // error tolerrance
 }
 
 type CInfo = (bool, usize);
-
-/// TODO: support 1D problems
 
 pub trait UpdateByCutChoices<SS> {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
@@ -26,7 +24,7 @@ pub trait UpdateByCutChoices<SS> {
 /// Oracle for feasibility problems
 pub trait OracleFeas<ArrayType> {
     type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
-    fn assess_feas(&mut self, x: &ArrayType) -> Option<(ArrayType, Self::CutChoices)>;
+    fn assess_feas(&mut self, xc: &ArrayType) -> Option<(ArrayType, Self::CutChoices)>;
 }
 
 /// Oracle for optimization problems
@@ -34,7 +32,7 @@ pub trait OracleOptim<ArrayType> {
     type CutChoices; // f64 for single cut; (f64, Option<f64>) for parallel cut
     fn assess_optim(
         &mut self,
-        x: &ArrayType,
+        xc: &ArrayType,
         tea: &mut f64,
     ) -> ((ArrayType, Self::CutChoices), bool);
 }
@@ -44,14 +42,10 @@ pub trait OracleQ<ArrayType> {
     type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
     fn assess_q(
         &mut self,
-        x: &ArrayType,
+        xc: &ArrayType,
         tea: &mut f64,
         retry: bool,
-    ) -> (
-        (ArrayType, Self::CutChoices),
-        Option<ArrayType>,
-        bool,
-    );
+    ) -> ((ArrayType, Self::CutChoices), Option<ArrayType>, bool);
 }
 
 /// Oracle for binary search
@@ -62,7 +56,7 @@ pub trait OracleBS {
 pub trait SearchSpace {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
     fn xc(&self) -> Self::ArrayType;
-    fn tsq(&self) -> f64;
+    fn tsq(&self) -> f64; // measure of the search space
     fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
@@ -109,8 +103,8 @@ where
             // feasible sol'n obtained
             return (true, niter);
         }
-        let cutstatus = space.update::<T>(&cut.unwrap()); // update space
-        if cutstatus != CutStatus::Success || space.tsq() < options.tol {
+        let status = space.update::<T>(&cut.unwrap()); // update space
+        if status != CutStatus::Success || space.tsq() < options.tol {
             return (false, niter);
         }
     }
@@ -149,8 +143,8 @@ where
             // best tea obtained
             x_best = Some(space.xc());
         }
-        let cutstatus = space.update::<T>(&cut); // update space
-        if cutstatus != CutStatus::Success || space.tsq() < options.tol {
+        let status = space.update::<T>(&cut); // update space
+        if status != CutStatus::Success || space.tsq() < options.tol {
             return (x_best, niter);
         }
     }
