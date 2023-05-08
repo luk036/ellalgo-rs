@@ -47,7 +47,7 @@ mod tests {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
         let options = Options {
-            max_iter: 2000,
+            max_iters: 2000,
             tol: 1e-12,
         };
         let (feasible, _niter) = cutting_plane_feas(&mut oracle, &mut ell, &options);

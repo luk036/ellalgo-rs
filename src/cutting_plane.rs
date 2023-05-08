@@ -4,14 +4,13 @@
 pub enum CutStatus {
     Success,
     NoSoln,
-    SmallEnough,
     NoEffect,
     Unknown,
 }
 
 pub struct Options {
-    pub max_iter: usize, // maximum number of iterations
-    pub tol: f64,        // error tolerrance
+    pub max_iters: usize, // maximum number of iterations
+    pub tol: f64,         // error tolerrance
 }
 
 type CInfo = (bool, usize);
@@ -19,6 +18,7 @@ type CInfo = (bool, usize);
 pub trait UpdateByCutChoices<SS> {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
     fn update_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
+    // fn update_cc_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
 }
 
 /// Oracle for feasibility problems
@@ -40,7 +40,7 @@ pub trait OracleOptim<ArrayType> {
 /// Oracle for quantized optimization problems
 pub trait OracleQ<ArrayType> {
     type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
-    fn assess_q(
+    fn assess_optim_q(
         &mut self,
         xc: &ArrayType,
         tea: &mut f64,
@@ -55,12 +55,20 @@ pub trait OracleBS {
 
 pub trait SearchSpace {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
+
     fn xc(&self) -> Self::ArrayType;
+
     fn tsq(&self) -> f64; // measure of the search space
+
     fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
         Self: Sized;
+
+    // fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    // where
+    //     T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
+    //     Self: Sized;
 }
 
 /**
@@ -97,7 +105,7 @@ where
     Oracle: OracleFeas<Space::ArrayType, CutChoices = T>,
     Space: SearchSpace,
 {
-    for niter in 0..options.max_iter {
+    for niter in 0..options.max_iters {
         let cut = omega.assess_feas(&space.xc()); // query the oracle at &space.xc()
         if cut.is_none() {
             // feasible sol'n obtained
@@ -108,7 +116,7 @@ where
             return (false, niter);
         }
     }
-    (false, options.max_iter)
+    (false, options.max_iters)
 }
 
 /**
@@ -137,18 +145,20 @@ where
 {
     let mut x_best: Option<Space::ArrayType> = None;
 
-    for niter in 0..options.max_iter {
+    for niter in 0..options.max_iters {
         let (cut, shrunk) = omega.assess_optim(&space.xc(), tea); // query the oracle at &space.xc()
-        if shrunk {
-            // best tea obtained
+        let status = if shrunk {
+            // better tea obtained
             x_best = Some(space.xc());
-        }
-        let status = space.update::<T>(&cut); // update space
+            space.update::<T>(&cut) // update space
+        } else {
+            space.update::<T>(&cut) // update space
+        };
         if status != CutStatus::Success || space.tsq() < options.tol {
             return (x_best, niter);
         }
     }
-    (x_best, options.max_iter)
+    (x_best, options.max_iters)
 } // END
 
 /**
@@ -163,9 +173,9 @@ where
  * @return Information of Cutting-plane method
  */
 #[allow(dead_code)]
-pub fn cutting_plane_q<T, Oracle, Space>(
+pub fn cutting_plane_optim_q<T, Oracle, Space>(
     omega: &mut Oracle,
-    space: &mut Space,
+    space_q: &mut Space,
     tea: &mut f64,
     options: &Options,
 ) -> (Option<Space::ArrayType>, usize)
@@ -175,35 +185,36 @@ where
     Space: SearchSpace,
 {
     let mut x_best: Option<Space::ArrayType> = None;
-    // let mut status = CutStatus::NoSoln; // note!!!
     let mut retry = false;
 
-    for niter in 0..options.max_iter {
-        let (cut, x_opt, more_alt) = omega.assess_q(&space.xc(), tea, retry); // query the oracle at &space.xc()
-        if let Some(x0) = x_opt {
+    for niter in 0..options.max_iters {
+        let (cut, x_opt, more_alt) = omega.assess_optim_q(&space_q.xc(), tea, retry); // query the oracle at &space.xc()
+        if let Some(x_q) = x_opt {
             // best tea obtained
-            x_best = Some(x0); // x0
+            x_best = Some(x_q);
         }
-        let status = space.update::<T>(&cut); // update space
+        let status = space_q.update::<T>(&cut); // update space
         match &status {
-            CutStatus::NoEffect => {
-                if !more_alt {
-                    // more alt?
-                    return (x_best, niter);
-                }
-                // status = cutstatus;
-                retry = true;
+            CutStatus::Success => {
+                retry = false;
             }
             CutStatus::NoSoln => {
                 return (x_best, niter);
             }
+            CutStatus::NoEffect => {
+                if !more_alt {
+                    // no more alternative cut
+                    return (x_best, niter);
+                }
+                retry = true;
+            }
             _ => {}
         }
-        if space.tsq() < options.tol {
+        if space_q.tsq() < options.tol {
             return (x_best, niter);
         }
     }
-    (x_best, options.max_iter)
+    (x_best, options.max_iters)
 } // END
 
 /**
@@ -217,17 +228,17 @@ where
  * @return CInfo
  */
 #[allow(dead_code)]
-pub fn bsearch<Oracle>(omega: &mut Oracle, intvl: &mut (f64, f64), options: &Options) -> CInfo
+pub fn bsearch<Oracle>(omega: &mut Oracle, intrvl: &mut (f64, f64), options: &Options) -> CInfo
 where
     Oracle: OracleBS,
 {
     // assume monotone
     // auto& [lower, upper] = I;
-    let &mut (mut lower, mut upper) = intvl;
+    let &mut (mut lower, mut upper) = intrvl;
     assert!(lower <= upper);
     let u_orig = upper;
 
-    for niter in 0..options.max_iter {
+    for niter in 0..options.max_iters {
         let tau = (upper - lower) / 2.0;
         if tau < options.tol {
             return (upper != u_orig, niter);
@@ -241,7 +252,7 @@ where
             lower = tea;
         }
     }
-    (upper != u_orig, options.max_iter)
+    (upper != u_orig, options.max_iters)
 }
 
 // /**

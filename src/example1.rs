@@ -13,10 +13,10 @@ impl OracleOptim<Arr> for MyOracle {
      * @brief
      *
      * @param[in] z
-     * @param[in,out] target
+     * @param[in,out] tea
      * @return std::tuple<Cut, double>
      */
-    fn assess_optim(&mut self, z: &Arr, target: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, z: &Arr, tea: &mut f64) -> ((Arr, f64), bool) {
         let x = z[0];
         let y = z[1];
 
@@ -32,9 +32,9 @@ impl OracleOptim<Arr> for MyOracle {
         }
         // objective: maximize x + y
         let f0 = x + y;
-        let fj = *target - f0;
+        let fj = *tea - f0;
         if fj < 0.0 {
-            *target = f0;
+            *tea = f0;
             return ((array![-1.0, -1.0], 0.0), true);
         }
         ((array![-1.0, -1.0], fj), false)
@@ -53,12 +53,12 @@ mod tests {
     pub fn test_feasible() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
-        let mut target = -1.0e100; // std::numeric_limits<double>::min()
+        let mut tea = -1.0e100; // std::numeric_limits<double>::min()
         let options = Options {
-            max_iter: 2000,
+            max_iters: 2000,
             tol: 1e-10,
         };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut tea, &options);
         assert!(x_opt.is_some());
         if let Some(x) = x_opt {
             assert!(x[0] >= 0.0);
@@ -70,12 +70,12 @@ mod tests {
         let mut ell = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
                                                                           // or ellipsoid is too small
         let mut oracle = MyOracle {};
-        let mut target = -1.0e100; // std::numeric_limits<double>::min()
+        let mut tea = -1.0e100; // std::numeric_limits<double>::min()
         let options = Options {
-            max_iter: 2000,
+            max_iters: 2000,
             tol: 1e-12,
         };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut tea, &options);
         assert_eq!(x_opt, None);
     }
 
@@ -85,7 +85,7 @@ mod tests {
         let mut oracle = MyOracle {};
         // wrong initial guess
         let options = Options {
-            max_iter: 2000,
+            max_iters: 2000,
             tol: 1e-12,
         };
         let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100.0, &options);

@@ -53,10 +53,10 @@ impl OracleOptim for ProfitOracle {
      * @brief
      *
      * @param[in] z
-     * @param[in,out] target
+     * @param[in,out] tea
      * @return std::tuple<Cut, double>
      */
-    fn assess_optim(&mut self, z: &Arr, target: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, z: &Arr, tea: &mut f64) -> ((Arr, f64), bool) {
 };
 
 /**
@@ -104,17 +104,17 @@ pub struct ProfitOracleRB {
      * @brief Make object callable for cutting_plane_dc()
      *
      * @param[in] y input quantity (in log scale)
-     * @param[in,out] target the best-so-far optimal value
+     * @param[in,out] tea the best-so-far optimal value
      * @return Cut and the updated best-so-far value
      *
      * @see cutting_plane_dc
      */
-    pub fn assess_optim<f64>(const Arr& y, f64& target) {
+    pub fn assess_optim<f64>(const Arr& y, f64& tea) {
         pub fn a_rb = self.a;
         a_rb[0] += y[0] > 0.0 ? -self.uie[0] : self.uie[0];
         a_rb[1] += y[1] > 0.0 ? -self.uie[1] : self.uie[1];
         self.omega._a = a_rb;
-        return self.omega(y, target);
+        return self.omega(y, tea);
     }
 };
 
@@ -159,14 +159,14 @@ pub struct ProfitOracleQ {
     ProfitOracleQ(p: f64, A: f64, k: f64, const Arr& a, const Arr& v) : _omega{p, A, k, a, v} {}
 
     /**
-     * @brief Make object callable for cutting_plane_q()
+     * @brief Make object callable for cutting_plane_optim_q()
      *
      * @param[in] y input quantity (in log scale)
-     * @param[in,out] target the best-so-far optimal value
+     * @param[in,out] tea the best-so-far optimal value
      * @param[in] retry whether it is a retry
      * @return Cut and the updated best-so-far value
      *
-     * @see cutting_plane_q
+     * @see cutting_plane_optim_q
      */
-    pub fn assess_optim<f64>(const Arr& y, f64& target, bool retry) -> (Cut, bool, Arr, bool);
+    pub fn assess_optim<f64>(const Arr& y, f64& tea, bool retry) -> (Cut, bool, Arr, bool);
 };

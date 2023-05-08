@@ -33,4 +33,4 @@ warning: unused import: `ndarray::array`
 
 warning: `ellalgo-rs` (lib) generated 5 warnings
 warning: `ellalgo-rs` (bin "ellalgo-rs") generated 5 warnings (5 duplicates)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.84s
+    Finished dev [unoptimized + debuginfo] tea(s) in 0.84s

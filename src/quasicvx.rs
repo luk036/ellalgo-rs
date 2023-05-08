@@ -13,10 +13,10 @@ impl OracleOptim<Arr> for MyOracle {
      * @brief
      *
      * @param[in] z
-     * @param[in,out] target
+     * @param[in,out] tea
      * @return std::tuple<Cut, double>
      */
-    fn assess_optim(&mut self, z: &Arr, target: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, z: &Arr, tea: &mut f64) -> ((Arr, f64), bool) {
         let sqrtx = z[0];
         let ly = z[1];
 
@@ -28,11 +28,11 @@ impl OracleOptim<Arr> for MyOracle {
 
         // objective: minimize -sqrt(x) / y
         let tmp2 = ly.exp();
-        let tmp3 = *target * tmp2;
+        let tmp3 = *tea * tmp2;
         let fj = -sqrtx + tmp3;
         if fj < 0.0 {
             // feasible
-            *target = sqrtx / tmp2;
+            *tea = sqrtx / tmp2;
             return ((array![-1.0, sqrtx], 0.0), true);
         }
         ((array![-1.0, tmp3], fj), false)
@@ -50,12 +50,12 @@ mod tests {
     pub fn test_feasible() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
-        let mut target = 0.0;
+        let mut tea = 0.0;
         let options = Options {
-            max_iter: 2000,
+            max_iters: 2000,
             tol: 1e-10,
         };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut tea, &options);
         assert!(x_opt.is_some());
         if let Some(x) = x_opt {
             assert!(x[0] * x[0] >= 0.49 && x[0] * x[0] <= 0.51);
@@ -67,12 +67,12 @@ mod tests {
     pub fn test_feasible_stable() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
-        let mut target = 0.0;
+        let mut tea = 0.0;
         let options = Options {
-            max_iter: 2000,
+            max_iters: 2000,
             tol: 1e-10,
         };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut tea, &options);
         assert!(x_opt.is_some());
         if let Some(x) = x_opt {
             assert!(x[0] * x[0] >= 0.49 && x[0] * x[0] <= 0.51);
