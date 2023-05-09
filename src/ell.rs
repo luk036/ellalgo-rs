@@ -5,14 +5,11 @@ use crate::ell_calc::EllCalc;
 // extern crate ndarray;
 use ndarray::prelude::*;
 
-type Arr = Array1<f64>;
-
 /**
  * @brief Ellipsoid Search Space
  *
  *  Ell = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
  *
- * Keep $mq$ symmetric but no promise of positive definite
  */
 #[derive(Debug, Clone)]
 pub struct Ell {
@@ -21,8 +18,9 @@ pub struct Ell {
     mq: Array2<f64>,
     xc: Array1<f64>,
     kappa: f64,
-    n: usize,
+    ndim: usize,
     helper: EllCalc,
+    tsq: f64,
 }
 
 impl Ell {
@@ -35,17 +33,18 @@ impl Ell {
      * @param mq
      * @param x
      */
-    pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Arr) -> Ell {
-        let n = xc.len();
-        let helper = EllCalc::new(n as f64);
+    pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Array1<f64>) -> Ell {
+        let ndim = xc.len();
+        let helper = EllCalc::new(ndim as f64);
 
         Ell {
             kappa,
             mq,
             xc,
-            n,
+            ndim,
             helper,
             no_defer_trick: false,
+            tsq: 0.0,
         }
     }
 
@@ -55,126 +54,80 @@ impl Ell {
      * @param[in] val
      * @param[in] x
      */
-    pub fn new(val: Arr, xc: Arr) -> Ell {
+    pub fn new(val: Array1<f64>, xc: Array1<f64>) -> Ell {
         Ell::new_with_matrix(1.0, Array2::from_diag(&val), xc)
     }
 
+    /**
+     * @brief Construct a new Ell object
+     *
+     * @param[in] val
+     * @param[in] xc
+     */
+    pub fn new_with_scalar(val: f64, xc: Array1<f64>) -> Ell {
+        Ell::new_with_matrix(val, Array2::eye(xc.len()), xc)
+    }
+
+    /**
+     * @brief Update ellipsoid core function using the cut
+     *
+     *  $grad^T * (x - xc) + beta <= 0$
+     *
+     * @tparam T
+     * @param[in] cut
+     * @return (i32, f64)
+     */
+    fn update_core<T, F>(&mut self, grad: &Array1<f64>, beta: &T, f_core: F) -> CutStatus
+    where
+        T: UpdateByCutChoices<Self, ArrayType = Array1<f64>>,
+        F: FnOnce(&T, &f64) -> (CutStatus, f64, f64, f64),
+    {
+        // let (grad, beta) = cut;
+        let mut mq_g = Array1::zeros(self.ndim); // initial x0
+        let mut omega = 0.0;
+        for i in 0..self.ndim {
+            for j in 0..self.ndim {
+                mq_g[i] += self.mq[[i, j]] * grad[j];
+            }
+            omega += mq_g[i] * grad[i];
+        }
+
+        self.tsq = self.kappa * omega;
+        // let status = self.helper.calc_dc(*beta);
+        let (status, rho, sigma, delta) = f_core(beta, &self.tsq);
+        if status != CutStatus::Success {
+            return status;
+        }
+
+        self.xc -= &((rho / omega) * &mq_g); // n
+
+        // n*(n+1)/2 + n
+        // self.mq -= (self.sigma / omega) * xt::linalg::outer(mq_g, mq_g);
+
+        let r = sigma / omega;
+        for i in 0..self.ndim {
+            let r_mq_g = r * mq_g[i];
+            for j in 0..i {
+                self.mq[[i, j]] -= r_mq_g * mq_g[j];
+                self.mq[[j, i]] = self.mq[[i, j]];
+            }
+            self.mq[[i, i]] -= r_mq_g * mq_g[i];
+        }
+
+        self.kappa *= delta;
+
+        if self.no_defer_trick {
+            self.mq *= self.kappa;
+            self.kappa = 1.0;
+        }
+        status
+    }
     // /**
     //  * @brief Set the xc object
     //  *
     //  * @param[in] xc
     //  */
-    // pub fn set_xc(&mut self, xc: Arr) { self.xc = xc; }
-
-    /**
-     * @brief Update ellipsoid core function using the cut
-     *
-     *  $grad^T * (x - xc) + beta <= 0$
-     *
-     * @tparam T
-     * @param[in] cut
-     * @return (i32, f64)
-     */
-    fn update_single(&mut self, grad: &Array1<f64>, beta: &f64) -> CutStatus {
-        // let (grad, beta) = cut;
-        let mut mq_g = Array1::zeros(self.n); // initial x0
-        let mut omega = 0.0;
-        for i in 0..self.n {
-            for j in 0..self.n {
-                mq_g[i] += self.mq[[i, j]] * grad[j];
-            }
-            omega += mq_g[i] * grad[i];
-        }
-
-        self.helper.tsq = self.kappa * omega;
-        let status = self.helper.calc_dc(*beta);
-        if status != CutStatus::Success {
-            return status;
-        }
-
-        self.xc -= &((self.helper.rho / omega) * &mq_g); // n
-
-        // n*(n+1)/2 + n
-        // self.mq -= (self.sigma / omega) * xt::linalg::outer(mq_g, mq_g);
-
-        let r = self.helper.sigma / omega;
-        for i in 0..self.n {
-            let r_mq_g = r * mq_g[i];
-            for j in 0..i {
-                self.mq[[i, j]] -= r_mq_g * mq_g[j];
-                self.mq[[j, i]] = self.mq[[i, j]];
-            }
-            self.mq[[i, i]] -= r_mq_g * mq_g[i];
-        }
-
-        self.kappa *= self.helper.delta;
-
-        if self.no_defer_trick {
-            self.mq *= self.kappa;
-            self.kappa = 1.0;
-        }
-        status
-    }
-
-    /**
-     * @brief Update ellipsoid core function using the cut
-     *
-     *  $grad^T * (x - xc) + beta <= 0$
-     *
-     * @tparam T
-     * @param[in] cut
-     * @return (i32, f64)
-     */
-    fn update_parallel(
-        &mut self,
-        grad: &Array1<f64>,
-        beta: &(f64, Option<f64>),
-    ) -> CutStatus {
-        // let (grad, beta) = cut;
-        let mut mq_g = Array1::zeros(self.n); // initial x0
-        let mut omega = 0.0;
-        for i in 0..self.n {
-            for j in 0..self.n {
-                mq_g[i] += self.mq[[i, j]] * grad[j];
-            }
-            omega += mq_g[i] * grad[i];
-        }
-
-        self.helper.tsq = self.kappa * omega;
-
-        let (b0, b1_opt) = *beta;
-        let status = if let Some(b1) = b1_opt {
-            self.helper.calc_ll_core(b0, b1)
-        } else {
-            self.helper.calc_dc(b0)
-        };
-        if status != CutStatus::Success {
-            return status;
-        }
-
-        self.xc -= &((self.helper.rho / omega) * &mq_g); // n
-
-        // n*(n+1)/2 + n
-        // self.mq -= (self.sigma / omega) * xt::linalg::outer(mq_g, mq_g);
-
-        let r = self.helper.sigma / omega;
-        for i in 0..self.n {
-            let r_mq_g = r * mq_g[i];
-            for j in 0..i {
-                self.mq[[i, j]] -= r_mq_g * mq_g[j];
-                self.mq[[j, i]] = self.mq[[i, j]];
-            }
-            self.mq[[i, i]] -= r_mq_g * mq_g[i];
-        }
-
-        self.kappa *= self.helper.delta;
-
-        if self.no_defer_trick {
-            self.mq *= self.kappa;
-            self.kappa = 1.0;
-        }
-        status
-    }
+    // pub fn set_xc(&mut self, xc: Array1<f64>) { self.xc = xc; }
 }
 
 impl SearchSpace for Ell {
@@ -183,14 +136,14 @@ impl SearchSpace for Ell {
     /**
      * @brief copy the whole array anyway
      *
-     * @return Arr
+     * @return Array1<f64>
      */
     fn xc(&self) -> Self::ArrayType {
         self.xc.clone()
     }
 
     fn tsq(&self) -> f64 {
-        self.helper.tsq
+        self.tsq
     }
 
     fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
@@ -200,22 +153,44 @@ impl SearchSpace for Ell {
         let (grad, beta) = cut;
         beta.update_by(self, grad)
     }
+
+    fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    where
+        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
+    {
+        let (grad, beta) = cut;
+        beta.update_cc_by(self, grad)
+    }
 }
 
 impl UpdateByCutChoices<Ell> for f64 {
-    type ArrayType = Arr;
+    type ArrayType = Array1<f64>;
 
-    fn update_by(&self, ell: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
+    fn update_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
-        ell.update_single(grad, beta)
+        let helper = ellip.helper.clone();
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_dc(beta, tsq))
+    }
+
+    fn update_cc_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
+        let beta = self;
+        let helper = ellip.helper.clone();
+        ellip.update_core(grad, beta, |_beta, tsq| helper.calc_cc(tsq))
     }
 }
 
 impl UpdateByCutChoices<Ell> for (f64, Option<f64>) {
-    type ArrayType = Arr;
+    type ArrayType = Array1<f64>;
 
-    fn update_by(&self, ell: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
+    fn update_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
-        ell.update_parallel(grad, beta)
+        let helper = ellip.helper.clone();
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_ll(beta, tsq))
+    }
+
+    fn update_cc_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
+        let beta = self;
+        let helper = ellip.helper.clone();
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_ll_cc(beta, tsq))
     }
 }

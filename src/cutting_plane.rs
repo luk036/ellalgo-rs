@@ -18,7 +18,7 @@ type CInfo = (bool, usize);
 pub trait UpdateByCutChoices<SS> {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
     fn update_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
-    // fn update_cc_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
+    fn update_cc_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
 }
 
 /// Oracle for feasibility problems
@@ -65,10 +65,10 @@ pub trait SearchSpace {
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
         Self: Sized;
 
-    // fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
-    // where
-    //     T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
-    //     Self: Sized;
+    fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    where
+        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
+        Self: Sized;
 }
 
 /**

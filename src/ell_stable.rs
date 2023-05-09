@@ -19,8 +19,9 @@ pub struct EllStable {
     mq: Array2<f64>,
     xc: Array1<f64>,
     kappa: f64,
-    n: usize,
+    ndim: usize,
     helper: EllCalc,
+    tsq: f64,
 }
 
 impl EllStable {
@@ -34,16 +35,17 @@ impl EllStable {
      * @param x
      */
     pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Array1<f64>) -> EllStable {
-        let n = xc.len();
-        let helper = EllCalc::new(n as f64);
+        let ndim = xc.len();
+        let helper = EllCalc::new(ndim as f64);
 
         EllStable {
             kappa,
             mq,
             xc,
-            n,
+            ndim,
             helper,
             no_defer_trick: false,
+            tsq: 0.0,
         }
     }
 
@@ -76,11 +78,15 @@ impl EllStable {
 
     // Reference: Gill, Murray, and Wright, "Practical Optimization", p43.
     // Author: Brian Borchers (borchers@nmt.edu)
-    fn update_single(&mut self, grad: &Array1<f64>, beta: &f64) -> CutStatus {
+    fn update_core<T, F>(&mut self, grad: &Array1<f64>, beta: &T, f_core: F) -> CutStatus
+    where
+        T: UpdateByCutChoices<Self, ArrayType = Array1<f64>>,
+        F: FnOnce(&T, &f64) -> (CutStatus, f64, f64, f64),
+    {
         // let (grad, beta) = cut;
         // calculate inv(L)*grad: (n-1)*n/2 multiplications
         let mut inv_ml_g = grad.clone(); // initial x0
-        for i in 1..self.n {
+        for i in 1..self.ndim {
             for j in 0..i {
                 self.mq[[i, j]] = self.mq[[j, i]] * inv_ml_g[j];
                 // keep for rank-one update
@@ -90,41 +96,42 @@ impl EllStable {
 
         // calculate inv(D)*inv(L)*grad: n
         let mut inv_md_inv_ml_g = inv_ml_g.clone(); // initially
-        for i in 0..self.n {
+        for i in 0..self.ndim {
             inv_md_inv_ml_g[i] *= self.mq[[i, i]];
         }
 
         // calculate omega: n
         let mut gg_t = inv_md_inv_ml_g.clone(); // initially
         let mut omega = 0.0; // initially
-        for i in 0..self.n {
+        for i in 0..self.ndim {
             gg_t[i] *= inv_ml_g[i];
             omega += gg_t[i];
         }
 
-        self.helper.tsq = self.kappa * omega;
-        let status = self.helper.calc_dc(*beta);
+        self.tsq = self.kappa * omega;
+        let (status, rho, sigma, delta) = f_core(beta, &self.tsq);
+
         if status != CutStatus::Success {
             return status;
         }
 
         // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad : (n-1)*n/2
         let mut g_t = inv_md_inv_ml_g.clone(); // initially
-        for i in (1..self.n).rev() {
+        for i in (1..self.ndim).rev() {
             // backward subsituition
-            for j in i..self.n {
+            for j in i..self.ndim {
                 g_t[i - 1] -= self.mq[[i - 1, j]] * g_t[j]; // ???
             }
         }
 
         // calculate xc: n
-        self.xc -= &((self.helper.rho / omega) * &g_t); // n
+        self.xc -= &((rho / omega) * &g_t); // n
 
         // rank-one update: 3*n + (n-1)*n/2
         // let r = self.sigma / omega;
-        let mu = self.helper.sigma / (1.0 - self.helper.sigma);
+        let mu = sigma / (1.0 - sigma);
         let mut oldt = omega / mu; // initially
-        let m = self.n - 1;
+        let m = self.ndim - 1;
         for j in 0..m {
             // p=sqrt(k)*vv[j];
             // let p = inv_ml_g[j];
@@ -133,7 +140,7 @@ impl EllStable {
             // self.mq[[j, j]] /= t; // update invD
             let beta2 = inv_md_inv_ml_g[j] / t;
             self.mq[[j, j]] *= oldt / t; // update invD
-            for l in (j + 1)..self.n {
+            for l in (j + 1)..self.ndim {
                 // v(l) -= p * self.mq(j, l);
                 self.mq[[j, l]] += beta2 * self.mq[[l, j]];
             }
@@ -144,90 +151,7 @@ impl EllStable {
         // let mup = mu * p;
         let t = oldt + gg_t[m];
         self.mq[[m, m]] *= oldt / t; // update invD
-        self.kappa *= self.helper.delta;
-
-        // if self.no_defer_trick
-        // {
-        //     self.mq *= self.kappa;
-        //     self.kappa = 1.;
-        // }
-        status
-    }
-
-    fn update_parallel(
-        &mut self,
-        grad: &Array1<f64>,
-        beta: &(f64, Option<f64>),
-    ) -> CutStatus {
-        // let (grad, beta) = cut;
-        // calculate inv(L)*grad: (n-1)*n/2 multiplications
-        let mut inv_ml_g = grad.clone(); // initial x0
-        for i in 1..self.n {
-            for j in 0..i {
-                self.mq[[i, j]] = self.mq[[j, i]] * inv_ml_g[j];
-                // keep for rank-one update
-                inv_ml_g[i] -= self.mq[[i, j]];
-            }
-        }
-
-        // calculate inv(D)*inv(L)*grad: n
-        let mut inv_md_inv_ml_g = inv_ml_g.clone(); // initially
-        for i in 0..self.n {
-            inv_md_inv_ml_g[i] *= self.mq[[i, i]];
-        }
-
-        // calculate omega: n
-        let mut gg_t = inv_md_inv_ml_g.clone(); // initially
-        let mut omega = 0.0; // initially
-        for i in 0..self.n {
-            gg_t[i] *= inv_ml_g[i];
-            omega += gg_t[i];
-        }
-
-        self.helper.tsq = self.kappa * omega;
-        let (b0, b1_opt) = *beta;
-        let status = if let Some(b1) = b1_opt {
-            self.helper.calc_ll_core(b0, b1)
-        } else {
-            self.helper.calc_dc(b0)
-        };
-        if status != CutStatus::Success {
-            return status;
-        }
-
-        // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad : (n-1)*n/2
-        let mut g_t = inv_md_inv_ml_g.clone(); // initially
-        for i in (1..self.n).rev() {
-            // backward subsituition
-            for j in i..self.n {
-                g_t[i - 1] -= self.mq[[i - 1, j]] * g_t[j]; // ???
-            }
-        }
-
-        // calculate xc: n
-        self.xc -= &((self.helper.rho / omega) * &g_t); // n
-
-        // rank-one update: 3*n + (n-1)*n/2
-        // let r = self.sigma / omega;
-        let mu = self.helper.sigma / (1.0 - self.helper.sigma);
-        let mut oldt = omega / mu; // initially
-        let m = self.n - 1;
-        for j in 0..m {
-            let t = oldt + gg_t[j];
-            let beta2 = inv_md_inv_ml_g[j] / t;
-            self.mq[[j, j]] *= oldt / t; // update invD
-            for l in (j + 1)..self.n {
-                // v(l) -= p * self.mq(j, l);
-                self.mq[[j, l]] += beta2 * self.mq[[l, j]];
-            }
-            oldt = t;
-        }
-
-        // let p = inv_ml_g(n1);
-        // let mup = mu * p;
-        let t = oldt + gg_t[m];
-        self.mq[[m, m]] *= oldt / t; // update invD
-        self.kappa *= self.helper.delta;
+        self.kappa *= delta;
 
         // if self.no_defer_trick
         // {
@@ -251,7 +175,7 @@ impl SearchSpace for EllStable {
     }
 
     fn tsq(&self) -> f64 {
-        self.helper.tsq
+        self.tsq
     }
 
     fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
@@ -261,22 +185,44 @@ impl SearchSpace for EllStable {
         let (grad, beta) = cut;
         beta.update_by(self, grad)
     }
+
+    fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    where
+        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
+    {
+        let (grad, beta) = cut;
+        beta.update_cc_by(self, grad)
+    }
 }
 
 impl UpdateByCutChoices<EllStable> for f64 {
     type ArrayType = Array1<f64>;
 
-    fn update_by(&self, ell: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
+    fn update_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
-        ell.update_single(grad, beta)
+        let helper = ellip.helper.clone();
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_dc(beta, tsq))
+    }
+
+    fn update_cc_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
+        let beta = self;
+        let helper = ellip.helper.clone();
+        ellip.update_core(grad, beta, |_beta, tsq| helper.calc_cc(tsq))
     }
 }
 
 impl UpdateByCutChoices<EllStable> for (f64, Option<f64>) {
     type ArrayType = Array1<f64>;
 
-    fn update_by(&self, ell: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
+    fn update_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
-        ell.update_parallel(grad, beta)
+        let helper = ellip.helper.clone();
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_ll(beta, tsq))
     }
-} // } Ell
+
+    fn update_cc_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
+        let beta = self;
+        let helper = ellip.helper.clone();
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_ll_cc(beta, tsq))
+    }
+}
