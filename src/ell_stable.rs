@@ -81,7 +81,7 @@ impl EllStable {
     fn update_core<T, F>(&mut self, grad: &Array1<f64>, beta: &T, f_core: F) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Array1<f64>>,
-        F: FnOnce(&T, &f64) -> (CutStatus, f64, f64, f64),
+        F: FnOnce(&T, &f64) -> (CutStatus, (f64, f64, f64)),
     {
         // let (grad, beta) = cut;
         // calculate inv(L)*grad: (n-1)*n/2 multiplications
@@ -109,7 +109,7 @@ impl EllStable {
         }
 
         self.tsq = self.kappa * omega;
-        let (status, rho, sigma, delta) = f_core(beta, &self.tsq);
+        let (status, (rho, sigma, delta)) = f_core(beta, &self.tsq);
 
         if status != CutStatus::Success {
             return status;
@@ -217,12 +217,16 @@ impl UpdateByCutChoices<EllStable> for (f64, Option<f64>) {
     fn update_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_ll(beta, tsq))
+        ellip.update_core(grad, beta, |beta, tsq| {
+            helper.calc_single_or_ll_dc(beta, tsq)
+        })
     }
 
     fn update_cc_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_ll_cc(beta, tsq))
+        ellip.update_core(grad, beta, |beta, tsq| {
+            helper.calc_single_or_ll_cc(beta, tsq)
+        })
     }
 }
