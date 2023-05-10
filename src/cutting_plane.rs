@@ -39,14 +39,14 @@ pub trait OracleOptim<ArrayType> {
 }
 
 /// Oracle for quantized optimization problems
-pub trait OracleQ<ArrayType> {
+pub trait OracleOptimQ<ArrayType> {
     type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
     fn assess_optim_q(
         &mut self,
         xc: &ArrayType,
         tea: &mut f64,
         retry: bool,
-    ) -> ((ArrayType, Self::CutChoices), Option<ArrayType>, bool);
+    ) -> ((ArrayType, Self::CutChoices), bool, ArrayType, bool);
 }
 
 /// Oracle for binary search
@@ -195,17 +195,18 @@ pub fn cutting_plane_optim_q<T, Oracle, Space>(
 ) -> (Option<Space::ArrayType>, usize)
 where
     T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleQ<Space::ArrayType, CutChoices = T>,
+    Oracle: OracleOptimQ<Space::ArrayType, CutChoices = T>,
     Space: SearchSpaceQ,
 {
     let mut x_best: Option<Space::ArrayType> = None;
     let mut retry = false;
 
     for niter in 0..options.max_iters {
-        let (cut, x_opt, more_alt) = omega.assess_optim_q(&space_q.xc(), tea, retry); // query the oracle at &space.xc()
-        if let Some(x_q) = x_opt {
+        let (cut, shrunk, x_q, more_alt) = omega.assess_optim_q(&space_q.xc(), tea, retry); // query the oracle at &space.xc()
+        if shrunk {
             // best tea obtained
             x_best = Some(x_q);
+            retry = false;
         }
         let status = space_q.update_q::<T>(&cut); // update space
         match &status {

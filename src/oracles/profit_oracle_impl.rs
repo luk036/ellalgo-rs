@@ -36,7 +36,7 @@ impl profit_q_oracle {
      * @param[in,out] tea the best-so-far optimal value
      * @return (Cut, f64, Arr, i32)
      */
-    pub fn profit_q_oracle::assess_optim<f64>(const Arr& y, f64& tea, bool retry)
+    pub fn profit_q_oracle::assess_optim<f64>(y: &Arr, tea: f64, bool retry)
         -> (Cut, bool, Arr, bool) {
         if !retry {
             Arr x = y.mapv(f64::exp).mapv(f64::round);
