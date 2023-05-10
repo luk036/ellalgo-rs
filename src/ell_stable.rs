@@ -1,16 +1,15 @@
 // mod lib;
-use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoices};
+use crate::cutting_plane::{CutStatus, SearchSpace, SearchSpaceQ, UpdateByCutChoices};
 use crate::ell_calc::EllCalc;
 // #[macro_use]
 // extern crate ndarray;
 use ndarray::prelude::*;
 
 /**
- * @brief Ellipsoid Search Space
+ * @brief EllStableipsoid Search Space
  *
  *  EllStable = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
  *
- * Keep $mq$ symmetric but no promise of positive definite
  */
 #[derive(Debug, Clone)]
 pub struct EllStable {
@@ -63,18 +62,11 @@ impl EllStable {
      * @brief Construct a new EllStable object
      *
      * @param[in] val
-     * @param[in] x
+     * @param[in] xc
      */
     pub fn new_with_scalar(val: f64, xc: Array1<f64>) -> EllStable {
         EllStable::new_with_matrix(val, Array2::eye(xc.len()), xc)
     }
-
-    // /**
-    //  * @brief Set the xc object
-    //  *
-    //  * @param[in] xc
-    //  */
-    // pub fn set_xc(&mut self, xc: Arr) { self.xc = xc; }
 
     // Reference: Gill, Murray, and Wright, "Practical Optimization", p43.
     // Author: Brian Borchers (borchers@nmt.edu)
@@ -178,12 +170,12 @@ impl SearchSpace for EllStable {
         self.tsq
     }
 
-    fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    fn update_dc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
-        beta.update_by(self, grad)
+        beta.update_dc_by(self, grad)
     }
 
     fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
@@ -195,10 +187,35 @@ impl SearchSpace for EllStable {
     }
 }
 
+impl SearchSpaceQ for EllStable {
+    type ArrayType = Array1<f64>;
+
+    /**
+     * @brief copy the whole array anyway
+     *
+     * @return Array1<f64>
+     */
+    fn xc(&self) -> Self::ArrayType {
+        self.xc.clone()
+    }
+
+    fn tsq(&self) -> f64 {
+        self.tsq
+    }
+
+    fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    where
+        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
+    {
+        let (grad, beta) = cut;
+        beta.update_q_by(self, grad)
+    }
+}
+
 impl UpdateByCutChoices<EllStable> for f64 {
     type ArrayType = Array1<f64>;
 
-    fn update_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
+    fn update_dc_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
         ellip.update_core(grad, beta, |beta, tsq| helper.calc_dc(beta, tsq))
@@ -209,12 +226,18 @@ impl UpdateByCutChoices<EllStable> for f64 {
         let helper = ellip.helper.clone();
         ellip.update_core(grad, beta, |_beta, tsq| helper.calc_cc(tsq))
     }
+
+    fn update_q_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
+        let beta = self;
+        let helper = ellip.helper.clone();
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_q(beta, tsq))
+    }
 }
 
 impl UpdateByCutChoices<EllStable> for (f64, Option<f64>) {
     type ArrayType = Array1<f64>;
 
-    fn update_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
+    fn update_dc_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
         ellip.update_core(grad, beta, |beta, tsq| {
@@ -227,6 +250,14 @@ impl UpdateByCutChoices<EllStable> for (f64, Option<f64>) {
         let helper = ellip.helper.clone();
         ellip.update_core(grad, beta, |beta, tsq| {
             helper.calc_single_or_ll_cc(beta, tsq)
+        })
+    }
+
+    fn update_q_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
+        let beta = self;
+        let helper = ellip.helper.clone();
+        ellip.update_core(grad, beta, |beta, tsq| {
+            helper.calc_single_or_ll_q(beta, tsq)
         })
     }
 }

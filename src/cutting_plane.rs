@@ -17,8 +17,9 @@ type CInfo = (bool, usize);
 
 pub trait UpdateByCutChoices<SS> {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
-    fn update_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
+    fn update_dc_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
     fn update_cc_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
+    fn update_q_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
 }
 
 /// Oracle for feasibility problems
@@ -60,12 +61,25 @@ pub trait SearchSpace {
 
     fn tsq(&self) -> f64; // measure of the search space
 
-    fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    fn update_dc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
         Self: Sized;
 
     fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    where
+        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
+        Self: Sized;
+}
+
+pub trait SearchSpaceQ {
+    type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
+
+    fn xc(&self) -> Self::ArrayType;
+
+    fn tsq(&self) -> f64; // measure of the search space
+
+    fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
         Self: Sized;
@@ -111,7 +125,7 @@ where
             // feasible sol'n obtained
             return (true, niter);
         }
-        let status = space.update::<T>(&cut.unwrap()); // update space
+        let status = space.update_dc::<T>(&cut.unwrap()); // update space
         if status != CutStatus::Success || space.tsq() < options.tol {
             return (false, niter);
         }
@@ -150,9 +164,9 @@ where
         let status = if shrunk {
             // better tea obtained
             x_best = Some(space.xc());
-            space.update::<T>(&cut) // update space
+            space.update_dc::<T>(&cut) // update space
         } else {
-            space.update::<T>(&cut) // update space
+            space.update_cc::<T>(&cut) // update space
         };
         if status != CutStatus::Success || space.tsq() < options.tol {
             return (x_best, niter);
@@ -182,7 +196,7 @@ pub fn cutting_plane_optim_q<T, Oracle, Space>(
 where
     T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
     Oracle: OracleQ<Space::ArrayType, CutChoices = T>,
-    Space: SearchSpace,
+    Space: SearchSpaceQ,
 {
     let mut x_best: Option<Space::ArrayType> = None;
     let mut retry = false;
@@ -193,7 +207,7 @@ where
             // best tea obtained
             x_best = Some(x_q);
         }
-        let status = space_q.update::<T>(&cut); // update space
+        let status = space_q.update_q::<T>(&cut); // update space
         match &status {
             CutStatus::Success => {
                 retry = false;
