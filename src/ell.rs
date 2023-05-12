@@ -83,13 +83,13 @@ impl Ell {
         F: FnOnce(&T, &f64) -> (CutStatus, (f64, f64, f64)),
     {
         // let (grad, beta) = cut;
-        let mut mq_g = Array1::zeros(self.ndim); // initial x0
+        let mut grad_t = Array1::zeros(self.ndim); // initial x0
         let mut omega = 0.0;
         for i in 0..self.ndim {
             for j in 0..self.ndim {
-                mq_g[i] += self.mq[[i, j]] * grad[j];
+                grad_t[i] += self.mq[[i, j]] * grad[j];
             }
-            omega += mq_g[i] * grad[i];
+            omega += grad_t[i] * grad[i];
         }
 
         self.tsq = self.kappa * omega;
@@ -99,19 +99,19 @@ impl Ell {
             return status;
         }
 
-        self.xc -= &((rho / omega) * &mq_g); // n
+        self.xc -= &((rho / omega) * &grad_t); // n
 
         // n*(n+1)/2 + n
-        // self.mq -= (self.sigma / omega) * xt::linalg::outer(mq_g, mq_g);
+        // self.mq -= (self.sigma / omega) * xt::linalg::outer(grad_t, grad_t);
 
         let r = sigma / omega;
         for i in 0..self.ndim {
-            let r_mq_g = r * mq_g[i];
+            let r_grad_t = r * grad_t[i];
             for j in 0..i {
-                self.mq[[i, j]] -= r_mq_g * mq_g[j];
+                self.mq[[i, j]] -= r_grad_t * grad_t[j];
                 self.mq[[j, i]] = self.mq[[i, j]];
             }
-            self.mq[[i, i]] -= r_mq_g * mq_g[i];
+            self.mq[[i, i]] -= r_grad_t * grad_t[i];
         }
 
         self.kappa *= delta;

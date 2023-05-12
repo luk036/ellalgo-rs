@@ -10,24 +10,28 @@ use crate::cutting_plane::CutStatus;
  */
 #[derive(Debug, Clone)]
 pub struct EllCalcCore {
-    n_f: f64,
+    pub n_f: f64,
     n_plus_1: f64,
-    half_n: f64,
+    pub half_n: f64,
     cst1: f64,
     cst2: f64,
     cst3: f64,
 }
 
 impl EllCalcCore {
-    /**
-     * @brief Construct a new EllCalc object
-     *
-     * @tparam V
-     * @tparam U
-     * @param kappa
-     * @param mq
-     * @param x
-     */
+    /// Construct a new EllCalcCore
+    ///
+    /// # Examples:
+    ///
+    /// ```rust
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalcCore;
+    ///
+    /// let ell_calc_core = EllCalcCore::new(4.0);
+    ///
+    /// assert_approx_eq!(ell_calc_core.n_f, 4.0);
+    /// assert_approx_eq!(ell_calc_core.half_n, 2.0);
+    /// ```
     pub fn new(n_f: f64) -> EllCalcCore {
         let n_plus_1 = n_f + 1.0;
         let half_n = n_f / 2.0;
@@ -111,9 +115,8 @@ impl EllCalcCore {
      */
     pub fn calc_cc_core(&self, tsq: &f64) -> (f64, f64, f64) {
         // self.mu = self.half_n_minus_1;
-        let tau = tsq.sqrt();
         let sigma = self.cst2;
-        let rho = tau / self.n_plus_1;
+        let rho = tsq.sqrt() / self.n_plus_1;
         let delta = self.cst1;
         (rho, sigma, delta)
     }
@@ -134,15 +137,15 @@ pub struct EllCalc {
 }
 
 impl EllCalc {
-    /**
-     * @brief Construct a new EllCalc object
-     *
-     * @tparam V
-     * @tparam U
-     * @param kappa
-     * @param mq
-     * @param x
-     */
+    /// Construct a new EllCalcCore
+    ///
+    /// # Examples:
+    ///
+    /// ```rust
+    /// use ellalgo_rs::ell_calc::EllCalc;
+    /// let ell_calc = EllCalc::new(4.0);
+    /// assert!(ell_calc.use_parallel_cut);
+    /// ```
     pub fn new(n_f: f64) -> EllCalc {
         let calculator = EllCalcCore::new(n_f);
 
@@ -194,13 +197,37 @@ impl EllCalc {
         }
     }
 
-    /**
-     * @brief
-     *
-     * @param[in] b0
-     * @param[in] b1
-     * @return i32
-     */
+    /// Parallel Deep Cut
+    ///
+    /// # Examples:
+    ///
+    /// ```rust
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalc;
+    /// use ellalgo_rs::cutting_plane::CutStatus;
+    ///
+    /// let ell_calc = EllCalc::new(4.0);
+    /// let (status, (_rho, _sigma, _delta)) = ell_calc.calc_ll_dc(0.07, 0.03, &0.01);
+    /// assert_eq!(status, CutStatus::NoSoln);
+    ///
+    /// let (status, (rho, sigma, delta)) = ell_calc.calc_ll_dc(0.0, 0.05, &0.01);
+    /// assert_eq!(status, CutStatus::Success);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(rho, 0.02);
+    /// assert_approx_eq!(delta, 1.2);
+    ///
+    /// let (status, (rho, sigma, delta)) = ell_calc.calc_ll_dc(0.05, 0.11, &0.01);
+    /// assert_eq!(status, CutStatus::Success);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(rho, 0.06);
+    /// assert_approx_eq!(delta, 0.8);
+    ///
+    /// let (status, (rho, sigma, delta)) = ell_calc.calc_ll_dc(0.01, 0.04, &0.01);
+    /// assert_eq!(status, CutStatus::Success);
+    /// assert_approx_eq!(sigma, 0.928);
+    /// assert_approx_eq!(rho, 0.0232);
+    /// assert_approx_eq!(delta, 1.232);
+    /// ```
     pub fn calc_ll_dc(&self, b0: f64, b1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
         if b1 < b0 {
             return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
@@ -212,24 +239,31 @@ impl EllCalc {
             return self.calc_dc(&b0, tsq);
         }
 
-        // let b0b1n = b0 * (b1 / tsq);
-        // if self.n_f * b0b1n < -1.0 {
-        //     return (CutStatus::NoEffect, (0.0, 0.0, 1.0)); // no effect
-        // }
-
         (
             CutStatus::Success,
             self.calculator.calc_ll_dc_core(b0, b1, tsq),
         )
     }
 
-    /**
-     * @brief
-     *
-     * @param[in] b0
-     * @param[in] b1
-     * @return i32
-     */
+    /// Discrete Parallel Deep Cut
+    ///
+    /// # Examples:
+    ///
+    /// ```rust
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalc;
+    /// use ellalgo_rs::cutting_plane::CutStatus;
+    ///
+    /// let ell_calc = EllCalc::new(4.0);
+    /// let (status, (_rho, _sigma, _delta)) = ell_calc.calc_ll_q(-0.07, 0.07, &0.01);
+    /// assert_eq!(status, CutStatus::NoEffect);
+    ///
+    /// let (status, (rho, sigma, delta)) = ell_calc.calc_ll_q(-0.04, 0.0625, &0.01);
+    /// assert_eq!(status, CutStatus::Success);
+    /// assert_approx_eq!(sigma, 0.0);
+    /// assert_approx_eq!(rho, 0.0);
+    /// assert_approx_eq!(delta, 1.0);
+    /// ```
     pub fn calc_ll_q(&self, b0: f64, b1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
         if b1 < b0 {
             return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
@@ -252,16 +286,31 @@ impl EllCalc {
         )
     }
 
-    /**
-     * @brief
-     *
-     * @param[in] b1
-     * @param[in] b1sq
-     * @return void
-     */
+    /// Parallel Central Cut
+    ///
+    /// # Examples:
+    ///
+    /// ```rust
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalc;
+    /// use ellalgo_rs::cutting_plane::CutStatus;
+    ///
+    /// let ell_calc = EllCalc::new(4.0);
+    /// let (status, (rho, sigma, delta)) = ell_calc.calc_ll_cc(0.11, &0.01);
+    /// assert_eq!(status, CutStatus::Success);
+    /// assert_approx_eq!(sigma, 0.4);
+    /// assert_approx_eq!(rho, 0.02);
+    /// assert_approx_eq!(delta, 16.0 / 15.0);
+    ///
+    /// let (status, (rho, sigma, delta)) = ell_calc.calc_ll_cc(0.05, &0.01);
+    /// assert_eq!(status, CutStatus::Success);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(rho, 0.02);
+    /// assert_approx_eq!(delta, 1.2);
+    /// ```
     pub fn calc_ll_cc(&self, b1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
         if b1 < 0.0 {
-            return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no effect
+            return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no solution
         }
         let b1sqn = b1 * (b1 / tsq);
         let t1n = 1.0 - b1sqn;
@@ -271,12 +320,27 @@ impl EllCalc {
         (CutStatus::Success, self.calculator.calc_ll_cc_core(b1, tsq))
     }
 
-    /**
-     * @brief Deep Cut
-     *
-     * @param[in] beta
-     * @return i32
-     */
+    /// Deep Cut
+    ///
+    /// # Examples:
+    ///
+    /// ```rust
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalc;
+    /// use ellalgo_rs::cutting_plane::CutStatus;
+    ///
+    /// let ell_calc = EllCalc::new(4.0);
+    /// let (status, (_rho, _sigma, _delta)) = ell_calc.calc_dc(&0.11, &0.01);
+    /// assert_eq!(status, CutStatus::NoSoln);
+    /// let (status, (_rho, _sigma, _delta)) = ell_calc.calc_dc(&0.0, &0.01);
+    /// assert_eq!(status, CutStatus::Success);
+    ///
+    /// let (status, (rho, sigma, delta)) = ell_calc.calc_dc(&0.05, &0.01);
+    /// assert_eq!(status, CutStatus::Success);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(rho, 0.06);
+    /// assert_approx_eq!(delta, 0.8);
+    /// ```
     pub fn calc_dc(&self, beta: &f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
         if *tsq < beta * beta {
             return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
@@ -284,22 +348,25 @@ impl EllCalc {
 
         let tau = tsq.sqrt();
         let gamma = tau + self.n_f * beta;
-        // if gamma < 0.0 {
-        //     return (CutStatus::NoEffect, (0.0, 0.0, 1.0)); // no effect
-        // }
-
         (
             CutStatus::Success,
             self.calculator.calc_dc_core(beta, &tau, &gamma),
         )
     }
 
-    /**
-     * @brief Deep Cut
-     *
-     * @param[in] beta
-     * @return i32
-     */
+    /// Discrete Deep Cut
+    ///
+    /// # Examples:
+    ///
+    /// ```rust
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalc;
+    /// use ellalgo_rs::cutting_plane::CutStatus;
+    ///
+    /// let ell_calc = EllCalc::new(4.0);
+    /// let (status, (_rho, _sigma, _delta)) = ell_calc.calc_q(&-0.05, &0.01);
+    /// assert_eq!(status, CutStatus::NoEffect);
+    /// ```
     pub fn calc_q(&self, beta: &f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
         let tau = tsq.sqrt();
 
@@ -318,12 +385,23 @@ impl EllCalc {
         )
     }
 
-    /**
-     * @brief Central Cut
-     *
-     * @param[in] tau
-     * @return i32
-     */
+    /// Central Cut
+    ///
+    /// # Examples:
+    ///
+    /// ```rust
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalc;
+    /// use ellalgo_rs::cutting_plane::CutStatus;
+    ///
+    /// let ell_calc = EllCalc::new(4.0);
+    /// let (status, (rho, sigma, delta)) = ell_calc.calc_cc(&0.01);
+    ///
+    /// assert_eq!(status, CutStatus::Success);
+    /// assert_approx_eq!(sigma, 0.4);
+    /// assert_approx_eq!(rho, 0.02);
+    /// assert_approx_eq!(delta, 16.0 / 15.0);
+    /// ```
     #[inline]
     pub fn calc_cc(&self, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
         // self.mu = self.half_n_minus_1;
@@ -382,10 +460,8 @@ mod tests {
     #[test]
     pub fn test_calc_ll_cc() {
         let ell_calc = EllCalc::new(4.0);
-        // ell_calc.tsq = 0.01;
         let (status, (rho, sigma, delta)) = ell_calc.calc_ll_cc(0.11, &0.01);
         assert_eq!(status, CutStatus::Success);
-        // Central cut
         assert_approx_eq!(sigma, 0.4);
         assert_approx_eq!(rho, 0.02);
         assert_approx_eq!(delta, 16.0 / 15.0);

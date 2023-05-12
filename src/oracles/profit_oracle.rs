@@ -9,7 +9,7 @@ type Cut = (Arr, f64);
  *
  *  This example is taken from [Aliabadi and Salahi, 2013]:
  *
- *    max   p(scale x1**alpha x2**beta) - v1 * x1 - v2 * x2
+ *    max   p(A x1**alpha x2**beta) - v1 * x1 - v2 * x2
  *    s.t.  x1 <= k
  *
  *  where:
@@ -202,5 +202,37 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
         let d = &self.yd - y;
         *h += g[0] * d[0] + g[1] * d[1];
         (cut, shrunk, self.yd.clone(), !retry)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ProfitOracle;
+    // use super::{ProfitOracle, ProfitOracleQ, ProfitOracleRB};
+    use crate::cutting_plane::{cutting_plane_optim, Options};
+    use crate::ell::Ell;
+    use ndarray::array;
+
+    #[test]
+    pub fn test_profit_oracle() {
+        let unit_price = 20.0;
+        let scale = 40.0;
+        let limit = 30.5;
+        let a = array![0.1, 0.4];
+        let v = array![10.0, 35.0];
+
+        let mut ellip = Ell::new(array![100.0, 100.0], array![0.0, 0.0]);
+        let mut omega = ProfitOracle::new(unit_price, scale, limit, a, v);
+        let mut tea = 0.0;
+        let options = Options {
+            max_iters: 2000,
+            tol: 1e-8,
+        };
+        let (y_opt, niter) = cutting_plane_optim(&mut omega, &mut ellip, &mut tea, &options);
+        assert!(y_opt.is_some());
+        if let Some(y) = y_opt {
+            assert!(y[0] <= limit.ln());
+        }
+        assert_eq!(niter, 57);
     }
 }
