@@ -15,11 +15,11 @@ pub struct Options {
 
 type CInfo = (bool, usize);
 
-pub trait UpdateByCutChoices<SS> {
+pub trait UpdateByCutChoices<SearchSpace> {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
-    fn update_dc_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
-    fn update_cc_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
-    fn update_q_by(&self, space: &mut SS, grad: &Self::ArrayType) -> CutStatus;
+    fn update_dc_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
+    fn update_cc_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
+    fn update_q_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
 }
 
 /// Oracle for feasibility problems
