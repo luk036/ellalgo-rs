@@ -26,8 +26,8 @@ type Cut = (Arr, f64);
 pub struct ProfitOracle {
     log_p_scale: f64,
     log_k: f64,
-    v: Arr,
-    pub a: Arr,
+    price_out: Arr,
+    pub elasticities: Arr,
 }
 
 impl ProfitOracle {
@@ -40,12 +40,12 @@ impl ProfitOracle {
      * @param[in] a the output elasticities
      * @param[in] v output price
      */
-    pub fn new(p: f64, scale: f64, k: f64, a: Arr, v: Arr) -> Self {
+    pub fn new(p: f64, scale: f64, k: f64, elasticities: Arr, price_out: Arr) -> Self {
         ProfitOracle {
             log_p_scale: (p * scale).ln(),
             log_k: k.ln(),
-            v,
-            a,
+            price_out,
+            elasticities,
         }
     }
 }
@@ -60,19 +60,19 @@ impl OracleOptim<Arr> for ProfitOracle {
             return ((array![1.0, 0.0], f1), false);
         }
 
-        let log_cobb = self.log_p_scale + self.a[0] * y[0] + self.a[1] * y[1];
+        let log_cobb = self.log_p_scale + self.elasticities[0] * y[0] + self.elasticities[1] * y[1];
         let x = y.mapv(f64::exp);
-        let vx = self.v[0] * x[0] + self.v[1] * x[1];
+        let vx = self.price_out[0] * x[0] + self.price_out[1] * x[1];
         let mut te = *tea + vx;
 
         let fj = te.ln() - log_cobb;
         if fj < 0.0 {
             te = log_cobb.exp();
             *tea = te - vx;
-            let g = (&self.v * &x) / te - &self.a;
+            let g = (&self.price_out * &x) / te - &self.elasticities;
             return ((g, 0.0), true);
         }
-        let g = (&self.v * &x) / te - &self.a;
+        let g = (&self.price_out * &x) / te - &self.elasticities;
         ((g, fj), false)
     }
 }
@@ -88,7 +88,7 @@ impl OracleOptim<Arr> for ProfitOracle {
 pub struct ProfitOracleRB {
     uie: Arr,
     omega: ProfitOracle,
-    a: Arr,
+    elasticities: Arr,
 }
 
 impl ProfitOracleRB {
@@ -103,11 +103,11 @@ impl ProfitOracleRB {
      * @param[in] e paramters for uncertainty
      * @param[in] e3 paramters for uncertainty
      */
-    pub fn new(p: f64, scale: f64, k: f64, aa: Arr, v: Arr, e: Arr, e3: f64) -> Self {
+    pub fn new(p: f64, scale: f64, k: f64, aa: Arr, price_out: Arr, e: Arr, e3: f64) -> Self {
         ProfitOracleRB {
             uie: e,
-            omega: ProfitOracle::new(p - e3, scale, k - e3, aa.clone(), &v + &array![e3, e3]),
-            a: aa,
+            omega: ProfitOracle::new(p - e3, scale, k - e3, aa.clone(), &price_out + &array![e3, e3]),
+            elasticities: aa,
         }
     }
 }
@@ -125,7 +125,7 @@ impl OracleOptim<Arr> for ProfitOracleRB {
      * @see cutting_plane_dc
      */
     fn assess_optim(&mut self, y: &Arr, tea: &mut f64) -> ((Arr, f64), bool) {
-        let mut a_rb = self.a.clone();
+        let mut a_rb = self.elasticities.clone();
         a_rb[0] += if y[0] > 0.0 {
             -self.uie[0]
         } else {
@@ -136,7 +136,7 @@ impl OracleOptim<Arr> for ProfitOracleRB {
         } else {
             self.uie[1]
         };
-        self.omega.a = a_rb;
+        self.omega.elasticities = a_rb;
         self.omega.assess_optim(y, tea)
     }
 }
@@ -163,10 +163,10 @@ impl ProfitOracleQ {
      * @param[in] a the output elasticities
      * @param[in] v output price
      */
-    pub fn new(p: f64, scale: f64, k: f64, a: Arr, v: Arr) -> Self {
+    pub fn new(p: f64, scale: f64, k: f64, a: Arr, price_out: Arr) -> Self {
         ProfitOracleQ {
             yd: array![0.0, 0.0],
-            omega: ProfitOracle::new(p, scale, k, a, v),
+            omega: ProfitOracle::new(p, scale, k, a, price_out),
         }
     }
 }
@@ -218,11 +218,11 @@ mod tests {
         let unit_price = 20.0;
         let scale = 40.0;
         let limit = 30.5;
-        let a = array![0.1, 0.4];
-        let v = array![10.0, 35.0];
+        let elasticities = array![0.1, 0.4];
+        let price_out = array![10.0, 35.0];
 
         let mut ellip = Ell::new(array![100.0, 100.0], array![0.0, 0.0]);
-        let mut omega = ProfitOracle::new(unit_price, scale, limit, a, v);
+        let mut omega = ProfitOracle::new(unit_price, scale, limit, elasticities, price_out);
         let mut tea = 0.0;
         let options = Options {
             max_iters: 2000,
