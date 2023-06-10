@@ -106,7 +106,13 @@ impl ProfitOracleRB {
     pub fn new(p: f64, scale: f64, k: f64, aa: Arr, price_out: Arr, e: Arr, e3: f64) -> Self {
         ProfitOracleRB {
             uie: e,
-            omega: ProfitOracle::new(p - e3, scale, k - e3, aa.clone(), &price_out + &array![e3, e3]),
+            omega: ProfitOracle::new(
+                p - e3,
+                scale,
+                k - e3,
+                aa.clone(),
+                &price_out + &array![e3, e3],
+            ),
             elasticities: aa,
         }
     }
