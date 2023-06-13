@@ -3,7 +3,9 @@ use crate::cutting_plane::{CutStatus, SearchSpace, SearchSpaceQ, UpdateByCutChoi
 use crate::ell_calc::EllCalc;
 // #[macro_use]
 // extern crate ndarray;
-use ndarray::prelude::*;
+// use ndarray::prelude::*;
+use ndarray::Array2;
+use ndarray::Array1;
 
 /**
  * @brief Ellipsoid Search Space
@@ -14,7 +16,6 @@ use ndarray::prelude::*;
 #[derive(Debug, Clone)]
 pub struct Ell {
     pub no_defer_trick: bool,
-
     mq: Array2<f64>,
     xc: Array1<f64>,
     kappa: f64,
@@ -77,24 +78,17 @@ impl Ell {
      * @param[in] cut
      * @return (i32, f64)
      */
-    fn update_core<T, F>(&mut self, grad: &Array1<f64>, beta: &T, f_core: F) -> CutStatus
+    fn update_core<T, F>(&mut self, grad: &Array1<f64>, beta: &T, cut_strategy: F) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Array1<f64>>,
         F: FnOnce(&T, &f64) -> (CutStatus, (f64, f64, f64)),
     {
-        // let (grad, beta) = cut;
-        let mut grad_t = Array1::zeros(self.ndim); // initial x0
-        let mut omega = 0.0;
-        for i in 0..self.ndim {
-            for j in 0..self.ndim {
-                grad_t[i] += self.mq[[i, j]] * grad[j];
-            }
-            omega += grad_t[i] * grad[i];
-        }
+        let grad_t = self.mq.dot(grad);
+        let omega = grad.dot(&grad_t);
 
         self.tsq = self.kappa * omega;
         // let status = self.helper.calc_dc(*beta);
-        let (status, (rho, sigma, delta)) = f_core(beta, &self.tsq);
+        let (status, (rho, sigma, delta)) = cut_strategy(beta, &self.tsq);
         if status != CutStatus::Success {
             return status;
         }
@@ -103,7 +97,6 @@ impl Ell {
 
         // n*(n+1)/2 + n
         // self.mq -= (self.sigma / omega) * xt::linalg::outer(grad_t, grad_t);
-
         let r = sigma / omega;
         for i in 0..self.ndim {
             let r_grad_t = r * grad_t[i];

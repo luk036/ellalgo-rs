@@ -3,7 +3,9 @@ use crate::cutting_plane::{CutStatus, SearchSpace, SearchSpaceQ, UpdateByCutChoi
 use crate::ell_calc::EllCalc;
 // #[macro_use]
 // extern crate ndarray;
-use ndarray::prelude::*;
+// use ndarray::prelude::*;
+use ndarray::Array2;
+use ndarray::Array1;
 
 /**
  * @brief EllStableipsoid Search Space
