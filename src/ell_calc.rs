@@ -1,13 +1,23 @@
 // mod lib;
 use crate::cutting_plane::CutStatus;
 
-/**
- * @brief Ellipsoid Search Space
- *
- *  EllCalcCore = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
- *
- * Keep $mq$ symmetric but no promise of positive definite
- */
+/// The `EllCalcCore` struct represents the parameters for calculating the new Ellipsoid Search Space.
+/// 
+/// Properties:
+/// 
+/// * `n_f`: The `n_f` property represents the number of variables in the ellipsoid search space.
+/// * `n_plus_1`: The `n_plus_1` property represents the value of `n + 1`, where `n` is the dimension of
+/// the search space. It is used in calculations related to the ellipsoid search space.
+/// * `half_n`: The `half_n` property represents half of the dimension of the ellipsoid search space. It
+/// is used in the calculation of the parameters for the ellipsoid search space.
+/// * `cst1`: The `cst1` property is a constant used in the calculation of the parameters for the new
+/// Ellipsoid Search Space. Its specific purpose and value are not provided in the code snippet.
+/// * `cst2`: The `cst2` property is a constant used in the calculation of the parameters for the new
+/// Ellipsoid Search Space. It is not specified what exactly it represents or how it is used in the
+/// calculation.
+/// * `cst3`: The `cst3` property is a constant value used in the calculation of the parameters for the
+/// new Ellipsoid Search Space. It is not specified what exactly this constant represents or how it is
+/// used in the calculations.
 #[derive(Debug, Clone)]
 pub struct EllCalcCore {
     pub n_f: f64,
