@@ -2,9 +2,9 @@
 use crate::cutting_plane::CutStatus;
 
 /// The `EllCalcCore` struct represents the parameters for calculating the new Ellipsoid Search Space.
-/// 
+///
 /// Properties:
-/// 
+///
 /// * `n_f`: The `n_f` property represents the number of variables in the ellipsoid search space.
 /// * `n_plus_1`: The `n_plus_1` property represents the value of `n + 1`, where `n` is the dimension of
 /// the search space. It is used in calculations related to the ellipsoid search space.
@@ -29,7 +29,17 @@ pub struct EllCalcCore {
 }
 
 impl EllCalcCore {
-    /// Construct a new EllCalcCore
+    /// The `new` function constructs a new [`EllCalcCore`] object with the given parameter `n_f` and
+    /// initializes its internal variables.
+    ///
+    /// Arguments:
+    ///
+    /// * `n_f`: The parameter `n_f` represents the value of `n` in the calculations. It is a floating-point
+    /// number.
+    ///
+    /// Returns:
+    ///
+    /// The `new` function returns an instance of the `EllCalcCore` struct.
     ///
     /// # Examples:
     ///
@@ -61,13 +71,7 @@ impl EllCalcCore {
         }
     }
 
-    /**
-     * @brief
-     *
-     * @param[in] b0
-     * @param[in] b1
-     * @return i32
-     */
+    /// Calculate the core of updating the ellipsoid with the parallel-cut or the deep-cut
     pub fn calc_ll_dc_core(&self, b0: f64, b1: f64, tsq: &f64) -> (f64, f64, f64) {
         let b1sqn = b1 * (b1 / tsq);
         let t1n = 1.0 - b1sqn;

@@ -85,30 +85,6 @@ pub trait SearchSpaceQ {
         Self: Sized;
 }
 
-/**
- * @brief Find a point in a convex set (defined through a cutting-plane oracle).
- *
- * A function f(x) is *convex* if there always exist a g(x)
- * such that f(z) >= f(x) + g(x)^T * (z - x), forall z, x in dom f.
- * Note that dom f does not need to be a convex set in our definition.
- * The affine function g^T (x - xc) + beta is called a cutting-plane,
- * or a "cut" for short.
- * This algorithm solves the following feasibility problem:
- *
- *   find x
- *   s.t. f(x) <= 0,
- *
- * A *separation oracle* asserts that an evalution point x0 is feasible,
- * or provide a cut that separates the feasible region and x0.
- *
- * @tparam Oracle
- * @tparam Space
- * @param omega perform assessment on x0
- * @param space search Space containing x*
- * @param options maximum iteration and error tolerance etc.
- * @return Information of Cutting-plane method
- */
-
 /// The function `cutting_plane_feas` iteratively updates a search space using a cutting plane oracle
 /// until a feasible solution is found or the maximum number of iterations is reached.
 /// 
