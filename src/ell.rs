@@ -83,12 +83,12 @@ impl Ell {
     ///
     /// Returns:
     ///
-    /// The function `new` returns an instance of the `Ell` struct.
+    /// The function `new` returns an instance of the [`Ell`] struct.
     pub fn new(val: Array1<f64>, xc: Array1<f64>) -> Ell {
         Ell::new_with_matrix(1.0, Array2::from_diag(&val), xc)
     }
 
-    /// The function `new_with_scalar` constructs a new `Ell` object with a scalar value and a vector.
+    /// The function `new_with_scalar` constructs a new [`Ell`] object with a scalar value and a vector.
     ///
     /// Arguments:
     ///
@@ -99,7 +99,7 @@ impl Ell {
     ///
     /// Returns:
     ///
-    /// an instance of the `Ell` struct.
+    /// an instance of the [`Ell`] struct.
     pub fn new_with_scalar(val: f64, xc: Array1<f64>) -> Ell {
         Ell::new_with_matrix(val, Array2::eye(xc.len()), xc)
     }

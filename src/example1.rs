@@ -9,13 +9,15 @@ pub struct MyOracle {}
 impl OracleOptim<Arr> for MyOracle {
     type CutChoices = f64; // single cut
 
-    /**
-     * @brief
-     *
-     * @param[in] z
-     * @param[in,out] tea
-     * @return std::tuple<Cut, double>
-     */
+    /// The function assess_optim takes in two parameters, z and tea, and returns a tuple containing an
+    /// array and a double, along with a boolean value.
+    ///
+    /// Arguments:
+    ///
+    /// * `z`: The parameter `z` is an array of length 2, representing the values of `x` and `y`
+    /// respectively.
+    /// * `tea`: The parameter `tea` is a mutable reference to a `f64` variable. It is used to store the
+    /// current best solution for the optimization problem.
     fn assess_optim(&mut self, z: &Arr, tea: &mut f64) -> ((Arr, f64), bool) {
         let x = z[0];
         let y = z[1];
