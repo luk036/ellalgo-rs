@@ -4,6 +4,20 @@ use ndarray::{Array1, Array2};
 
 /// The `LDLTMgr` struct is a manager for LDLT factorization in Rust.
 ///
+/// `LDLTMgr` is a class that performs the LDLT factorization for a given
+/// symmetric matrix. The LDLT factorization decomposes a symmetric matrix A into
+/// the product of a lower triangular matrix L, a diagonal matrix D, and the
+/// transpose of L. This factorization is useful for solving linear systems and
+/// eigenvalue problems. The class provides methods to perform the factorization,
+/// check if the matrix is positive definite, calculate a witness vector if it is
+/// not positive definite, and calculate the symmetric quadratic form.
+///
+///  - LDL^T square-root-free version
+///  - Option allow semidefinite
+///  - A matrix A in R^{m x m} is positive definite iff v' A v > 0
+///      for all v in R^n.
+///  - O(p^2) per iteration, independent of N
+///
 /// Properties:
 ///
 /// * `pos`: A tuple containing two usize values. It represents the dimensions of the LDLT factorization.
