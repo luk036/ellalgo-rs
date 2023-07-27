@@ -21,7 +21,7 @@ use crate::cutting_plane::CutStatus;
 #[derive(Debug, Clone)]
 pub struct EllCalcCore {
     pub n_f: f64,
-    n_plus_1: f64,
+    pub n_plus_1: f64,
     pub half_n: f64,
     cst1: f64,
     cst2: f64,
@@ -51,6 +51,7 @@ impl EllCalcCore {
     ///
     /// assert_approx_eq!(ell_calc_core.n_f, 4.0);
     /// assert_approx_eq!(ell_calc_core.half_n, 2.0);
+    /// assert_approx_eq!(ell_calc_core.n_plus_1, 5.0);
     /// ```
     pub fn new(n_f: f64) -> EllCalcCore {
         let n_plus_1 = n_f + 1.0;
@@ -81,6 +82,19 @@ impl EllCalcCore {
     /// * `b1`: The parameter `b1` represents the length of the semi-minor axis of the ellipsoid.
     /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
     /// of the ellipsoid.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalcCore;
+    /// 
+    /// let ell_calc_core = EllCalcCore::new(4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_ll_dc_core(1.0, 2.0, &4.0);
+    /// assert_approx_eq!(rho, 1.2);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(delta, 0.8);
+    /// ```
     pub fn calc_ll_dc_core(&self, b0: f64, b1: f64, tsq: &f64) -> (f64, f64, f64) {
         let b1sqn = b1 * (b1 / tsq);
         let t1n = 1.0 - b1sqn;
@@ -106,6 +120,19 @@ impl EllCalcCore {
     /// * `b1`: The parameter `b1` represents the semi-minor axis of the ellipsoid. It is a floating-point
     /// number.
     /// * `tsq`: The parameter `tsq` represents the square of the target semi-axis length of the ellipsoid.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalcCore;
+    /// 
+    /// let ell_calc_core = EllCalcCore::new(4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_ll_cc_core(1.0, &4.0);
+    /// assert_approx_eq!(rho, 0.4);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(delta, 1.2);
+    /// ```
     pub fn calc_ll_cc_core(&self, b1: f64, tsq: &f64) -> (f64, f64, f64) {
         let b1sqn = b1 * (b1 / tsq);
         let temp = self.half_n * b1sqn;
@@ -127,6 +154,19 @@ impl EllCalcCore {
     /// quickly the system responds to changes.
     /// * `gamma`: The parameter `gamma` represents the deep-cut factor. It is a measure of how much the
     /// ellipsoid is being updated or modified.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalcCore;
+    /// 
+    /// let ell_calc_core = EllCalcCore::new(4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_dc_core(&1.0, &2.0, &6.0);
+    /// assert_approx_eq!(rho, 1.2);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(delta, 0.8);
+    /// ```
     pub fn calc_dc_core(&self, beta: &f64, tau: &f64, gamma: &f64) -> (f64, f64, f64) {
         let rho = gamma / self.n_plus_1;
         let sigma = 2.0 * rho / (tau + beta);
@@ -142,6 +182,18 @@ impl EllCalcCore {
     ///
     /// * `tsq`: The parameter `tsq` represents the square of the time taken to update the ellipsoid with
     /// the central-cut.
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalcCore;
+    /// let ell_calc_core = EllCalcCore::new(4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_cc_core(&4.0);
+    /// assert_approx_eq!(rho, 0.4);
+    /// assert_approx_eq!(sigma, 0.4);
+    /// assert_approx_eq!(delta, 16.0/15.0);
+    /// ```
     pub fn calc_cc_core(&self, tsq: &f64) -> (f64, f64, f64) {
         // self.mu = self.half_n_minus_1;
         let sigma = self.cst2;
