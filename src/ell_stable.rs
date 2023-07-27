@@ -108,13 +108,13 @@ impl EllStable {
     /// Update ellipsoid core function using the cut
     ///
     ///  $grad^T * (x - xc) + beta <= 0$
-    /// 
+    ///
     /// The `update_core` function in Rust updates the ellipsoid core based on a given gradient and beta
     /// value using a cut strategy.
     ///
     /// Reference:
     /// Gill, Murray, and Wright, "Practical Optimization", p43. Author: Brian Borchers (borchers@nmt.edu)
-    /// 
+    ///
     /// Arguments:
     ///
     /// * `grad`: A reference to an Array1<f64> representing the gradient vector.
@@ -233,13 +233,13 @@ impl SearchSpace for EllStable {
     }
 
     /// The `update_dc` function updates the decision variable based on the given cut.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `cut`: A tuple containing two elements:
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// The `update_dc` function returns a value of type `CutStatus`.
     fn update_dc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
@@ -250,14 +250,14 @@ impl SearchSpace for EllStable {
     }
 
     /// The `update_cc` function updates the cut choices using the gradient and beta values.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `cut`: The `cut` parameter is a tuple containing two elements. The first element is of type
     /// `Self::ArrayType`, and the second element is of type `T`.
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// The function `update_cc` returns a value of type `CutStatus`.
     fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
@@ -286,13 +286,13 @@ impl SearchSpaceQ for EllStable {
     }
 
     /// The `update_q` function updates the decision variable based on the given cut.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `cut`: A tuple containing two elements:
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// The `update_dc` function returns a value of type `CutStatus`.
     fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where

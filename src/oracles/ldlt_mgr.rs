@@ -27,10 +27,10 @@ use ndarray::{Array1, Array2};
 /// * `mat_t`: The `mat_t` property is a 2-dimensional array of type `f64`. It is used to store the LDLT
 /// factorization of a matrix.
 pub struct LDLTMgr {
-    pos: (usize, usize),
-    witness: Array1<f64>,
-    ndim: usize,
-    mat_t: Array2<f64>,
+    pub pos: (usize, usize),
+    pub witness: Array1<f64>,
+    pub ndim: usize,
+    pub mat_t: Array2<f64>,
 }
 
 impl LDLTMgr {
@@ -44,6 +44,18 @@ impl LDLTMgr {
     /// Returns:
     ///
     /// The `new` function is returning an instance of the struct that it is defined in.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
+    /// use ndarray::{array, Array1};
+    /// let ldl_mgr = LDLTMgr::new(3);
+    /// assert_eq!(ldl_mgr.pos, (0, 0));
+    /// assert_eq!(ldl_mgr.witness.len(), 3);
+    /// assert_eq!(ldl_mgr.ndim, 3);
+    /// assert_eq!(ldl_mgr.mat_t.len(), 9);
+    /// ```
     pub fn new(ndim: usize) -> Self {
         Self {
             pos: (0, 0),
@@ -62,6 +74,20 @@ impl LDLTMgr {
     /// Returns:
     ///
     /// The `factorize` function returns a boolean value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
+    /// use ndarray::array;
+    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mat_a = array![
+    ///     [1.0, 2.0, 3.0],
+    ///     [2.0, 4.0, 5.0],
+    ///     [3.0, 5.0, 6.0],
+    /// ];
+    /// assert_eq!(ldl_mgr.factorize(&mat_a), false);
+    /// ```
     pub fn factorize(&mut self, mat_a: &Array2<f64>) -> bool {
         self.factor(&|i, j| mat_a[[i, j]])
     }
@@ -77,6 +103,20 @@ impl LDLTMgr {
     /// Returns:
     ///
     /// The `factor` function returns a boolean value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
+    /// use ndarray::array;
+    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mat_a = array![
+    ///     [1.0, 2.0, 3.0],
+    ///     [2.0, 4.0, 5.0],
+    ///     [3.0, 5.0, 6.0],
+    /// ];
+    /// assert_eq!(ldl_mgr.factor(&|i, j| mat_a[[i, j]]), false);
+    /// ```
     pub fn factor<F>(&mut self, get_elem: &F) -> bool
     where
         F: Fn(usize, usize) -> f64,
@@ -113,6 +153,20 @@ impl LDLTMgr {
     /// Returns:
     ///
     /// a boolean value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
+    /// use ndarray::array;
+    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mat_a = array![
+    ///     [1.0, 2.0, 3.0],
+    ///     [2.0, 4.0, 5.0],
+    ///     [3.0, 5.0, 6.0],
+    /// ];
+    /// assert_eq!(ldl_mgr.factor_with_allow_semidefinite(&|i, j| mat_a[[i, j]]), true);
+    /// ```
     pub fn factor_with_allow_semidefinite<F>(&mut self, get_elem: &F) -> bool
     where
         F: Fn(usize, usize) -> f64,
@@ -148,6 +202,21 @@ impl LDLTMgr {
     /// Returns:
     ///
     /// A boolean value is being returned.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
+    /// use ndarray::array;
+    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mat_a = array![
+    ///     [1.0, 2.0, 3.0],
+    ///     [2.0, 4.0, 5.0],
+    ///     [3.0, 5.0, 6.0],
+    /// ];
+    /// assert_eq!(ldl_mgr.factor(&|i, j| mat_a[[i, j]]), false);
+    /// assert_eq!(ldl_mgr.is_spd(), false);
+    /// ```
     pub fn is_spd(&self) -> bool {
         self.pos.1 == 0
     }
@@ -157,6 +226,24 @@ impl LDLTMgr {
     /// Returns:
     ///
     /// The function `witness` returns a `f64` (a 64-bit floating-point number).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
+    /// use ndarray::array;
+    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mat_a = array![
+    ///     [1.0, 2.0, 3.0],
+    ///     [2.0, 4.0, 5.0],
+    ///     [3.0, 5.0, 6.0],
+    /// ];
+    /// assert_eq!(ldl_mgr.factor(&|i, j| mat_a[[i, j]]), false);
+    /// assert_eq!(ldl_mgr.witness(), 0.0);
+    /// assert_eq!(ldl_mgr.witness[0], -2.0);
+    /// assert_eq!(ldl_mgr.witness[1], 1.0);
+    /// assert_eq!(ldl_mgr.pos.1, 2);
+    /// ```
     pub fn witness(&mut self) -> f64 {
         if self.is_spd() {
             panic!("Matrix is SPD");
@@ -182,6 +269,26 @@ impl LDLTMgr {
     /// Returns:
     ///
     /// The function `sym_quad` returns a `f64` value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
+    /// use ndarray::array;
+    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mat_a = array![
+    ///     [1.0, 2.0, 3.0],
+    ///     [2.0, 4.0, 5.0],
+    ///     [3.0, 5.0, 6.0],
+    /// ];
+    /// assert_eq!(ldl_mgr.factor(&|i, j| mat_a[[i, j]]), false);
+    /// assert_eq!(ldl_mgr.witness(), 0.0);
+    /// let mat_b = array![
+    ///     [1.0, 2.0, 3.0],
+    ///     [2.0, 6.0, 5.0],
+    ///     [3.0, 5.0, 4.0],
+    /// ];
+    /// assert_eq!(ldl_mgr.sym_quad(&mat_b), 2.0);
     pub fn sym_quad(&self, mat_a: &Array2<f64>) -> f64 {
         let mut res = 0.0;
         let (start, stop) = self.pos;

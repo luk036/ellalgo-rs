@@ -31,12 +31,12 @@ use ndarray::Array2;
 #[derive(Debug, Clone)]
 pub struct Ell {
     pub no_defer_trick: bool,
-    mq: Array2<f64>,
-    xc: Array1<f64>,
-    kappa: f64,
+    pub mq: Array2<f64>,
+    pub xc: Array1<f64>,
+    pub kappa: f64,
     ndim: usize,
     helper: EllCalc,
-    tsq: f64,
+    pub tsq: f64,
 }
 
 impl Ell {
@@ -84,6 +84,18 @@ impl Ell {
     /// Returns:
     ///
     /// The function `new` returns an instance of the [`Ell`] struct.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::ell::Ell;
+    /// use ndarray::arr1;
+    /// let val = arr1(&[1.0, 1.0]);
+    /// let xc = arr1(&[0.0, 0.0]);
+    /// let ell = Ell::new(val, xc);
+    /// assert_eq!(ell.kappa, 1.0);
+    /// assert_eq!(ell.mq.shape(), &[2, 2]);
+    /// ```
     pub fn new(val: Array1<f64>, xc: Array1<f64>) -> Ell {
         Ell::new_with_matrix(1.0, Array2::from_diag(&val), xc)
     }
@@ -100,6 +112,22 @@ impl Ell {
     /// Returns:
     ///
     /// an instance of the [`Ell`] struct.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::ell::Ell;
+    /// use ndarray::arr1;
+    /// let val = 1.0;
+    /// let xc = arr1(&[0.0, 0.0]);
+    /// let ell = Ell::new_with_scalar(val, xc);
+    /// assert_eq!(ell.kappa, 1.0);
+    /// assert_eq!(ell.mq.shape(), &[2, 2]);
+    /// assert_eq!(ell.xc.shape(), &[2]);
+    /// assert_eq!(ell.xc[0], 0.0);
+    /// assert_eq!(ell.xc[1], 0.0);
+    /// assert_eq!(ell.tsq, 0.0);
+    /// ```
     pub fn new_with_scalar(val: f64, xc: Array1<f64>) -> Ell {
         Ell::new_with_matrix(val, Array2::eye(xc.len()), xc)
     }
@@ -182,13 +210,13 @@ impl SearchSpace for Ell {
     }
 
     /// The `update_dc` function updates the decision variable based on the given cut.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `cut`: A tuple containing two elements:
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// The `update_dc` function returns a value of type `CutStatus`.
     fn update_dc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
@@ -199,14 +227,14 @@ impl SearchSpace for Ell {
     }
 
     /// The `update_cc` function updates the cut choices using the gradient and beta values.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `cut`: The `cut` parameter is a tuple containing two elements. The first element is of type
     /// `Self::ArrayType`, and the second element is of type `T`.
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// The function `update_cc` returns a value of type `CutStatus`.
     fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
@@ -235,13 +263,13 @@ impl SearchSpaceQ for Ell {
     }
 
     /// The `update_q` function updates the decision variable based on the given cut.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `cut`: A tuple containing two elements:
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// The `update_dc` function returns a value of type `CutStatus`.
     fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where

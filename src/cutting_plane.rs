@@ -87,9 +87,9 @@ pub trait SearchSpaceQ {
 
 /// The function `cutting_plane_feas` iteratively updates a search space using a cutting plane oracle
 /// until a feasible solution is found or the maximum number of iterations is reached.
-/// 
+///
 /// Arguments:
-/// 
+///
 /// * `omega`: `omega` is an instance of the `Oracle` trait, which represents an oracle that provides
 /// information about the feasibility of a solution. The `Oracle` trait has a method `assess_feas` that
 /// takes a reference to the current solution `&space.xc()` and returns an optional `
@@ -99,9 +99,9 @@ pub trait SearchSpaceQ {
 /// cutting plane algorithm. It likely includes properties such as `max_iters` (maximum number of
 /// iterations), `tol` (tolerance for termination), and other parameters that control the behavior of
 /// the algorithm.
-/// 
+///
 /// Returns:
-/// 
+///
 /// The function `cutting_plane_feas` returns a tuple `(bool, usize)`. The first element of the tuple
 /// represents whether a feasible solution was obtained (`true` if yes, `false` if no), and the second
 /// element represents the number of iterations performed.
@@ -132,9 +132,9 @@ where
 
 /// The function `cutting_plane_optim` performs cutting plane optimization on a given search space using
 /// an oracle.
-/// 
+///
 /// Arguments:
-/// 
+///
 /// * `omega`: The `omega` parameter is an instance of the `Oracle` trait, which represents an
 /// optimization oracle. The oracle provides information about the optimization problem, such as the
 /// objective function and constraints.
@@ -176,11 +176,10 @@ where
     (x_best, options.max_iters)
 } // END
 
-
 /// The function implements the cutting-plane method for solving a convex discrete optimization problem.
-/// 
+///
 /// Arguments:
-/// 
+///
 /// * `omega`: The parameter "omega" is an instance of the OracleOptimQ trait, which represents an
 /// oracle that provides assessments for the cutting-plane method. It is used to query the oracle for
 /// assessments on the current solution.
@@ -239,9 +238,9 @@ where
 } // END
 
 /// The `bsearch` function performs a binary search to find a feasible solution within a given interval.
-/// 
+///
 /// Arguments:
-/// 
+///
 /// * `omega`: The parameter `omega` is an instance of the `Oracle` trait, which is used to perform
 /// assessments on a value `x0`. The specific implementation of the `Oracle` trait is not provided in
 /// the code snippet, so it could be any type that implements the necessary methods for the binary
@@ -252,9 +251,9 @@ where
 /// * `options`: The `options` parameter is a struct that contains various options for the binary search
 /// algorithm. It includes properties such as the maximum number of iterations (`max_iters`) and the
 /// error tolerance (`tol`). These options control the termination criteria for the algorithm.
-/// 
+///
 /// Returns:
-/// 
+///
 /// The function `bsearch` returns a tuple of two values: a boolean indicating whether a feasible
 /// solution was obtained, and the number of iterations performed.
 #[allow(dead_code)]

@@ -82,13 +82,13 @@ impl EllCalcCore {
     /// * `b1`: The parameter `b1` represents the length of the semi-minor axis of the ellipsoid.
     /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
     /// of the ellipsoid.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use approx_eq::assert_approx_eq;
     /// use ellalgo_rs::ell_calc::EllCalcCore;
-    /// 
+    ///
     /// let ell_calc_core = EllCalcCore::new(4.0);
     /// let (rho, sigma, delta) = ell_calc_core.calc_ll_dc_core(1.0, 2.0, &4.0);
     /// assert_approx_eq!(rho, 1.2);
@@ -120,13 +120,13 @@ impl EllCalcCore {
     /// * `b1`: The parameter `b1` represents the semi-minor axis of the ellipsoid. It is a floating-point
     /// number.
     /// * `tsq`: The parameter `tsq` represents the square of the target semi-axis length of the ellipsoid.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```
     /// use approx_eq::assert_approx_eq;
     /// use ellalgo_rs::ell_calc::EllCalcCore;
-    /// 
+    ///
     /// let ell_calc_core = EllCalcCore::new(4.0);
     /// let (rho, sigma, delta) = ell_calc_core.calc_ll_cc_core(1.0, &4.0);
     /// assert_approx_eq!(rho, 0.4);
@@ -154,13 +154,13 @@ impl EllCalcCore {
     /// quickly the system responds to changes.
     /// * `gamma`: The parameter `gamma` represents the deep-cut factor. It is a measure of how much the
     /// ellipsoid is being updated or modified.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```
     /// use approx_eq::assert_approx_eq;
     /// use ellalgo_rs::ell_calc::EllCalcCore;
-    /// 
+    ///
     /// let ell_calc_core = EllCalcCore::new(4.0);
     /// let (rho, sigma, delta) = ell_calc_core.calc_dc_core(&1.0, &2.0, &6.0);
     /// assert_approx_eq!(rho, 1.2);
@@ -182,9 +182,9 @@ impl EllCalcCore {
     ///
     /// * `tsq`: The parameter `tsq` represents the square of the time taken to update the ellipsoid with
     /// the central-cut.
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```
     /// use approx_eq::assert_approx_eq;
     /// use ellalgo_rs::ell_calc::EllCalcCore;
@@ -260,7 +260,7 @@ impl EllCalc {
     ///
     /// * `beta`: The `beta` parameter is a tuple containing two values: `b0` and `b1_opt`. `b0` is of type
     /// `f64` and `b1_opt` is an optional value of type `Option<f64>`.
-    /// * `tsq`: The `tsq` parameter is a reference to a `f64` value. 
+    /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
     pub fn calc_single_or_ll_dc(
         &self,
         beta: &(f64, Option<f64>),
@@ -278,7 +278,7 @@ impl EllCalc {
     ///
     /// Arguments:
     ///
-    /// * `beta`: The `beta` parameter is a tuple containing two values: `f64` and `Option<f64>`. 
+    /// * `beta`: The `beta` parameter is a tuple containing two values: `f64` and `Option<f64>`.
     /// The first value, denoted as `_b0`, is of type `f64`. The second value, `b1_opt`, is of type `Option<f64>`.
     /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
     pub fn calc_single_or_ll_cc(
@@ -300,7 +300,7 @@ impl EllCalc {
     ///
     /// * `beta`: The `beta` parameter is a tuple containing two values: `b0` and `b1_opt`. `b0` is of type
     /// `f64` and `b1_opt` is an optional value of type `Option<f64>`.
-    /// * `tsq`: The `tsq` parameter is a reference to a `f64` value. 
+    /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
     pub fn calc_single_or_ll_q(
         &self,
         beta: &(f64, Option<f64>),
