@@ -9,13 +9,11 @@ pub struct MyOracle {}
 impl OracleOptim<Arr> for MyOracle {
     type CutChoices = f64; // single cut
 
-    /**
-     * @brief
-     *
-     * @param[in] z
-     * @param[in,out] tea
-     * @return std::tuple<Cut, double>
-     */
+    /// * @brief
+    ///  *
+    ///  * @param[in] z
+    ///  * @param[in,out] tea
+    ///  * @return std::tuple<Cut, double>
     fn assess_optim(&mut self, z: &Arr, tea: &mut f64) -> ((Arr, f64), bool) {
         let sqrtx = z[0];
         let ly = z[1];
