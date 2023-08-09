@@ -90,12 +90,12 @@ impl EllCalcCore {
     /// use ellalgo_rs::ell_calc::EllCalcCore;
     ///
     /// let ell_calc_core = EllCalcCore::new(4.0);
-    /// let (rho, sigma, delta) = ell_calc_core.calc_parallel_deep_cut_core(1.0, 2.0, &4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_parallel_deep_cut(1.0, 2.0, &4.0);
     /// assert_approx_eq!(rho, 1.2);
     /// assert_approx_eq!(sigma, 0.8);
     /// assert_approx_eq!(delta, 0.8);
     /// ```
-    pub fn calc_parallel_deep_cut_core(
+    pub fn calc_parallel_deep_cut(
         &self,
         beta0: f64,
         beta1: f64,
@@ -133,12 +133,12 @@ impl EllCalcCore {
     /// use ellalgo_rs::ell_calc::EllCalcCore;
     ///
     /// let ell_calc_core = EllCalcCore::new(4.0);
-    /// let (rho, sigma, delta) = ell_calc_core.calc_parallel_central_cut_core(1.0, &4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_parallel_central_cut(1.0, &4.0);
     /// assert_approx_eq!(rho, 0.4);
     /// assert_approx_eq!(sigma, 0.8);
     /// assert_approx_eq!(delta, 1.2);
     /// ```
-    pub fn calc_parallel_central_cut_core(&self, beta1: f64, tsq: &f64) -> (f64, f64, f64) {
+    pub fn calc_parallel_central_cut(&self, beta1: f64, tsq: &f64) -> (f64, f64, f64) {
         let b1sqn = beta1 * (beta1 / tsq);
         let temp = self.half_n * b1sqn;
         let xi = (1.0 - b1sqn + temp * temp).sqrt();
@@ -167,12 +167,12 @@ impl EllCalcCore {
     /// use ellalgo_rs::ell_calc::EllCalcCore;
     ///
     /// let ell_calc_core = EllCalcCore::new(4.0);
-    /// let (rho, sigma, delta) = ell_calc_core.calc_deep_cut_core(&1.0, &2.0, &6.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_deep_cut(&1.0, &2.0, &6.0);
     /// assert_approx_eq!(rho, 1.2);
     /// assert_approx_eq!(sigma, 0.8);
     /// assert_approx_eq!(delta, 0.8);
     /// ```
-    pub fn calc_deep_cut_core(&self, beta: &f64, tau: &f64, gamma: &f64) -> (f64, f64, f64) {
+    pub fn calc_deep_cut(&self, beta: &f64, tau: &f64, gamma: &f64) -> (f64, f64, f64) {
         let rho = gamma / self.n_plus_1;
         let sigma = 2.0 * rho / (tau + beta);
         let alpha = beta / tau;
@@ -194,12 +194,12 @@ impl EllCalcCore {
     /// use approx_eq::assert_approx_eq;
     /// use ellalgo_rs::ell_calc::EllCalcCore;
     /// let ell_calc_core = EllCalcCore::new(4.0);
-    /// let (rho, sigma, delta) = ell_calc_core.calc_central_cut_core(&4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_central_cut(&4.0);
     /// assert_approx_eq!(rho, 0.4);
     /// assert_approx_eq!(sigma, 0.4);
     /// assert_approx_eq!(delta, 16.0/15.0);
     /// ```
-    pub fn calc_central_cut_core(&self, tsq: &f64) -> (f64, f64, f64) {
+    pub fn calc_central_cut(&self, tsq: &f64) -> (f64, f64, f64) {
         // self.mu = self.half_n_minus_1;
         let sigma = self.cst2;
         let rho = tsq.sqrt() / self.n_plus_1;
@@ -216,14 +216,14 @@ impl EllCalcCore {
 ///
 /// * `n_f`: The `n_f` property is a floating-point number that represents the dimensionality of the
 /// search space. It indicates the number of variables or dimensions in the ellipsoid search space.
-/// * `calculator`: The `calculator` property is of type `EllCalcCore` and is used to perform
+/// * `helper`: The `helper` property is of type `EllCalcCore` and is used to perform
 /// calculations related to the ellipsoid search space. It is a separate struct that contains the
 /// necessary methods and data for these calculations.
 /// * `use_parallel_cut`: A boolean flag indicating whether to use parallel cut or not.
 #[derive(Debug, Clone)]
 pub struct EllCalc {
     n_f: f64,
-    pub calculator: EllCalcCore,
+    pub helper: EllCalcCore,
     pub use_parallel_cut: bool,
 }
 
@@ -248,11 +248,11 @@ impl EllCalc {
     /// assert!(ell_calc.use_parallel_cut);
     /// ```
     pub fn new(n_f: f64) -> EllCalc {
-        let calculator = EllCalcCore::new(n_f);
+        let helper = EllCalcCore::new(n_f);
 
         EllCalc {
             n_f,
-            calculator,
+            helper,
             use_parallel_cut: true,
         }
     }
@@ -368,8 +368,8 @@ impl EllCalc {
 
         (
             CutStatus::Success,
-            self.calculator
-                .calc_parallel_deep_cut_core(beta0, beta1, tsq),
+            self.helper
+                .calc_parallel_deep_cut(beta0, beta1, tsq),
         )
     }
 
@@ -415,8 +415,8 @@ impl EllCalc {
 
         (
             CutStatus::Success,
-            self.calculator
-                .calc_parallel_deep_cut_core(beta0, beta1, tsq),
+            self.helper
+                .calc_parallel_deep_cut(beta0, beta1, tsq),
         )
     }
 
@@ -453,7 +453,7 @@ impl EllCalc {
         }
         (
             CutStatus::Success,
-            self.calculator.calc_parallel_central_cut_core(beta1, tsq),
+            self.helper.calc_parallel_central_cut(beta1, tsq),
         )
     }
 
@@ -487,7 +487,7 @@ impl EllCalc {
         let gamma = tau + self.n_f * beta;
         (
             CutStatus::Success,
-            self.calculator.calc_deep_cut_core(beta, &tau, &gamma),
+            self.helper.calc_deep_cut(beta, &tau, &gamma),
         )
     }
 
@@ -518,7 +518,7 @@ impl EllCalc {
 
         (
             CutStatus::Success,
-            self.calculator.calc_deep_cut_core(beta, &tau, &gamma),
+            self.helper.calc_deep_cut(beta, &tau, &gamma),
         )
     }
 
@@ -544,7 +544,7 @@ impl EllCalc {
         // self.mu = self.half_n_minus_1;
         (
             CutStatus::Success,
-            self.calculator.calc_central_cut_core(tsq),
+            self.helper.calc_central_cut(tsq),
         )
     }
 }
@@ -559,12 +559,12 @@ mod tests {
 
     #[test]
     pub fn test_construct() {
-        let calculator = EllCalcCore::new(4.0);
-        assert_eq!(calculator.n_f, 4.0);
-        assert_eq!(calculator.half_n, 2.0);
-        assert_approx_eq!(calculator.cst1, 16.0 / 15.0);
-        assert_approx_eq!(calculator.cst2, 0.4);
-        assert_approx_eq!(calculator.cst3, 0.8);
+        let helper = EllCalcCore::new(4.0);
+        assert_eq!(helper.n_f, 4.0);
+        assert_eq!(helper.half_n, 2.0);
+        assert_approx_eq!(helper.cst1, 16.0 / 15.0);
+        assert_approx_eq!(helper.cst2, 0.4);
+        assert_approx_eq!(helper.cst3, 0.8);
     }
 
     #[test]
