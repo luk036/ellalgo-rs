@@ -95,7 +95,12 @@ impl EllCalcCore {
     /// assert_approx_eq!(sigma, 0.8);
     /// assert_approx_eq!(delta, 0.8);
     /// ```
-    pub fn calc_parallel_deep_cut_core(&self, beta0: f64, beta1: f64, tsq: &f64) -> (f64, f64, f64) {
+    pub fn calc_parallel_deep_cut_core(
+        &self,
+        beta0: f64,
+        beta1: f64,
+        tsq: &f64,
+    ) -> (f64, f64, f64) {
         let b1sqn = beta1 * (beta1 / tsq);
         let t1n = 1.0 - b1sqn;
         let b0b1n = beta0 * (beta1 / tsq);
@@ -345,7 +350,12 @@ impl EllCalc {
     /// assert_approx_eq!(rho, 0.0232);
     /// assert_approx_eq!(delta, 1.232);
     /// ```
-    pub fn calc_parallel_deep_cut(&self, beta0: f64, beta1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
+    pub fn calc_parallel_deep_cut(
+        &self,
+        beta0: f64,
+        beta1: f64,
+        tsq: &f64,
+    ) -> (CutStatus, (f64, f64, f64)) {
         if beta1 < beta0 {
             return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
         }
@@ -358,7 +368,8 @@ impl EllCalc {
 
         (
             CutStatus::Success,
-            self.calculator.calc_parallel_deep_cut_core(beta0, beta1, tsq),
+            self.calculator
+                .calc_parallel_deep_cut_core(beta0, beta1, tsq),
         )
     }
 
@@ -381,7 +392,12 @@ impl EllCalc {
     /// assert_approx_eq!(rho, 0.0);
     /// assert_approx_eq!(delta, 1.0);
     /// ```
-    pub fn calc_parallel_q(&self, beta0: f64, beta1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
+    pub fn calc_parallel_q(
+        &self,
+        beta0: f64,
+        beta1: f64,
+        tsq: &f64,
+    ) -> (CutStatus, (f64, f64, f64)) {
         if beta1 < beta0 {
             return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
         }
@@ -399,7 +415,8 @@ impl EllCalc {
 
         (
             CutStatus::Success,
-            self.calculator.calc_parallel_deep_cut_core(beta0, beta1, tsq),
+            self.calculator
+                .calc_parallel_deep_cut_core(beta0, beta1, tsq),
         )
     }
 
@@ -434,7 +451,10 @@ impl EllCalc {
         if t1n < 0.0 || !self.use_parallel_cut {
             return self.calc_central_cut(tsq);
         }
-        (CutStatus::Success, self.calculator.calc_parallel_central_cut_core(beta1, tsq))
+        (
+            CutStatus::Success,
+            self.calculator.calc_parallel_central_cut_core(beta1, tsq),
+        )
     }
 
     /// Deep Cut
@@ -522,7 +542,10 @@ impl EllCalc {
     #[inline]
     pub fn calc_central_cut(&self, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
         // self.mu = self.half_n_minus_1;
-        (CutStatus::Success, self.calculator.calc_central_cut_core(tsq))
+        (
+            CutStatus::Success,
+            self.calculator.calc_central_cut_core(tsq),
+        )
     }
 }
 
