@@ -49,11 +49,11 @@ impl Ell1D {
     ///
     /// * `grad`: The `grad` parameter is the gradient value, which is of type `f64`. It represents the
     /// gradient of the function at a particular point.
-    /// * `b0`: The parameter `b0` represents the value of the constant term in the inequality constraint
+    /// * `beta0`: The parameter `beta0` represents the value of the constant term in the inequality constraint
     /// equation. In the code, it is referred to as `beta`.
-    fn update_single(&mut self, grad: &f64, b0: &f64) -> (CutStatus, f64) {
+    fn update_single(&mut self, grad: &f64, beta0: &f64) -> (CutStatus, f64) {
         let g = *grad;
-        let beta = *b0;
+        let beta = *beta0;
         let temp = self.r * g;
         let tau = if g < 0.0 { -temp } else { temp };
         let tsq = tau * tau;

@@ -77,9 +77,9 @@ impl EllCalcCore {
     ///
     /// Arguments:
     ///
-    /// * `b0`: The parameter `b0` represents the semi-minor axis of the ellipsoid before the cut. It is
+    /// * `beta0`: The parameter `beta0` represents the semi-minor axis of the ellipsoid before the cut. It is
     /// a floating-point number.
-    /// * `b1`: The parameter `b1` represents the length of the semi-minor axis of the ellipsoid.
+    /// * `beta1`: The parameter `beta1` represents the length of the semi-minor axis of the ellipsoid.
     /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
     /// of the ellipsoid.
     ///
@@ -95,17 +95,17 @@ impl EllCalcCore {
     /// assert_approx_eq!(sigma, 0.8);
     /// assert_approx_eq!(delta, 0.8);
     /// ```
-    pub fn calc_parallel_deep_cut_core(&self, b0: f64, b1: f64, tsq: &f64) -> (f64, f64, f64) {
-        let b1sqn = b1 * (b1 / tsq);
+    pub fn calc_parallel_deep_cut_core(&self, beta0: f64, beta1: f64, tsq: &f64) -> (f64, f64, f64) {
+        let b1sqn = beta1 * (beta1 / tsq);
         let t1n = 1.0 - b1sqn;
-        let b0b1n = b0 * (b1 / tsq);
-        // let t0 = tsq - b0 * b0;
-        let t0n = 1.0 - b0 * (b0 / tsq);
+        let b0b1n = beta0 * (beta1 / tsq);
+        // let t0 = tsq - beta0 * beta0;
+        let t0n = 1.0 - beta0 * (beta0 / tsq);
         // let t1 = tsq - b1sq;
-        let bsum = b0 + b1;
+        let bsum = beta0 + beta1;
         let bsumn = bsum / tsq;
         let bav = bsum / 2.0;
-        let tempn = self.half_n * bsumn * (b1 - b0);
+        let tempn = self.half_n * bsumn * (beta1 - beta0);
         let xi = (t0n * t1n + tempn * tempn).sqrt();
         let sigma = self.cst3 + (1.0 + b0b1n - xi) / (bsumn * bav) / self.n_plus_1;
         let rho = sigma * bav;
@@ -117,7 +117,7 @@ impl EllCalcCore {
     ///
     /// Arguments:
     ///
-    /// * `b1`: The parameter `b1` represents the semi-minor axis of the ellipsoid. It is a floating-point
+    /// * `beta1`: The parameter `beta1` represents the semi-minor axis of the ellipsoid. It is a floating-point
     /// number.
     /// * `tsq`: The parameter `tsq` represents the square of the target semi-axis length of the ellipsoid.
     ///
@@ -133,12 +133,12 @@ impl EllCalcCore {
     /// assert_approx_eq!(sigma, 0.8);
     /// assert_approx_eq!(delta, 1.2);
     /// ```
-    pub fn calc_parallel_central_cut_core(&self, b1: f64, tsq: &f64) -> (f64, f64, f64) {
-        let b1sqn = b1 * (b1 / tsq);
+    pub fn calc_parallel_central_cut_core(&self, beta1: f64, tsq: &f64) -> (f64, f64, f64) {
+        let b1sqn = beta1 * (beta1 / tsq);
         let temp = self.half_n * b1sqn;
         let xi = (1.0 - b1sqn + temp * temp).sqrt();
         let sigma = self.cst3 + self.cst2 * (1.0 - xi) / b1sqn;
-        let rho = sigma * b1 / 2.0;
+        let rho = sigma * beta1 / 2.0;
         let delta = self.cst1 * (1.0 - b1sqn / 2.0 + xi / self.n_f);
         (rho, sigma, delta)
     }
@@ -258,19 +258,19 @@ impl EllCalc {
     ///
     /// Arguments:
     ///
-    /// * `beta`: The `beta` parameter is a tuple containing two values: `b0` and `b1_opt`. `b0` is of type
-    /// `f64` and `b1_opt` is an optional value of type `Option<f64>`.
+    /// * `beta`: The `beta` parameter is a tuple containing two values: `beta0` and `beta1_opt`. `beta0` is of type
+    /// `f64` and `beta1_opt` is an optional value of type `Option<f64>`.
     /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
     pub fn calc_single_or_parallel_deep_cut(
         &self,
         beta: &(f64, Option<f64>),
         tsq: &f64,
     ) -> (CutStatus, (f64, f64, f64)) {
-        let (b0, b1_opt) = *beta;
-        if let Some(b1) = b1_opt {
-            self.calc_parallel_deep_cut(b0, b1, tsq)
+        let (beta0, beta1_opt) = *beta;
+        if let Some(beta1) = beta1_opt {
+            self.calc_parallel_deep_cut(beta0, beta1, tsq)
         } else {
-            self.calc_deep_cut(&b0, tsq)
+            self.calc_deep_cut(&beta0, tsq)
         }
     }
 
@@ -279,16 +279,16 @@ impl EllCalc {
     /// Arguments:
     ///
     /// * `beta`: The `beta` parameter is a tuple containing two values: `f64` and `Option<f64>`.
-    /// The first value, denoted as `_b0`, is of type `f64`. The second value, `b1_opt`, is of type `Option<f64>`.
+    /// The first value, denoted as `_b0`, is of type `f64`. The second value, `beta1_opt`, is of type `Option<f64>`.
     /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
     pub fn calc_single_or_parallel_central_cut(
         &self,
         beta: &(f64, Option<f64>),
         tsq: &f64,
     ) -> (CutStatus, (f64, f64, f64)) {
-        let (_b0, b1_opt) = *beta;
-        if let Some(b1) = b1_opt {
-            self.calc_parallel_central_cut(b1, tsq)
+        let (_b0, beta1_opt) = *beta;
+        if let Some(beta1) = beta1_opt {
+            self.calc_parallel_central_cut(beta1, tsq)
         } else {
             self.calc_central_cut(tsq)
         }
@@ -298,19 +298,19 @@ impl EllCalc {
     ///
     /// Arguments:
     ///
-    /// * `beta`: The `beta` parameter is a tuple containing two values: `b0` and `b1_opt`. `b0` is of type
-    /// `f64` and `b1_opt` is an optional value of type `Option<f64>`.
+    /// * `beta`: The `beta` parameter is a tuple containing two values: `beta0` and `beta1_opt`. `beta0` is of type
+    /// `f64` and `beta1_opt` is an optional value of type `Option<f64>`.
     /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
     pub fn calc_single_or_parallel_q(
         &self,
         beta: &(f64, Option<f64>),
         tsq: &f64,
     ) -> (CutStatus, (f64, f64, f64)) {
-        let (b0, b1_opt) = *beta;
-        if let Some(b1) = b1_opt {
-            self.calc_parallel_q(b0, b1, tsq)
+        let (beta0, beta1_opt) = *beta;
+        if let Some(beta1) = beta1_opt {
+            self.calc_parallel_q(beta0, beta1, tsq)
         } else {
-            self.calc_deep_cut_q(&b0, tsq)
+            self.calc_deep_cut_q(&beta0, tsq)
         }
     }
 
@@ -345,20 +345,20 @@ impl EllCalc {
     /// assert_approx_eq!(rho, 0.0232);
     /// assert_approx_eq!(delta, 1.232);
     /// ```
-    pub fn calc_parallel_deep_cut(&self, b0: f64, b1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
-        if b1 < b0 {
+    pub fn calc_parallel_deep_cut(&self, beta0: f64, beta1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
+        if beta1 < beta0 {
             return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
         }
 
-        let b1sqn = b1 * (b1 / tsq);
+        let b1sqn = beta1 * (beta1 / tsq);
         let t1n = 1.0 - b1sqn;
         if t1n < 0.0 || !self.use_parallel_cut {
-            return self.calc_deep_cut(&b0, tsq);
+            return self.calc_deep_cut(&beta0, tsq);
         }
 
         (
             CutStatus::Success,
-            self.calculator.calc_parallel_deep_cut_core(b0, b1, tsq),
+            self.calculator.calc_parallel_deep_cut_core(beta0, beta1, tsq),
         )
     }
 
@@ -381,25 +381,25 @@ impl EllCalc {
     /// assert_approx_eq!(rho, 0.0);
     /// assert_approx_eq!(delta, 1.0);
     /// ```
-    pub fn calc_parallel_q(&self, b0: f64, b1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
-        if b1 < b0 {
+    pub fn calc_parallel_q(&self, beta0: f64, beta1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
+        if beta1 < beta0 {
             return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
         }
 
-        let b1sqn = b1 * (b1 / tsq);
+        let b1sqn = beta1 * (beta1 / tsq);
         let t1n = 1.0 - b1sqn;
         if t1n < 0.0 || !self.use_parallel_cut {
-            return self.calc_deep_cut_q(&b0, tsq);
+            return self.calc_deep_cut_q(&beta0, tsq);
         }
 
-        let b0b1n = b0 * (b1 / tsq);
+        let b0b1n = beta0 * (beta1 / tsq);
         if self.n_f * b0b1n < -1.0 {
             return (CutStatus::NoEffect, (0.0, 0.0, 1.0)); // no effect
         }
 
         (
             CutStatus::Success,
-            self.calculator.calc_parallel_deep_cut_core(b0, b1, tsq),
+            self.calculator.calc_parallel_deep_cut_core(beta0, beta1, tsq),
         )
     }
 
@@ -425,16 +425,16 @@ impl EllCalc {
     /// assert_approx_eq!(rho, 0.02);
     /// assert_approx_eq!(delta, 1.2);
     /// ```
-    pub fn calc_parallel_central_cut(&self, b1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
-        if b1 < 0.0 {
+    pub fn calc_parallel_central_cut(&self, beta1: f64, tsq: &f64) -> (CutStatus, (f64, f64, f64)) {
+        if beta1 < 0.0 {
             return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no solution
         }
-        let b1sqn = b1 * (b1 / tsq);
+        let b1sqn = beta1 * (beta1 / tsq);
         let t1n = 1.0 - b1sqn;
         if t1n < 0.0 || !self.use_parallel_cut {
             return self.calc_central_cut(tsq);
         }
-        (CutStatus::Success, self.calculator.calc_parallel_central_cut_core(b1, tsq))
+        (CutStatus::Success, self.calculator.calc_parallel_central_cut_core(beta1, tsq))
     }
 
     /// Deep Cut
