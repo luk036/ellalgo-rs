@@ -298,7 +298,7 @@ impl UpdateByCutChoices<Ell> for f64 {
     fn update_q_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_deep_cut_q(beta, tsq))
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut_q(beta, tsq))
     }
 }
 

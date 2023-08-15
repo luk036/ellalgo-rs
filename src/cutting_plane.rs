@@ -34,7 +34,7 @@ pub trait OracleOptim<ArrayType> {
     fn assess_optim(
         &mut self,
         xc: &ArrayType,
-        tea: &mut f64,
+        target: &mut f64,
     ) -> ((ArrayType, Self::CutChoices), bool);
 }
 
@@ -44,14 +44,14 @@ pub trait OracleOptimQ<ArrayType> {
     fn assess_optim_q(
         &mut self,
         xc: &ArrayType,
-        tea: &mut f64,
+        target: &mut f64,
         retry: bool,
     ) -> ((ArrayType, Self::CutChoices), bool, ArrayType, bool);
 }
 
 /// Oracle for binary search
 pub trait OracleBS {
-    fn assess_bs(&mut self, tea: f64) -> bool;
+    fn assess_bs(&mut self, target: f64) -> bool;
 }
 
 pub trait SearchSpace {
@@ -141,7 +141,7 @@ where
 /// * `space`: The `space` parameter represents the search space, which is a type that implements the
 /// `SearchSpace` trait. It contains the current state of the optimization problem, including the
 /// decision variables and any additional information needed for the optimization algorithm.
-/// * `tea`: The parameter `tea` represents the current value of the target function that the
+/// * `target`: The parameter `target` represents the current value of the target function that the
 /// optimization algorithm is trying to minimize.
 /// * `options`: The `options` parameter is of type `Options` and contains various settings for the
 /// optimization algorithm. It likely includes parameters such as the maximum number of iterations
@@ -150,7 +150,7 @@ where
 pub fn cutting_plane_optim<T, Oracle, Space>(
     omega: &mut Oracle,
     space: &mut Space,
-    tea: &mut f64,
+    target: &mut f64,
     options: &Options,
 ) -> (Option<Space::ArrayType>, usize)
 where
@@ -161,9 +161,9 @@ where
     let mut x_best: Option<Space::ArrayType> = None;
 
     for niter in 0..options.max_iters {
-        let (cut, shrunk) = omega.assess_optim(&space.xc(), tea); // query the oracle at &space.xc()
+        let (cut, shrunk) = omega.assess_optim(&space.xc(), target); // query the oracle at &space.xc()
         let status = if shrunk {
-            // better tea obtained
+            // better target obtained
             x_best = Some(space.xc());
             space.update_deep_cut::<T>(&cut) // update space
         } else {
@@ -186,7 +186,7 @@ where
 /// * `space_q`: The parameter `space_q` is a mutable reference to a `Space` object, which represents
 /// the search space containing the optimal solution `x*`. It is used to update the space based on the
 /// cuts obtained from the oracle.
-/// * `tea`: The parameter "tea" represents the best-so-far optimal solution. It is a mutable reference
+/// * `target`: The parameter "target" represents the best-so-far optimal solution. It is a mutable reference
 /// to a floating-point number (f64).
 /// * `options`: The `options` parameter is a struct that contains various options for the cutting-plane
 /// method. It includes parameters such as the maximum number of iterations (`max_iters`) and the error
@@ -195,7 +195,7 @@ where
 pub fn cutting_plane_optim_q<T, Oracle, Space>(
     omega: &mut Oracle,
     space_q: &mut Space,
-    tea: &mut f64,
+    target: &mut f64,
     options: &Options,
 ) -> (Option<Space::ArrayType>, usize)
 where
@@ -207,9 +207,9 @@ where
     let mut retry = false;
 
     for niter in 0..options.max_iters {
-        let (cut, shrunk, x_q, more_alt) = omega.assess_optim_q(&space_q.xc(), tea, retry); // query the oracle at &space.xc()
+        let (cut, shrunk, x_q, more_alt) = omega.assess_optim_q(&space_q.xc(), target, retry); // query the oracle at &space.xc()
         if shrunk {
-            // best tea obtained
+            // best target obtained
             x_best = Some(x_q);
             retry = false;
         }
@@ -272,13 +272,13 @@ where
         if tau < options.tol {
             return (upper != u_orig, niter);
         }
-        let mut tea = lower; // l may be `i32` or `Fraction`
-        tea += tau;
-        if omega.assess_bs(tea) {
+        let mut target = lower; // l may be `i32` or `Fraction`
+        target += tau;
+        if omega.assess_bs(target) {
             // feasible sol'n obtained
-            upper = tea;
+            upper = target;
         } else {
-            lower = tea;
+            lower = target;
         }
     }
     (upper != u_orig, options.max_iters)
@@ -326,12 +326,12 @@ where
 //     /**
 //      * @brief
 //      *
-//      * @param tea the best-so-far optimal value
+//      * @param target the best-so-far optimal value
 //      * @return bool
 //      */
-//     template <typename Num> let mut operator()(const Num& tea) -> bool {
+//     template <typename Num> let mut operator()(const Num& target) -> bool {
 //         Space space = self.space.copy();
-//         self.omega.update(tea);
+//         self.omega.update(target);
 //         let ell_info = cutting_plane_feas(self.omega, space, self.options);
 //         if ell_info.feasible {
 //             self.space.set_xc(&space.xc());
