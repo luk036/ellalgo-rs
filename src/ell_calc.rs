@@ -96,20 +96,18 @@ impl EllCalcCore {
     /// assert_approx_eq!(delta, 0.8);
     /// ```
     pub fn calc_parallel_bias_cut(&self, beta0: f64, beta1: f64, tsq: &f64) -> (f64, f64, f64) {
-        let b1sqn = beta1 * (beta1 / tsq);
-        let t1n = 1.0 - b1sqn;
-        let b0b1n = beta0 * (beta1 / tsq);
-        // let t0 = tsq - beta0 * beta0;
-        let t0n = 1.0 - beta0 * (beta0 / tsq);
-        // let t1 = tsq - b1sq;
+        let b0b1 = beta0 * beta1;
         let bsum = beta0 + beta1;
-        let bsumn = bsum / tsq;
-        let bav = bsum / 2.0;
-        let tempn = self.half_n * bsumn * (beta1 - beta0);
-        let xi = (t0n * t1n + tempn * tempn).sqrt();
-        let sigma = self.cst3 + (1.0 + b0b1n - xi) / (bsumn * bav) / self.n_plus_1;
-        let rho = sigma * bav;
-        let delta = self.cst1 * ((t0n + t1n) / 2.0 + xi / self.n_f);
+        let bsumsq = bsum * bsum;
+        let gamma = tsq + self.n_f * b0b1;
+        let h = tsq + b0b1 + self.half_n * bsumsq;
+        let temp2 = h + (h * h - gamma * self.n_plus_1 * bsumsq).sqrt();
+        let inv_mu_plus_2 = gamma / temp2;
+        let inv_mu = gamma / (temp2 - 2.0 * gamma);
+        let rho = bsum * inv_mu_plus_2;
+        let sigma = 2.0 * inv_mu_plus_2;
+        let delta = 1.0 + (-2.0 * b0b1 + bsumsq * inv_mu_plus_2) * inv_mu / tsq;
+
         (rho, sigma, delta)
     }
 
@@ -134,12 +132,16 @@ impl EllCalcCore {
     /// assert_approx_eq!(delta, 1.2);
     /// ```
     pub fn calc_parallel_central_cut(&self, beta1: f64, tsq: &f64) -> (f64, f64, f64) {
-        let b1sqn = beta1 * (beta1 / tsq);
-        let temp = self.half_n * b1sqn;
-        let xi = (1.0 - b1sqn + temp * temp).sqrt();
-        let sigma = self.cst3 + self.cst2 * (1.0 - xi) / b1sqn;
-        let rho = sigma * beta1 / 2.0;
-        let delta = self.cst1 * (1.0 - b1sqn / 2.0 + xi / self.n_f);
+        let b1sq = beta1 * beta1;
+        let a1sq = b1sq / tsq;
+        let temp = self.half_n * a1sq;
+        let mu_plus_1 = temp + (1.0 - a1sq + temp * temp).sqrt();
+        let mu_plus_2 = mu_plus_1 + 1.0;
+        let rho = beta1 / mu_plus_2;
+        let sigma = 2.0 / mu_plus_2;
+        let temp2 = self.n_f * mu_plus_1;
+        let delta = temp2 / (temp2 - 1.0);
+
         (rho, sigma, delta)
     }
 
