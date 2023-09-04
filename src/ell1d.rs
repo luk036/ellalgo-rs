@@ -2,13 +2,14 @@ use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoices};
 // #[macro_use]
 // extern crate ndarray;
 
-/**
- * @brief Ellipsoid Method for special 1D case
- *
- *  Ell = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
- *
- * Keep $mq$ symmetric but no promise of positive definite
- */
+/// The [`Ell1D`] struct represents an ellipsoid in one dimension.
+///
+/// Properties:
+///
+/// * `r`: The `r` property represents the radius of the ellipsoid in the 1D case. It determines the
+/// size of the ellipsoid along the x-axis.
+/// * `xc`: The property `xc` represents the center of the ellipsoid in the 1D case. It is a scalar
+/// value that specifies the position of the center along the x-axis.
 #[derive(Debug, Clone)]
 pub struct Ell1D {
     r: f64,
@@ -16,39 +17,43 @@ pub struct Ell1D {
 }
 
 impl Ell1D {
-    /**
-     * @brief Construct a new Ell1D object
-     *
-     * @param[in] l
-     * @param[in] u
-     */
+    /// The `new` function creates a new instance of the [`Ell1D`] struct with the given lower and upper
+    /// bounds.
+    ///
+    /// Arguments:
+    ///
+    /// * `l`: The parameter `l` represents the lower bound of the range.
+    /// * `u`: The parameter `u` represents the upper bound of the range.
+    ///
+    /// Returns:
+    ///
+    /// The `new` function is returning an instance of the [`Ell1D`] struct.
     pub fn new(l: f64, u: f64) -> Self {
         let r = (u - l) / 2.0;
         let xc = l + r;
         Ell1D { r, xc }
     }
 
-    /**
-     * @brief Set the xc object
-     *
-     * @param[in] xc
-     */
+    /// The function `set_xc` sets the value of the `xc` variable in a Rust struct.
+    ///
+    /// Arguments:
+    ///
+    /// * `xc`: The parameter `xc` is of type `f64`, which means it is a floating-point number.
     fn set_xc(&mut self, xc: f64) {
         self.xc = xc;
     }
 
-    /**
-     * @brief Update ellipsoid core function using the cut
-     *
-     *  $grad^T * (x - xc) + beta <= 0$
-     *
-     * @tparam T
-     * @param[in] cut
-     * @return (i32, f64)
-     */
-    fn update_single(&mut self, grad: &f64, b0: &f64) -> (CutStatus, f64) {
+    /// The function `update_single` updates an ellipsoid core using a single cut.
+    ///
+    /// Arguments:
+    ///
+    /// * `grad`: The `grad` parameter is the gradient value, which is of type `f64`. It represents the
+    /// gradient of the function at a particular point.
+    /// * `beta0`: The parameter `beta0` represents the value of the constant term in the inequality constraint
+    /// equation. In the code, it is referred to as `beta`.
+    fn update_single(&mut self, grad: &f64, beta0: &f64) -> (CutStatus, f64) {
         let g = *grad;
-        let beta = *b0;
+        let beta = *beta0;
         let temp = self.r * g;
         let tau = if g < 0.0 { -temp } else { temp };
         let tsq = tau * tau;
@@ -78,15 +83,20 @@ impl Ell1D {
 impl SearchSpace for Ell1D {
     type ArrayType = f64;
 
-    /**
-     * @brief
-     *
-     * @return f64
-     */
+    /// The function `xc` returns a copy of the `xc` array.
     fn xc(&self) -> f64 {
         self.xc
     }
 
+    /// The `update` function updates the decision variable based on the given cut.
+    /// 
+    /// Arguments:
+    /// 
+    /// * `cut`: A tuple containing two elements:
+    /// 
+    /// Returns:
+    /// 
+    /// The `update` function returns a value of type `CutStatus`.
     fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> (CutStatus, f64)
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,

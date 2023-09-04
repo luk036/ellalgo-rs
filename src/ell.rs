@@ -31,12 +31,12 @@ use ndarray::Array2;
 #[derive(Debug, Clone)]
 pub struct Ell {
     pub no_defer_trick: bool,
-    mq: Array2<f64>,
-    xc: Array1<f64>,
-    kappa: f64,
+    pub mq: Array2<f64>,
+    pub xc: Array1<f64>,
+    pub kappa: f64,
     ndim: usize,
     helper: EllCalc,
-    tsq: f64,
+    pub tsq: f64,
 }
 
 impl Ell {
@@ -83,12 +83,24 @@ impl Ell {
     ///
     /// Returns:
     ///
-    /// The function `new` returns an instance of the `Ell` struct.
+    /// The function `new` returns an instance of the [`Ell`] struct.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::ell::Ell;
+    /// use ndarray::arr1;
+    /// let val = arr1(&[1.0, 1.0]);
+    /// let xc = arr1(&[0.0, 0.0]);
+    /// let ell = Ell::new(val, xc);
+    /// assert_eq!(ell.kappa, 1.0);
+    /// assert_eq!(ell.mq.shape(), &[2, 2]);
+    /// ```
     pub fn new(val: Array1<f64>, xc: Array1<f64>) -> Ell {
         Ell::new_with_matrix(1.0, Array2::from_diag(&val), xc)
     }
 
-    /// The function `new_with_scalar` constructs a new `Ell` object with a scalar value and a vector.
+    /// The function `new_with_scalar` constructs a new [`Ell`] object with a scalar value and a vector.
     ///
     /// Arguments:
     ///
@@ -99,7 +111,23 @@ impl Ell {
     ///
     /// Returns:
     ///
-    /// an instance of the `Ell` struct.
+    /// an instance of the [`Ell`] struct.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::ell::Ell;
+    /// use ndarray::arr1;
+    /// let val = 1.0;
+    /// let xc = arr1(&[0.0, 0.0]);
+    /// let ell = Ell::new_with_scalar(val, xc);
+    /// assert_eq!(ell.kappa, 1.0);
+    /// assert_eq!(ell.mq.shape(), &[2, 2]);
+    /// assert_eq!(ell.xc.shape(), &[2]);
+    /// assert_eq!(ell.xc[0], 0.0);
+    /// assert_eq!(ell.xc[1], 0.0);
+    /// assert_eq!(ell.tsq, 0.0);
+    /// ```
     pub fn new_with_scalar(val: f64, xc: Array1<f64>) -> Ell {
         Ell::new_with_matrix(val, Array2::eye(xc.len()), xc)
     }
@@ -133,7 +161,7 @@ impl Ell {
         let omega = grad.dot(&grad_t);
 
         self.tsq = self.kappa * omega;
-        // let status = self.helper.calc_dc(*beta);
+        // let status = self.helper.calc_deep_cut(*beta);
         let (status, (rho, sigma, delta)) = cut_strategy(beta, &self.tsq);
         if status != CutStatus::Success {
             return status;
@@ -181,39 +209,39 @@ impl SearchSpace for Ell {
         self.tsq
     }
 
-    /// The `update_dc` function updates the decision variable based on the given cut.
-    /// 
+    /// The `update_deep_cut` function updates the decision variable based on the given cut.
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `cut`: A tuple containing two elements:
-    /// 
+    ///
     /// Returns:
-    /// 
-    /// The `update_dc` function returns a value of type `CutStatus`.
-    fn update_dc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    ///
+    /// The `update_deep_cut` function returns a value of type `CutStatus`.
+    fn update_deep_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
-        beta.update_dc_by(self, grad)
+        beta.update_deep_cut_by(self, grad)
     }
 
-    /// The `update_cc` function updates the cut choices using the gradient and beta values.
-    /// 
+    /// The `update_central_cut` function updates the cut choices using the gradient and beta values.
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `cut`: The `cut` parameter is a tuple containing two elements. The first element is of type
     /// `Self::ArrayType`, and the second element is of type `T`.
-    /// 
+    ///
     /// Returns:
-    /// 
-    /// The function `update_cc` returns a value of type `CutStatus`.
-    fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    ///
+    /// The function `update_central_cut` returns a value of type `CutStatus`.
+    fn update_central_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
-        beta.update_cc_by(self, grad)
+        beta.update_central_cut_by(self, grad)
     }
 }
 
@@ -235,14 +263,14 @@ impl SearchSpaceQ for Ell {
     }
 
     /// The `update_q` function updates the decision variable based on the given cut.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `cut`: A tuple containing two elements:
-    /// 
+    ///
     /// Returns:
-    /// 
-    /// The `update_dc` function returns a value of type `CutStatus`.
+    ///
+    /// The `update_deep_cut` function returns a value of type `CutStatus`.
     fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
@@ -255,41 +283,41 @@ impl SearchSpaceQ for Ell {
 impl UpdateByCutChoices<Ell> for f64 {
     type ArrayType = Array1<f64>;
 
-    fn update_dc_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
+    fn update_deep_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_dc(beta, tsq))
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_deep_cut(beta, tsq))
     }
 
-    fn update_cc_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
+    fn update_central_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |_beta, tsq| helper.calc_cc(tsq))
+        ellip.update_core(grad, beta, |_beta, tsq| helper.calc_central_cut(tsq))
     }
 
     fn update_q_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_q(beta, tsq))
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut_q(beta, tsq))
     }
 }
 
 impl UpdateByCutChoices<Ell> for (f64, Option<f64>) {
     type ArrayType = Array1<f64>;
 
-    fn update_dc_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
+    fn update_deep_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
         ellip.update_core(grad, beta, |beta, tsq| {
-            helper.calc_single_or_ll_dc(beta, tsq)
+            helper.calc_single_or_parallel_deep_cut(beta, tsq)
         })
     }
 
-    fn update_cc_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
+    fn update_central_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
         ellip.update_core(grad, beta, |beta, tsq| {
-            helper.calc_single_or_ll_cc(beta, tsq)
+            helper.calc_single_or_parallel_central_cut(beta, tsq)
         })
     }
 
@@ -297,7 +325,7 @@ impl UpdateByCutChoices<Ell> for (f64, Option<f64>) {
         let beta = self;
         let helper = ellip.helper.clone();
         ellip.update_core(grad, beta, |beta, tsq| {
-            helper.calc_single_or_ll_q(beta, tsq)
+            helper.calc_single_or_parallel_q(beta, tsq)
         })
     }
 }

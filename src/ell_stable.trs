@@ -183,12 +183,12 @@ impl SearchSpace for EllStable {
         beta.update_by(self, grad)
     }
 
-    fn update_cc<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    fn update_central_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
-        beta.update_cc_by(self, grad)
+        beta.update_central_cut_by(self, grad)
     }
 }
 
@@ -198,13 +198,13 @@ impl UpdateByCutChoices<EllStable> for f64 {
     fn update_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let mut helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta| helper.calc_dc(beta))
+        ellip.update_core(grad, beta, |beta| helper.calc_deep_cut(beta))
     }
 
-    fn update_cc_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
+    fn update_central_cut_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let mut helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |_beta| helper.calc_cc())
+        ellip.update_core(grad, beta, |_beta| helper.calc_central_cut())
     }
 }
 
@@ -214,12 +214,12 @@ impl UpdateByCutChoices<EllStable> for (f64, Option<f64>) {
     fn update_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let mut helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta| helper.calc_ll(beta))
+        ellip.update_core(grad, beta, |beta| helper.calc_parallel(beta))
     }
 
-    fn update_cc_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
+    fn update_central_cut_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let mut helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta| helper.calc_ll_cc(beta))
+        ellip.update_core(grad, beta, |beta| helper.calc_parallel_central_cut(beta))
     }
 }
