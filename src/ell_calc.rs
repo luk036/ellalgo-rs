@@ -53,6 +53,8 @@ impl EllCalcCore {
     /// assert_approx_eq!(ell_calc_core.n_plus_1, 5.0);
     /// ```
     pub fn new(n_f: f64) -> EllCalcCore {
+        assert!(n_f >= 2.0); // do not accept one dimensional
+
         let n_plus_1 = n_f + 1.0;
         let half_n = n_f / 2.0;
         let n_sq = n_f * n_f;
