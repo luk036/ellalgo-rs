@@ -56,7 +56,7 @@ struct ProfitOracle {
 }
 
 impl OracleOptim for ProfitOracle {
-    fn assess_optim(&self, y: ArrayView1<f64>, target: f64) -> (Cut, Option<f64>) {
+    fn assess_optim(&self, y: ArrayView1<f64>, gamma: f64) -> (Cut, Option<f64>) {
         let fj: f64;
         let mut g: Arr;
         let log_Cobb = self.log_pA + self.elasticities.dot(&y);
@@ -66,13 +66,13 @@ impl OracleOptim for ProfitOracle {
             g = arr2(&[[1.0, 0.0]]);
             return ((g, fj), None);
         }
-        if (fj = f64::ln(target + vx) - log_Cobb) >= 0.0 {
-            g = q / (target + vx) - &self.elasticities;
+        if (fj = f64::ln(gamma + vx) - log_Cobb) >= 0.0 {
+            g = q / (gamma + vx) - &self.elasticities;
             return ((g, fj), None);
         }
-        let target = f64::exp(log_Cobb) - vx;
-        g = q / (target + vx) - &self.elasticities;
-        ((g, 0.0), Some(target))
+        let gamma = f64::exp(log_Cobb) - vx;
+        g = q / (gamma + vx) - &self.elasticities;
+        ((g, 0.0), Some(gamma))
     }
 }
 
@@ -87,7 +87,7 @@ fn main() {
         elasticities: elasticities.into_shape((1, 2)).unwrap(),
     };
     let y = arr1(&[1.0, 2.0]);
-    let target = 3.0;
-    let (cut, opt) = oracle.assess_optim(y.view(), target);
+    let gamma = 3.0;
+    let (cut, opt) = oracle.assess_optim(y.view(), gamma);
 }
 

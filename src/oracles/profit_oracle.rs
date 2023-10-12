@@ -85,8 +85,8 @@ impl OracleOptim<Arr> for ProfitOracle {
     /// Arguments:
     ///
     /// * `y`: A reference to an array of f64 values.
-    /// * `target`: The parameter `target` is a mutable reference to a `f64` variable.
-    fn assess_optim(&mut self, y: &Arr, target: &mut f64) -> ((Arr, f64), bool) {
+    /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable.
+    fn assess_optim(&mut self, y: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
         // y0 <= log k
         let f1 = y[0] - self.log_k;
         if f1 > 0.0 {
@@ -96,12 +96,12 @@ impl OracleOptim<Arr> for ProfitOracle {
         let log_cobb = self.log_p_scale + self.elasticities[0] * y[0] + self.elasticities[1] * y[1];
         let x = y.mapv(f64::exp);
         let vx = self.price_out[0] * x[0] + self.price_out[1] * x[1];
-        let mut te = *target + vx;
+        let mut te = *gamma + vx;
 
         let fj = te.ln() - log_cobb;
         if fj < 0.0 {
             te = log_cobb.exp();
-            *target = te - vx;
+            *gamma = te - vx;
             let g = (&self.price_out * &x) / te - &self.elasticities;
             return ((g, 0.0), true);
         }
@@ -168,14 +168,14 @@ impl OracleOptim<Arr> for ProfitOracleRB {
     type CutChoices = f64; // single cut
 
     /// The `assess_optim` function takes an input quantity `y` and updates the best-so-far optimal value
-    /// `target` based on the elasticities and returns a cut and the updated best-so-far value.
+    /// `gamma` based on the elasticities and returns a cut and the updated best-so-far value.
     ///
     /// Arguments:
     ///
     /// * `y`: The parameter `y` is an input quantity represented as an array (`Arr`) in log scale.
-    /// * `target`: The parameter `target` is the best-so-far optimal value. It is passed as a mutable reference
+    /// * `gamma`: The parameter `gamma` is the best-so-far optimal value. It is passed as a mutable reference
     /// (`&mut f64`) so that its value can be updated within the function.
-    fn assess_optim(&mut self, y: &Arr, target: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, y: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
         let mut a_rb = self.elasticities.clone();
         a_rb[0] += if y[0] > 0.0 {
             -self.uie[0]
@@ -188,7 +188,7 @@ impl OracleOptim<Arr> for ProfitOracleRB {
             self.uie[1]
         };
         self.omega.elasticities = a_rb;
-        self.omega.assess_optim(y, target)
+        self.omega.assess_optim(y, gamma)
     }
 }
 
@@ -237,16 +237,16 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
     type CutChoices = f64; // single cut
 
     /// The `assess_optim_q` function takes in an input quantity `y` in log scale, updates the best-so-far
-    /// optimal value `target`, and returns a cut and the updated best-so-far value.
+    /// optimal value `gamma`, and returns a cut and the updated best-so-far value.
     ///
     /// Arguments:
     ///
     /// * `y`: The parameter `y` is an input quantity in log scale. It is of type `Arr`, which is likely an
     /// array or vector type.
-    /// * `target`: The parameter `target` represents the best-so-far optimal value. It is a mutable reference to
+    /// * `gamma`: The parameter `gamma` represents the best-so-far optimal value. It is a mutable reference to
     /// a `f64` value, which means it can be modified within the function.
     /// * `retry`: A boolean value indicating whether it is a retry or not.
-    fn assess_optim_q(&mut self, y: &Arr, target: &mut f64, retry: bool) -> (Cut, bool, Arr, bool) {
+    fn assess_optim_q(&mut self, y: &Arr, gamma: &mut f64, retry: bool) -> (Cut, bool, Arr, bool) {
         if !retry {
             let mut x = y.mapv(f64::exp).mapv(f64::round);
             if x[0] == 0.0 {
@@ -257,7 +257,7 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
             }
             self.yd = x.mapv(f64::ln);
         }
-        let (mut cut, shrunk) = self.omega.assess_optim(&self.yd, target);
+        let (mut cut, shrunk) = self.omega.assess_optim(&self.yd, gamma);
         let g = &cut.0;
         let h = &mut cut.1;
         // let (g, mut h) = cut;
@@ -285,12 +285,12 @@ mod tests {
 
         let mut ellip = Ell::new(array![100.0, 100.0], array![0.0, 0.0]);
         let mut omega = ProfitOracle::new(unit_price, scale, limit, elasticities, price_out);
-        let mut target = 0.0;
+        let mut gamma = 0.0;
         let options = Options {
             max_iters: 2000,
             tol: 1e-8,
         };
-        let (y_opt, niter) = cutting_plane_optim(&mut omega, &mut ellip, &mut target, &options);
+        let (y_opt, niter) = cutting_plane_optim(&mut omega, &mut ellip, &mut gamma, &options);
         assert!(y_opt.is_some());
         if let Some(y) = y_opt {
             assert!(y[0] <= limit.ln());

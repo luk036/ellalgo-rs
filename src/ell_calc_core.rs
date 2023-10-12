@@ -49,11 +49,11 @@ impl EllCalcCore {
         let b0b1 = beta0 * beta1;
         let bsum = beta0 + beta1;
         let bsumsq = bsum * bsum;
-        let gamma = tsq + self.n_f * b0b1;
+        let eta = tsq + self.n_f * b0b1;
         let h = tsq + b0b1 + self.half_n * bsumsq;
-        let temp2 = h + sqrt(h * h - gamma * self.n_plus_1 * bsumsq);
-        let inv_mu_plus_2 = gamma / temp2;
-        let inv_mu = gamma / (temp2 - 2.0 * gamma);
+        let temp2 = h + sqrt(h * h - eta * self.n_plus_1 * bsumsq);
+        let inv_mu_plus_2 = eta / temp2;
+        let inv_mu = eta / (temp2 - 2.0 * eta);
         let rho = bsum * inv_mu_plus_2;
         let sigma = 2.0 * inv_mu_plus_2;
         let delta = 1.0 + (-2.0 * b0b1 + bsumsq * inv_mu_plus_2) * inv_mu / tsq;

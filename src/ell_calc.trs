@@ -163,13 +163,13 @@ impl EllCalc {
         //     return self.calc_central_cut();
         // }
 
-        let gamma = tau + self.n_f * beta;
-        if gamma < 0.0 {
+        let eta = tau + self.n_f * beta;
+        if eta < 0.0 {
             return CutStatus::NoEffect; // no effect
         }
 
-        // self.mu = (bdiff / gamma) * self.half_n_minus_1;
-        self.rho = gamma / self.n_plus_1;
+        // self.mu = (bdiff / eta) * self.half_n_minus_1;
+        self.rho = eta / self.n_plus_1;
         self.sigma = 2.0 * self.rho / (tau + beta);
         self.delta = self.cst1 * (1.0 - beta * (beta / self.tsq));
         CutStatus::Success

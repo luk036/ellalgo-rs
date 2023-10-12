@@ -9,16 +9,16 @@ pub struct MyOracle {}
 impl OracleOptim<Arr> for MyOracle {
     type CutChoices = f64; // single cut
 
-    /// The function assess_optim takes in two parameters, z and target, and returns a tuple containing an
+    /// The function assess_optim takes in two parameters, z and gamma, and returns a tuple containing an
     /// array and a double, along with a boolean value.
     ///
     /// Arguments:
     ///
     /// * `z`: The parameter `z` is an array of length 2, representing the values of `x` and `y`
     /// respectively.
-    /// * `target`: The parameter `target` is a mutable reference to a `f64` variable. It is used to store the
+    /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable. It is used to store the
     /// current best solution for the optimization problem.
-    fn assess_optim(&mut self, z: &Arr, target: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, z: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
         let x = z[0];
         let y = z[1];
 
@@ -34,9 +34,9 @@ impl OracleOptim<Arr> for MyOracle {
         }
         // objective: maximize x + y
         let f0 = x + y;
-        let fj = *target - f0;
+        let fj = *gamma - f0;
         if fj < 0.0 {
-            *target = f0;
+            *gamma = f0;
             return ((array![-1.0, -1.0], 0.0), true);
         }
         ((array![-1.0, -1.0], fj), false)
@@ -55,12 +55,12 @@ mod tests {
     pub fn test_feasible() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle {};
-        let mut target = -1.0e100; // std::numeric_limits<double>::min()
+        let mut gamma = -1.0e100; // std::numeric_limits<double>::min()
         let options = Options {
             max_iters: 2000,
             tol: 1e-10,
         };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
         assert!(x_opt.is_some());
         if let Some(x) = x_opt {
             assert!(x[0] >= 0.0);
@@ -72,12 +72,12 @@ mod tests {
         let mut ell = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
                                                                           // or ellipsoid is too small
         let mut oracle = MyOracle {};
-        let mut target = -1.0e100; // std::numeric_limits<double>::min()
+        let mut gamma = -1.0e100; // std::numeric_limits<double>::min()
         let options = Options {
             max_iters: 2000,
             tol: 1e-12,
         };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut target, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
         assert_eq!(x_opt, None);
     }
 
