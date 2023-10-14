@@ -11,15 +11,15 @@ impl OracleFeas<Arr> for MyOracle {
 
     /// The function assess_feas takes in an array z and checks if it satisfies two constraints,
     /// returning an optional tuple of an array and a float if any constraint is violated.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `z`: The parameter `z` is an array of size 2, representing the coordinates of a point in a
     /// 2-dimensional space. The first element `z[0]` represents the x-coordinate, and the second
     /// element `z[1]` represents the y-coordinate.
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// The function `assess_feas` returns an `Option` containing a tuple `(Arr, f64)`.
     fn assess_feas(&mut self, z: &Arr) -> Option<(Arr, f64)> {
         let x = z[0];
