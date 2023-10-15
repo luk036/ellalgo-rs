@@ -23,6 +23,7 @@ pub struct EllCalcCore {
     pub n_f: f64,
     pub n_plus_1: f64,
     pub half_n: f64,
+    pub inv_n: f64,
     cst1: f64,
     cst2: f64,
 }
@@ -55,6 +56,7 @@ impl EllCalcCore {
     pub fn new(n_f: f64) -> EllCalcCore {
         let n_plus_1 = n_f + 1.0;
         let half_n = n_f / 2.0;
+        let inv_n = 1.0 / n_f;
         let n_sq = n_f * n_f;
         let cst0 = 1.0 / (n_f + 1.0);
         let cst1 = n_sq / (n_sq - 1.0);
@@ -64,6 +66,7 @@ impl EllCalcCore {
             n_f,
             n_plus_1,
             half_n,
+            inv_n,
             cst1,
             cst2,
         }
@@ -95,6 +98,123 @@ impl EllCalcCore {
     ///  |   |    |          |
     /// "-τ" "-β" "-β"      +τ
     ///        1    0
+    /// 
+    ///      β  + β                            
+    ///       0    1                           
+    ///  β = ───────                           
+    ///         2                              
+    ///                                        
+    ///      1   ⎛ 2          ⎞        2       
+    ///  h = ─ ⋅ ⎜τ  + β  ⋅ β ⎟ + n ⋅ β        
+    ///      2   ⎝      0    1⎠                
+    ///             _____________________      
+    ///            ╱ 2                  2      
+    ///  k = h + ╲╱ h  - (n + 1) ⋅ η ⋅ β       
+    ///                                        
+    ///        1     η                         
+    ///  σ = ───── = ─                         
+    ///      μ + 1   k                         
+    ///                                        
+    ///  1     η                               
+    ///  ─ = ─────                             
+    ///  μ   k - η                             
+    ///                                        
+    ///  ϱ = β ⋅ σ                            
+    ///                                        
+    ///       2    2   1   ⎛ 2              ⎞  
+    ///  δ ⋅ τ  = τ  + ─ ⋅ ⎜β  ⋅ σ - β  ⋅ β ⎟  
+    ///                μ   ⎝          0    1⎠   
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalcCore;
+    ///
+    /// let ell_calc_core = EllCalcCore::new(4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_parallel_bias_cut_fast(1.0, 2.0, &4.0, &2.0, &12.0);
+    /// assert_approx_eq!(rho, 1.2);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(delta, 0.8);
+    /// ```
+    )]
+    pub fn calc_parallel_bias_cut_fast(
+        &self,
+        beta0: f64,
+        beta1: f64,
+        tsq: &f64,
+        b0b1: &f64,
+        eta: &f64,
+    ) -> (f64, f64, f64) {
+        let bavg = (beta0 + beta1) * 0.5;
+        let bavgsq = bavg * bavg;
+        let h = (tsq + b0b1) * 0.5 + self.n_f * bavgsq;
+        let k = h + (h * h - eta * self.n_plus_1 * bavgsq).sqrt();
+        let inv_mu_plus_1 = eta / k;
+        let inv_mu = eta / (k - eta);
+        let rho = bavg * inv_mu_plus_1;
+        let sigma = inv_mu_plus_1;
+        let delta = (tsq + inv_mu * (bavgsq * inv_mu_plus_1 - b0b1))  / tsq;
+
+        (rho, sigma, delta)
+    }
+
+    #[doc = svgbobdoc::transform!(
+    /// The function calculates the core values for updating an ellipsoid with either a parallel-cut or
+    /// a deep-cut.
+    ///
+    /// Arguments:
+    ///
+    /// * `beta0`: The parameter `beta0` represents the semi-minor axis of the ellipsoid before the cut. It is
+    /// a floating-point number.
+    /// * `beta1`: The parameter `beta1` represents the length of the semi-minor axis of the ellipsoid.
+    /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
+    /// of the ellipsoid.
+    ///
+    /// ```svgbob
+    ///      _.-'''''''-._
+    ///    ,'     |       `.
+    ///   /  |    |         \
+    ///  .   |    |          .
+    ///  |   |    |          |
+    ///  |   |    |.         |
+    ///  |   |    |          |
+    ///  :\  |    |         /:
+    ///  | `._    |      _.' |
+    ///  |   |'-.......-'    |
+    ///  |   |    |          |
+    /// "-τ" "-β" "-β"      +τ
+    ///        1    0
+    /// 
+    ///       2                            
+    ///  η = τ  + n ⋅ β  ⋅ β               
+    ///                0    1                
+    ///      β  + β                            
+    ///       0    1                           
+    ///  β = ───────                           
+    ///         2                              
+    ///                                        
+    ///      1   ⎛ 2          ⎞        2       
+    ///  h = ─ ⋅ ⎜τ  + β  ⋅ β ⎟ + n ⋅ β        
+    ///      2   ⎝      0    1⎠                
+    ///             _____________________      
+    ///            ╱ 2                  2      
+    ///  k = h + ╲╱ h  - (n + 1) ⋅ η ⋅ β       
+    ///                                        
+    ///        1     η                         
+    ///  σ = ───── = ─                         
+    ///      μ + 1   k                         
+    ///                                        
+    ///  1     η                               
+    ///  ─ = ─────                             
+    ///  μ   k - η                             
+    ///                                        
+    ///  ϱ = β ⋅ σ                            
+    ///                                        
+    ///       2    2   1   ⎛ 2              ⎞  
+    ///  δ ⋅ τ  = τ  + ─ ⋅ ⎜β  ⋅ σ - β  ⋅ β ⎟  
+    ///                μ   ⎝          0    1⎠   
     /// ```
     ///
     /// # Examples
@@ -115,27 +235,6 @@ impl EllCalcCore {
         let b0b1 = beta0 * beta1;
         let eta = tsq + self.n_f * b0b1;
         self.calc_parallel_bias_cut_fast(beta0, beta1, tsq, &b0b1, &eta)
-    }
-
-    pub fn calc_parallel_bias_cut_fast(
-        &self,
-        beta0: f64,
-        beta1: f64,
-        tsq: &f64,
-        b0b1: &f64,
-        eta: &f64,
-    ) -> (f64, f64, f64) {
-        let bsum = beta0 + beta1;
-        let bsumsq = bsum * bsum;
-        let h = tsq + b0b1 + self.half_n * bsumsq;
-        let root = h + (h * h - eta * self.n_plus_1 * bsumsq).sqrt();
-        let inv_mu_plus_2 = eta / root;
-        let inv_mu = eta / (root - 2.0 * eta);
-        let rho = bsum * inv_mu_plus_2;
-        let sigma = 2.0 * inv_mu_plus_2;
-        let delta = 1.0 + (-2.0 * b0b1 + bsumsq * inv_mu_plus_2) * inv_mu / tsq;
-
-        (rho, sigma, delta)
     }
 
     #[doc = svgbobdoc::transform!(
@@ -168,9 +267,9 @@ impl EllCalcCore {
     ///      n    2
     ///  h = ─ ⋅ α
     ///      2
-    ///             _____________
-    ///            ╱ 2          2
-    ///  r = h + ╲╱ h  + 1.0 - α
+    ///             ___________
+    ///            ╱ 2        2
+    ///  r = h + ╲╱ h  + 1 - α
     ///
     ///        β
     ///  ϱ = ─────
@@ -180,9 +279,9 @@ impl EllCalcCore {
     ///  σ = ─────
     ///      r + 1
     ///
-    ///        n ⋅ r
+    ///          r
     ///  δ = ─────────
-    ///      n ⋅ r - 1
+    ///      r - 1 / n
     /// ```
     ///
     /// # Example
@@ -201,14 +300,76 @@ impl EllCalcCore {
     pub fn calc_parallel_central_cut(&self, beta1: f64, tsq: &f64) -> (f64, f64, f64) {
         let b1sq = beta1 * beta1;
         let a1sq = b1sq / tsq;
-        let temp = self.half_n * a1sq;
-        let mu_plus_1 = temp + (1.0 - a1sq + temp * temp).sqrt();
-        let mu_plus_2 = mu_plus_1 + 1.0;
-        let rho = beta1 / mu_plus_2;
-        let sigma = 2.0 / mu_plus_2;
-        let temp2 = self.n_f * mu_plus_1;
-        let delta = temp2 / (temp2 - 1.0);
+        let h = self.half_n * a1sq;
+        let r = h + (1.0 - a1sq + h * h).sqrt();
+        let r_plus_1 = r + 1.0;
+        let rho = beta1 / r_plus_1;
+        let sigma = 2.0 / r_plus_1;
+        let delta = r / (r - self.inv_n);
 
+        (rho, sigma, delta)
+    }
+
+    #[doc = svgbobdoc::transform!(
+    /// The function calculates the core values needed for updating an ellipsoid with the deep-cut method.
+    ///
+    /// Arguments:
+    ///
+    /// * `beta`: The `beta` parameter represents a value used in the calculation of the core of updating
+    /// the ellipsoid with the deep-cut. It is of type `f64`, which means it is a 64-bit floating-point
+    /// number.
+    /// * `tau`: The parameter `tau` represents the time constant of the system. It is a measure of how
+    /// quickly the system responds to changes.
+    /// * `eta`: The parameter `eta` represents the deep-cut factor. It is a measure of how much the
+    /// ellipsoid is being updated or modified.
+    ///
+    /// ```svgbob
+    ///       _.-'''''''-._
+    ///     ,'    |        `.
+    ///    /      |          \
+    ///   .       |           .
+    ///   |       |           |
+    ///   |       | .         |
+    ///   |       |           |
+    ///   :\      |          /:
+    ///   | `._   |       _.' |
+    ///   |    '-.......-'    |
+    ///   |       |           |
+    ///  "-τ"     "-β"       +τ
+    ///
+    ///         η
+    ///   ϱ = ─────
+    ///       n + 1
+    ///
+    ///       2 ⋅ ϱ
+    ///   σ = ─────
+    ///       "τ + β"
+    ///
+    ///          2       2    2
+    ///         n       τ  - β
+    ///   δ = ────── ⋅  ───────
+    ///        2           2
+    ///       n  - 1      τ
+    /// ```
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalcCore;
+    ///
+    /// let ell_calc_core = EllCalcCore::new(4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_bias_cut_fast(&1.0, &2.0, &6.0);
+    /// assert_approx_eq!(rho, 1.2);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(delta, 0.8);
+    /// ```
+    )]
+    pub fn calc_bias_cut_fast(&self, beta: &f64, tau: &f64, eta: &f64) -> (f64, f64, f64) {
+        let rho = eta / self.n_plus_1;
+        let sigma = 2.0 * rho / (tau + beta);
+        let alpha = beta / tau;
+        let delta = self.cst1 * (1.0 - alpha * alpha);
         (rho, sigma, delta)
     }
 
@@ -273,69 +434,6 @@ impl EllCalcCore {
     pub fn calc_bias_cut(&self, beta: &f64, tau: &f64) -> (f64, f64, f64) {
         let eta = tau + self.n_f * beta;
         self.calc_bias_cut_fast(beta, tau, &eta)
-    }
-
-    #[doc = svgbobdoc::transform!(
-    /// The function calculates the core values needed for updating an ellipsoid with the deep-cut method.
-    ///
-    /// Arguments:
-    ///
-    /// * `beta`: The `beta` parameter represents a value used in the calculation of the core of updating
-    /// the ellipsoid with the deep-cut. It is of type `f64`, which means it is a 64-bit floating-point
-    /// number.
-    /// * `tau`: The parameter `tau` represents the time constant of the system. It is a measure of how
-    /// quickly the system responds to changes.
-    /// * `eta`: The parameter `eta` represents the deep-cut factor. It is a measure of how much the
-    /// ellipsoid is being updated or modified.
-    ///
-    /// ```svgbob
-    ///       _.-'''''''-._
-    ///     ,'    |        `.
-    ///    /      |          \
-    ///   .       |           .
-    ///   |       |           |
-    ///   |       | .         |
-    ///   |       |           |
-    ///   :\      |          /:
-    ///   | `._   |       _.' |
-    ///   |    '-.......-'    |
-    ///   |       |           |
-    ///  "-τ"     "-β"       +τ
-    ///
-    ///         η
-    ///   ϱ = ─────
-    ///       n + 1
-    ///
-    ///       2 ⋅ ϱ
-    ///   σ = ─────
-    ///       "τ + β"
-    ///
-    ///          2       2    2
-    ///         n       τ  - β
-    ///   δ = ────── ⋅  ───────
-    ///        2           2
-    ///       n  - 1      τ
-    /// ```
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use approx_eq::assert_approx_eq;
-    /// use ellalgo_rs::ell_calc::EllCalcCore;
-    ///
-    /// let ell_calc_core = EllCalcCore::new(4.0);
-    /// let (rho, sigma, delta) = ell_calc_core.calc_bias_cut_fast(&1.0, &2.0, &6.0);
-    /// assert_approx_eq!(rho, 1.2);
-    /// assert_approx_eq!(sigma, 0.8);
-    /// assert_approx_eq!(delta, 0.8);
-    /// ```
-    )]
-    pub fn calc_bias_cut_fast(&self, beta: &f64, tau: &f64, eta: &f64) -> (f64, f64, f64) {
-        let rho = eta / self.n_plus_1;
-        let sigma = 2.0 * rho / (tau + beta);
-        let alpha = beta / tau;
-        let delta = self.cst1 * (1.0 - alpha * alpha);
-        (rho, sigma, delta)
     }
 
     #[doc = svgbobdoc::transform!(
