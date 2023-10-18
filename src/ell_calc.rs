@@ -155,7 +155,7 @@ impl EllCalcCore {
         let inv_mu = eta / (k - eta);
         let rho = bavg * inv_mu_plus_1;
         let sigma = inv_mu_plus_1;
-        let delta = (tsq + inv_mu * (bavgsq * inv_mu_plus_1 - b0b1))  / tsq;
+        let delta = (tsq + inv_mu * (bavgsq * inv_mu_plus_1 - b0b1)) / tsq;
 
         (rho, sigma, delta)
     }

@@ -4,9 +4,35 @@ use ndarray::prelude::*;
 type Arr = Array1<f64>;
 
 #[derive(Debug)]
-struct MyOracle {}
+struct MyOracleFeas {
+    idx: usize,
+}
 
-impl OracleFeas<Arr> for MyOracle {
+impl MyOracleFeas {
+    // constraint 1: x + y <= 3
+    fn fn1(&self, x: f64, y: f64) -> f64 {
+        x + y - 3.0
+    }
+
+    // constraint 2: x - y >= 1
+    fn fn2(&self, x: f64, y: f64) -> f64 {
+        -x + y + 1.0
+    }
+
+    fn grad1(&self) -> Arr {
+        array![1.0, 1.0]
+    }
+
+    fn grad2(&self) -> Arr {
+        array![-1.0, 1.0]
+    }
+
+    pub fn new() -> Self {
+        MyOracleFeas { idx: 0 }
+    }
+}
+
+impl OracleFeas<Arr> for MyOracleFeas {
     type CutChoices = f64;
 
     /// The function assess_feas takes in an array z and checks if it satisfies two constraints,
@@ -25,16 +51,28 @@ impl OracleFeas<Arr> for MyOracle {
         let x = z[0];
         let y = z[1];
 
-        // constraint 1: x + y <= 3
-        let fj = x + y - 3.0;
-        if fj > 0.0 {
-            return Some((array![1.0, 1.0], fj));
+        for _ in 0..2 {
+            self.idx += 1;
+            if self.idx == 2 {
+                self.idx = 0; // round robin
+            }
+            let fj = match self.idx {
+                0 => self.fn1(x, y),
+                1 => self.fn2(x, y),
+                _ => unreachable!(),
+            };
+            if fj > 0.0 {
+                return Some((
+                    match self.idx {
+                        0 => self.grad1(),
+                        1 => self.grad2(),
+                        _ => unreachable!(),
+                    },
+                    fj,
+                ));
+            }
         }
-        // constraint 2: x - y >= 1
-        let fj = -x + y + 1.0;
-        if fj > 0.0 {
-            return Some((array![-1.0, 1.0], fj));
-        }
+
         None
     }
 }
@@ -51,7 +89,7 @@ mod tests {
     #[test]
     pub fn test_example2() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
-        let mut oracle = MyOracle {};
+        let mut oracle = MyOracleFeas::new();
         let options = Options {
             max_iters: 2000,
             tol: 1e-12,

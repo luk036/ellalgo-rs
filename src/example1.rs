@@ -4,7 +4,15 @@ use ndarray::prelude::*;
 type Arr = Array1<f64>;
 
 #[derive(Debug)]
-pub struct MyOracle {}
+pub struct MyOracle {
+    idx: usize,
+}
+
+impl MyOracle {
+    pub fn new() -> Self {
+        MyOracle { idx: 0 }
+    }
+}
 
 impl OracleOptim<Arr> for MyOracle {
     type CutChoices = f64; // single cut
@@ -22,24 +30,35 @@ impl OracleOptim<Arr> for MyOracle {
         let x = z[0];
         let y = z[1];
 
-        // constraint 1: x + y <= 3
-        let fj = x + y - 3.0;
-        if fj > 0.0 {
-            return ((array![1.0, 1.0], fj), false);
+        for _ in 0..2 {
+            self.idx += 1;
+            if self.idx == 2 {
+                self.idx = 0; // round robin
+            }
+            let fj = match self.idx {
+                0 => x + y - 3.0,
+                1 => -x + y + 1.0,
+                _ => unreachable!(),
+            };
+            if fj > 0.0 {
+                return ((
+                    match self.idx {
+                        0 => array![1.0, 1.0],
+                        1 => array![-1.0, 1.0],
+                        _ => unreachable!(),
+                    },
+                    fj,
+                ), false);
+            }
         }
-        // constraint 2: x - y >= 1
-        let fj = -x + y + 1.0;
-        if fj > 0.0 {
-            return ((array![-1.0, 1.0], fj), false);
-        }
-        // objective: maximize x + y
+
         let f0 = x + y;
         let fj = *gamma - f0;
-        if fj < 0.0 {
-            *gamma = f0;
-            return ((array![-1.0, -1.0], 0.0), true);
+        if fj > 0.0 {
+            return ((array![-1.0, -1.0], fj), false)
         }
-        ((array![-1.0, -1.0], fj), false)
+        *gamma = f0;
+        ((array![-1.0, -1.0], 0.0), true)
     }
 }
 
@@ -54,7 +73,7 @@ mod tests {
     #[test]
     pub fn test_feasible() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
-        let mut oracle = MyOracle {};
+        let mut oracle = MyOracle::new();
         let mut gamma = -1.0e100; // std::numeric_limits<double>::min()
         let options = Options {
             max_iters: 2000,
@@ -71,7 +90,7 @@ mod tests {
     pub fn test_infeasible1() {
         let mut ell = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
                                                                           // or ellipsoid is too small
-        let mut oracle = MyOracle {};
+        let mut oracle = MyOracle::new();
         let mut gamma = -1.0e100; // std::numeric_limits<double>::min()
         let options = Options {
             max_iters: 2000,
@@ -84,13 +103,13 @@ mod tests {
     #[test]
     pub fn test_infeasible2() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
-        let mut oracle = MyOracle {};
+        let mut oracle = MyOracle::new();
         // wrong initial guess
         let options = Options {
             max_iters: 2000,
             tol: 1e-12,
         };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100.0, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100000.0, &options);
         assert_eq!(x_opt, None);
     }
 }
