@@ -44,6 +44,8 @@ pub struct ProfitOracle {
     price_out: Arr,
     pub elasticities: Arr,
     idx: i32,
+    log_cobb: f64,
+    vx: f64,
 }
 
 impl ProfitOracle {
@@ -74,8 +76,52 @@ impl ProfitOracle {
             price_out,
             elasticities,
             idx: 0,
+            log_cobb: 0.0,
+            vx: 0.0,
         }
     }
+
+    /// The function assess_feas calculates the gradient and objective function value for an optimization
+    /// problem in Rust.
+    ///
+    /// Arguments:
+    ///
+    /// * `y`: A reference to an array of f64 values.
+    /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable.
+    fn assess_feas(&mut self, y: &Arr, gamma: &mut f64) -> Option<(Arr, f64)> {
+        let x = y.mapv(f64::exp);
+        let mut te = 0.0;
+
+        for _ in 0..2 {
+            self.idx += 1;
+            if self.idx == 2 {
+                self.idx = 0; // round robin
+            }
+            let fj = match self.idx {
+                0 => y[0] - self.log_k, // y0 <= log k
+                1 => {
+                    self.log_cobb = self.log_p_scale + self.elasticities[0] * y[0] + self.elasticities[1] * y[1];
+                    self.vx = self.price_out[0] * x[0] + self.price_out[1] * x[1];
+                    te = *gamma + self.vx;
+                    te.ln() - self.log_cobb
+                },
+                _ => unreachable!(),
+            };
+            if fj > 0.0 {
+                return Some((
+                    match self.idx {
+                        0 => array![1.0, 1.0],
+                        1 => (&self.price_out * &x) / te - &self.elasticities,
+                        _ => unreachable!(),
+                    },
+                    fj
+                ));
+            }
+        }
+
+        return None;
+    }
+
 }
 
 impl OracleOptim<Arr> for ProfitOracle {
@@ -89,40 +135,13 @@ impl OracleOptim<Arr> for ProfitOracle {
     /// * `y`: A reference to an array of f64 values.
     /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable.
     fn assess_optim(&mut self, y: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
-        let x = y.mapv(f64::exp);
-        let mut log_cobb = 0.0;
-        let mut te = 0.0;
-        let mut vx = 0.0;
-
-        for _ in 0..2 {
-            self.idx += 1;
-            if self.idx == 2 {
-                self.idx = 0; // round robin
-            }
-            let fj = match self.idx {
-                0 => y[0] - self.log_k, // y0 <= log k
-                1 => {
-                    log_cobb = self.log_p_scale + self.elasticities[0] * y[0] + self.elasticities[1] * y[1];
-                    vx = self.price_out[0] * x[0] + self.price_out[1] * x[1];
-                    te = *gamma + vx;
-                    te.ln() - log_cobb
-                },
-                _ => unreachable!(),
-            };
-            if fj > 0.0 {
-                return ((
-                    match self.idx {
-                        0 => array![1.0, 1.0],
-                        1 => (&self.price_out * &x) / te - &self.elasticities,
-                        _ => unreachable!(),
-                    },
-                    fj,
-                ), false);
-            }
+        if let Some(cut) = self.assess_feas(y, gamma) {
+            return (cut, false);
         }
 
-        te = log_cobb.exp();
-        *gamma = te - vx;
+        let x = y.mapv(f64::exp);
+        let te = self.log_cobb.exp();
+        *gamma = te - self.vx;
         let grad = (&self.price_out * &x) / te - &self.elasticities;
         return ((grad, 0.0), true);
     }
@@ -266,6 +285,10 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
     /// * `retry`: A boolean value indicating whether it is a retry or not.
     fn assess_optim_q(&mut self, y: &Arr, gamma: &mut f64, retry: bool) -> (Cut, bool, Arr, bool) {
         if !retry {
+            if let Some(cut) = self.omega.assess_feas(y, gamma) {
+                return (cut, false, y.clone(), true);
+            }
+
             let mut xd = y.mapv(f64::exp).mapv(f64::round);
             if xd[0] == 0.0 {
                 xd[0] = 1.0; // nearest integer than 0
@@ -280,7 +303,7 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
         let beta = &mut cut.1;
         let diff = &self.yd - y;
         *beta += grad[0] * diff[0] + grad[1] * diff[1];
-        (cut, shrunk, self.yd.clone(), !retry)
+        (cut, shrunk, self.yd.clone(), !shrunk)
     }
 }
 
