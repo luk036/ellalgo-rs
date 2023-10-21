@@ -303,15 +303,15 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
         let beta = &mut cut.1;
         let diff = &self.yd - y;
         *beta += grad[0] * diff[0] + grad[1] * diff[1];
-        (cut, shrunk, self.yd.clone(), !shrunk)
+        (cut, shrunk, self.yd.clone(), false)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::ProfitOracle;
+    use super::{ProfitOracle, ProfitOracleQ};
     // use super::{ProfitOracle, ProfitOracleQ, ProfitOracleRB};
-    use crate::cutting_plane::{cutting_plane_optim, Options};
+    use crate::cutting_plane::{cutting_plane_optim, cutting_plane_optim_q, Options};
     use crate::ell::Ell;
     use ndarray::array;
 
@@ -336,5 +336,28 @@ mod tests {
             assert!(y[0] <= limit.ln());
         }
         assert_eq!(niter, 56, "regression test");
+    }
+
+    #[test]
+    pub fn test_profit_oracle_q() {
+        let unit_price = 20.0;
+        let scale = 40.0;
+        let limit = 30.5;
+        let elasticities = array![0.1, 0.4];
+        let price_out = array![10.0, 35.0];
+
+        let mut ellip = Ell::new(array![100.0, 100.0], array![0.0, 0.0]);
+        let mut omega = ProfitOracleQ::new(unit_price, scale, limit, elasticities, price_out);
+        let mut gamma = 0.0;
+        let options = Options {
+            max_iters: 2000,
+            tol: 1e-8,
+        };
+        let (y_opt, niter) = cutting_plane_optim_q(&mut omega, &mut ellip, &mut gamma, &options);
+        assert!(y_opt.is_some());
+        if let Some(y) = y_opt {
+            assert!(y[0] <= limit.ln());
+        }
+        assert_eq!(niter, 21, "regression test");
     }
 }
