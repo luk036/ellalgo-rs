@@ -100,11 +100,13 @@ impl ProfitOracle {
             let fj = match self.idx {
                 0 => y[0] - self.log_k, // y0 <= log k
                 1 => {
-                    self.log_cobb = self.log_p_scale + self.elasticities[0] * y[0] + self.elasticities[1] * y[1];
+                    self.log_cobb = self.log_p_scale
+                        + self.elasticities[0] * y[0]
+                        + self.elasticities[1] * y[1];
                     self.vx = self.price_out[0] * x[0] + self.price_out[1] * x[1];
                     te = *gamma + self.vx;
                     te.ln() - self.log_cobb
-                },
+                }
                 _ => unreachable!(),
             };
             if fj > 0.0 {
@@ -114,14 +116,13 @@ impl ProfitOracle {
                         1 => (&self.price_out * &x) / te - &self.elasticities,
                         _ => unreachable!(),
                     },
-                    fj
+                    fj,
                 ));
             }
         }
 
-        return None;
+        None
     }
-
 }
 
 impl OracleOptim<Arr> for ProfitOracle {
@@ -143,7 +144,7 @@ impl OracleOptim<Arr> for ProfitOracle {
         let te = self.log_cobb.exp();
         *gamma = te - self.vx;
         let grad = (&self.price_out * &x) / te - &self.elasticities;
-        return ((grad, 0.0), true);
+        ((grad, 0.0), true)
     }
 }
 

@@ -14,6 +14,12 @@ impl MyOracle {
     }
 }
 
+impl Default for MyOracle {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OracleOptim<Arr> for MyOracle {
     type CutChoices = f64; // single cut
 
@@ -43,15 +49,18 @@ impl OracleOptim<Arr> for MyOracle {
                 _ => unreachable!(),
             };
             if fj > 0.0 {
-                return ((
-                    match self.idx {
-                        0 => array![1.0, 1.0],
-                        1 => array![-1.0, 1.0],
-                        2 => array![-1.0, -1.0],
-                        _ => unreachable!(),
-                    },
-                    fj,
-                ), false);
+                return (
+                    (
+                        match self.idx {
+                            0 => array![1.0, 1.0],
+                            1 => array![-1.0, 1.0],
+                            2 => array![-1.0, -1.0],
+                            _ => unreachable!(),
+                        },
+                        fj,
+                    ),
+                    false,
+                );
             }
         }
 
@@ -76,7 +85,7 @@ mod tests {
     #[test]
     pub fn test_feasible() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
-        let mut oracle = MyOracle::new();
+        let mut oracle = MyOracle::default();
         let mut gamma = -1.0e100; // std::numeric_limits<double>::min()
         let options = Options {
             max_iters: 2000,
