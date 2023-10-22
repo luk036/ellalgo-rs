@@ -27,6 +27,7 @@ impl MyOracleFeas {
         array![-1.0, 1.0]
     }
 
+    #[allow(dead_code)]
     pub fn new() -> Self {
         MyOracleFeas { idx: 0 }
     }
