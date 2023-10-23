@@ -14,6 +14,12 @@ impl MyOracle {
     }
 }
 
+impl Default for MyOracle {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OracleOptim<Arr> for MyOracle {
     type CutChoices = f64; // single cut
 
@@ -29,34 +35,40 @@ impl OracleOptim<Arr> for MyOracle {
     fn assess_optim(&mut self, z: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
         let x = z[0];
         let y = z[1];
+        let f0 = x + y;
 
-        for _ in 0..2 {
+        for _ in 0..3 {
             self.idx += 1;
-            if self.idx == 2 {
+            if self.idx == 3 {
                 self.idx = 0; // round robin
             }
             let fj = match self.idx {
-                0 => x + y - 3.0,
+                0 => f0 - 3.0,
                 1 => -x + y + 1.0,
+                2 => *gamma - f0,
                 _ => unreachable!(),
             };
             if fj > 0.0 {
-                return ((
-                    match self.idx {
-                        0 => array![1.0, 1.0],
-                        1 => array![-1.0, 1.0],
-                        _ => unreachable!(),
-                    },
-                    fj,
-                ), false);
+                return (
+                    (
+                        match self.idx {
+                            0 => array![1.0, 1.0],
+                            1 => array![-1.0, 1.0],
+                            2 => array![-1.0, -1.0],
+                            _ => unreachable!(),
+                        },
+                        fj,
+                    ),
+                    false,
+                );
             }
         }
 
-        let f0 = x + y;
-        let fj = *gamma - f0;
-        if fj > 0.0 {
-            return ((array![-1.0, -1.0], fj), false)
-        }
+        // let f0 = x + y;
+        // let fj = *gamma - f0;
+        // if fj > 0.0 {
+        //     return ((array![-1.0, -1.0], fj), false)
+        // }
         *gamma = f0;
         ((array![-1.0, -1.0], 0.0), true)
     }
@@ -73,7 +85,7 @@ mod tests {
     #[test]
     pub fn test_feasible() {
         let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
-        let mut oracle = MyOracle::new();
+        let mut oracle = MyOracle::default();
         let mut gamma = -1.0e100; // std::numeric_limits<double>::min()
         let options = Options {
             max_iters: 2000,
@@ -109,7 +121,7 @@ mod tests {
             max_iters: 2000,
             tol: 1e-12,
         };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100000.0, &options);
+        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100.0, &options);
         assert_eq!(x_opt, None);
     }
 }

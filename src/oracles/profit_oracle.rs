@@ -43,6 +43,9 @@ pub struct ProfitOracle {
     log_k: f64,
     price_out: Arr,
     pub elasticities: Arr,
+    idx: i32,
+    log_cobb: f64,
+    vx: f64,
 }
 
 impl ProfitOracle {
@@ -72,7 +75,53 @@ impl ProfitOracle {
             log_k: k.ln(),
             price_out,
             elasticities,
+            idx: 0,
+            log_cobb: 0.0,
+            vx: 0.0,
         }
+    }
+
+    /// The function assess_feas calculates the gradient and objective function value for an optimization
+    /// problem in Rust.
+    ///
+    /// Arguments:
+    ///
+    /// * `y`: A reference to an array of f64 values.
+    /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable.
+    fn assess_feas(&mut self, y: &Arr, gamma: &mut f64) -> Option<(Arr, f64)> {
+        let x = y.mapv(f64::exp);
+        let mut te = 0.0;
+
+        for _ in 0..2 {
+            self.idx += 1;
+            if self.idx == 2 {
+                self.idx = 0; // round robin
+            }
+            let fj = match self.idx {
+                0 => y[0] - self.log_k, // y0 <= log k
+                1 => {
+                    self.log_cobb = self.log_p_scale
+                        + self.elasticities[0] * y[0]
+                        + self.elasticities[1] * y[1];
+                    self.vx = self.price_out[0] * x[0] + self.price_out[1] * x[1];
+                    te = *gamma + self.vx;
+                    te.ln() - self.log_cobb
+                }
+                _ => unreachable!(),
+            };
+            if fj > 0.0 {
+                return Some((
+                    match self.idx {
+                        0 => array![1.0, 1.0],
+                        1 => (&self.price_out * &x) / te - &self.elasticities,
+                        _ => unreachable!(),
+                    },
+                    fj,
+                ));
+            }
+        }
+
+        None
     }
 }
 
@@ -87,26 +136,15 @@ impl OracleOptim<Arr> for ProfitOracle {
     /// * `y`: A reference to an array of f64 values.
     /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable.
     fn assess_optim(&mut self, y: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
-        // y0 <= log k
-        let f1 = y[0] - self.log_k;
-        if f1 > 0.0 {
-            return ((array![1.0, 0.0], f1), false);
+        if let Some(cut) = self.assess_feas(y, gamma) {
+            return (cut, false);
         }
 
-        let log_cobb = self.log_p_scale + self.elasticities[0] * y[0] + self.elasticities[1] * y[1];
         let x = y.mapv(f64::exp);
-        let vx = self.price_out[0] * x[0] + self.price_out[1] * x[1];
-        let mut te = *gamma + vx;
-
-        let fj = te.ln() - log_cobb;
-        if fj < 0.0 {
-            te = log_cobb.exp();
-            *gamma = te - vx;
-            let g = (&self.price_out * &x) / te - &self.elasticities;
-            return ((g, 0.0), true);
-        }
-        let g = (&self.price_out * &x) / te - &self.elasticities;
-        ((g, fj), false)
+        let te = self.log_cobb.exp();
+        *gamma = te - self.vx;
+        let grad = (&self.price_out * &x) / te - &self.elasticities;
+        ((grad, 0.0), true)
     }
 }
 
@@ -248,30 +286,33 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
     /// * `retry`: A boolean value indicating whether it is a retry or not.
     fn assess_optim_q(&mut self, y: &Arr, gamma: &mut f64, retry: bool) -> (Cut, bool, Arr, bool) {
         if !retry {
-            let mut x = y.mapv(f64::exp).mapv(f64::round);
-            if x[0] == 0.0 {
-                x[0] = 1.0; // nearest integer than 0
+            if let Some(cut) = self.omega.assess_feas(y, gamma) {
+                return (cut, false, y.clone(), true);
             }
-            if x[1] == 0.0 {
-                x[1] = 1.0;
+
+            let mut xd = y.mapv(f64::exp).mapv(f64::round);
+            if xd[0] == 0.0 {
+                xd[0] = 1.0; // nearest integer than 0
             }
-            self.yd = x.mapv(f64::ln);
+            if xd[1] == 0.0 {
+                xd[1] = 1.0;
+            }
+            self.yd = xd.mapv(f64::ln);
         }
         let (mut cut, shrunk) = self.omega.assess_optim(&self.yd, gamma);
-        let g = &cut.0;
-        let h = &mut cut.1;
-        // let (g, mut h) = cut;
-        let d = &self.yd - y;
-        *h += g[0] * d[0] + g[1] * d[1];
-        (cut, shrunk, self.yd.clone(), !retry)
+        let grad = &cut.0;
+        let beta = &mut cut.1;
+        let diff = &self.yd - y;
+        *beta += grad[0] * diff[0] + grad[1] * diff[1];
+        (cut, shrunk, self.yd.clone(), false)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::ProfitOracle;
+    use super::{ProfitOracle, ProfitOracleQ};
     // use super::{ProfitOracle, ProfitOracleQ, ProfitOracleRB};
-    use crate::cutting_plane::{cutting_plane_optim, Options};
+    use crate::cutting_plane::{cutting_plane_optim, cutting_plane_optim_q, Options};
     use crate::ell::Ell;
     use ndarray::array;
 
@@ -295,6 +336,29 @@ mod tests {
         if let Some(y) = y_opt {
             assert!(y[0] <= limit.ln());
         }
-        assert_eq!(niter, 57);
+        assert_eq!(niter, 56, "regression test");
+    }
+
+    #[test]
+    pub fn test_profit_oracle_q() {
+        let unit_price = 20.0;
+        let scale = 40.0;
+        let limit = 30.5;
+        let elasticities = array![0.1, 0.4];
+        let price_out = array![10.0, 35.0];
+
+        let mut ellip = Ell::new(array![100.0, 100.0], array![0.0, 0.0]);
+        let mut omega = ProfitOracleQ::new(unit_price, scale, limit, elasticities, price_out);
+        let mut gamma = 0.0;
+        let options = Options {
+            max_iters: 2000,
+            tol: 1e-8,
+        };
+        let (y_opt, niter) = cutting_plane_optim_q(&mut omega, &mut ellip, &mut gamma, &options);
+        assert!(y_opt.is_some());
+        if let Some(y) = y_opt {
+            assert!(y[0] <= limit.ln());
+        }
+        assert_eq!(niter, 21, "regression test");
     }
 }
