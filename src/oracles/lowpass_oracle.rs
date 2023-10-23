@@ -5,15 +5,6 @@ use ndarray::s;
 use ndarray::stack;
 use ndarray::Array;
 use ndarray::ArrayView;
-use ndarray::ArrayViewMut;
-use ndarray::Array2;
-use ndarray::Array1;
-use ndarray::Axis;
-use ndarray::s;
-use ndarray::stack;
-use ndarray::Array;
-use ndarray::ArrayView;
-use ndarray::ArrayViewMut;
 
 type Arr = Array2<f64>;
 type Cut = (Arr, f64);
@@ -25,6 +16,9 @@ struct LowpassOracle {
     Lpsq: f64,
     Upsq: f64,
     more_alt: bool,
+    idx1: usize,
+    idx2: usize,
+    idx3: usize,
 }
 
 impl LowpassOracle {
@@ -36,6 +30,9 @@ impl LowpassOracle {
             Lpsq,
             Upsq,
             more_alt: true,
+            idx1: 0,
+            idx2: nwpass,
+            idx3: nwstop,
         }
     }
 
@@ -43,16 +40,20 @@ impl LowpassOracle {
         let n = x.len();
         self.more_alt = true;
 
-        for k in 0..self.nwpass {
-            let v = self.A.slice(s![k, ..]).dot(&x);
+        for _k in 0..self.nwpass {
+            self.idx1 += 1;
+            if self.idx1 == self.nwpass {
+                self.idx1 = 0;
+            }
+            let v = self.A.slice(s![self.idx1, ..]).dot(&x);
             if v > self.Upsq {
-                let g = self.A.slice(s![k, ..]);
+                let g = self.A.slice(s![self.idx1, ..]);
                 let f = (v - self.Upsq, v - self.Lpsq);
                 return ((g, f), None);
             }
 
             if v < self.Lpsq {
-                let g = -self.A.slice(s![k, ..]);
+                let g = -self.A.slice(s![self.idx1, ..]);
                 let f = (-v + self.Lpsq, -v + self.Upsq);
                 return ((g, f), None);
             }
@@ -60,31 +61,40 @@ impl LowpassOracle {
 
         let mut fmax = f64::NEG_INFINITY;
         let mut imax = 0;
-        for k in self.nwstop..self.A.shape()[0] {
-            let v = self.A.slice(s![k, ..]).dot(&x);
+        let mdim = self.A.shape()[0];
+        for _k in self.nwstop..mdim {
+            self.idx3 += 1;
+            if self.idx3 == mdim {
+                self.idx3 = self.nwstop;
+            }
+            let v = self.A.slice(s![self.idx3, ..]).dot(&x);
             if v > Spsq {
-                let g = self.A.slice(s![k, ..]);
+                let g = self.A.slice(s![self.idx3, ..]);
                 let f = (v - Spsq, v);
                 return ((g, f), None);
             }
 
             if v < 0.0 {
-                let g = -self.A.slice(s![k, ..]);
+                let g = -self.A.slice(s![self.idx3, ..]);
                 let f = (-v, -v + Spsq);
                 return ((g, f), None);
             }
 
             if v > fmax {
                 fmax = v;
-                imax = k;
+                imax = self.idx3;
             }
         }
 
-        for k in self.nwpass..self.nwstop {
-            let v = self.A.slice(s![k, ..]).dot(&x);
+        for _k in self.nwpass..self.nwstop {
+            self.idx2 += 1;
+            if self.idx2 == self.nwstop {
+                self.idx2 = self.nwpass;
+            }
+            let v = self.A.slice(s![self.idx2, ..]).dot(&x);
             if v < 0.0 {
                 let f = -v;
-                let g = -self.A.slice(s![k, ..]);
+                let g = -self.A.slice(s![self.idx2, ..]);
                 return ((g, f), None);
             }
         }
