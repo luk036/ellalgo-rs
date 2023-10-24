@@ -304,7 +304,7 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
         let beta = &mut cut.1;
         let diff = &self.yd - y;
         *beta += grad[0] * diff[0] + grad[1] * diff[1];
-        (cut, shrunk, self.yd.clone(), false)
+        (cut, shrunk, self.yd.clone(), !retry)
     }
 }
 
