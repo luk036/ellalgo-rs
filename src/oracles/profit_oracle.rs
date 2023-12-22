@@ -329,14 +329,14 @@ mod tests {
         let mut gamma = 0.0;
         let options = Options {
             max_iters: 2000,
-            tol: 1e-8,
+            tol: 1e-20,
         };
         let (y_opt, niter) = cutting_plane_optim(&mut omega, &mut ellip, &mut gamma, &options);
         assert!(y_opt.is_some());
         if let Some(y) = y_opt {
             assert!(y[0] <= limit.ln());
         }
-        assert_eq!(niter, 56, "regression test");
+        assert_eq!(niter, 135, "regression test");
     }
 
     #[test]
@@ -352,7 +352,7 @@ mod tests {
         let mut gamma = 0.0;
         let options = Options {
             max_iters: 2000,
-            tol: 1e-8,
+            tol: 1e-20,
         };
         let (y_opt, niter) = cutting_plane_optim_q(&mut omega, &mut ellip, &mut gamma, &options);
         assert!(y_opt.is_some());
