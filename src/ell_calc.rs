@@ -29,8 +29,13 @@ pub struct EllCalcCore {
 }
 
 impl EllCalcCore {
-    /// The `new` function constructs a new [`EllCalcCore`] object with the given parameter `n_f` and
-    /// initializes its internal variables.
+    /// Constructs a new EllCalcCore instance, initializing its fields based on the provided dimension n_f.
+    ///
+    /// This is a constructor function for the EllCalcCore struct. It takes in the dimension n_f and uses
+    /// it to calculate and initialize the other fields of EllCalcCore that depend on n_f.
+    ///
+    /// Being a constructor function, it is part of the public API of the EllCalcCore struct. The
+    /// documentation follows the conventions and style of the other documentation in this crate.
     ///
     /// Arguments:
     ///
