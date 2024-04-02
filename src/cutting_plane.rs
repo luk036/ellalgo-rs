@@ -10,7 +10,7 @@ pub enum CutStatus {
 
 pub struct Options {
     pub max_iters: usize, // maximum number of iterations
-    pub tol: f64,         // error tolerrance
+    pub tolerance: f64,   // error tolerrance
 }
 
 type CInfo = (bool, usize);
@@ -97,7 +97,7 @@ pub trait SearchSpaceQ {
 /// being solved. It is a mutable reference to an object that implements the `SearchSpace` trait.
 /// * `options`: The `options` parameter is of type `Options` and contains various settings for the
 /// cutting plane algorithm. It likely includes properties such as `max_iters` (maximum number of
-/// iterations), `tol` (tolerance for termination), and other parameters that control the behavior of
+/// iterations), `` (tolerance for termination), and other parameters that control the behavior of
 /// the algorithm.
 ///
 /// Returns:
@@ -123,7 +123,7 @@ where
             return (true, niter);
         }
         let status = space.update_deep_cut::<T>(&cut.unwrap()); // update space
-        if status != CutStatus::Success || space.tsq() < options.tol {
+        if status != CutStatus::Success || space.tsq() < options.tolerance {
             return (false, niter);
         }
     }
@@ -145,7 +145,7 @@ where
 /// optimization algorithm is trying to minimize.
 /// * `options`: The `options` parameter is of type `Options` and contains various settings for the
 /// optimization algorithm. It likely includes parameters such as the maximum number of iterations
-/// (`max_iters`) and the tolerance (`tol`) for convergence.
+/// (`max_iters`) and the tolerance (``) for convergence.
 #[allow(dead_code)]
 pub fn cutting_plane_optim<T, Oracle, Space>(
     omega: &mut Oracle,
@@ -169,7 +169,7 @@ where
         } else {
             space.update_central_cut::<T>(&cut) // update space
         };
-        if status != CutStatus::Success || space.tsq() < options.tol {
+        if status != CutStatus::Success || space.tsq() < options.tolerance {
             return (x_best, niter);
         }
     }
@@ -190,7 +190,7 @@ where
 /// to a floating-point number (f64).
 /// * `options`: The `options` parameter is a struct that contains various options for the cutting-plane
 /// method. It includes parameters such as the maximum number of iterations (`max_iters`) and the error
-/// tolerance (`tol`). These options control the termination criteria for the method.
+/// tolerance (``). These options control the termination criteria for the method.
 #[allow(dead_code)]
 pub fn cutting_plane_optim_q<T, Oracle, Space>(
     omega: &mut Oracle,
@@ -230,7 +230,7 @@ where
             }
             _ => {}
         }
-        if space_q.tsq() < options.tol {
+        if space_q.tsq() < options.tolerance {
             return (x_best, niter);
         }
     }
@@ -250,7 +250,7 @@ where
 /// bound of the interval and the second element is the upper bound of the interval.
 /// * `options`: The `options` parameter is a struct that contains various options for the binary search
 /// algorithm. It includes properties such as the maximum number of iterations (`max_iters`) and the
-/// error tolerance (`tol`). These options control the termination criteria for the algorithm.
+/// error tolerance (``). These options control the termination criteria for the algorithm.
 ///
 /// Returns:
 ///
@@ -269,7 +269,7 @@ where
 
     for niter in 0..options.max_iters {
         let tau = (upper - lower) / 2.0;
-        if tau < options.tol {
+        if tau < options.tolerance {
             return (upper != u_orig, niter);
         }
         let mut gamma = lower; // l may be `i32` or `Fraction`

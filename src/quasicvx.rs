@@ -51,7 +51,7 @@ mod tests {
         let mut gamma = 0.0;
         let options = Options {
             max_iters: 2000,
-            tol: 1e-10,
+            tolerance: 1e-10,
         };
         let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
         assert!(x_opt.is_some());
@@ -68,7 +68,7 @@ mod tests {
         let mut gamma = 0.0;
         let options = Options {
             max_iters: 2000,
-            tol: 1e-10,
+            tolerance: 1e-10,
         };
         let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
         assert!(x_opt.is_some());

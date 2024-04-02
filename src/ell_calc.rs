@@ -224,7 +224,7 @@ impl EllCalcCore {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use approx_eq::assert_approx_eq;
     /// use ellalgo_rs::ell_calc::EllCalcCore;
     ///
@@ -847,6 +847,25 @@ mod tests {
     }
 
     #[test]
+    pub fn test_calc_parallel_bias_cut_fast() {
+        let ell_calc_core = EllCalcCore::new(4.0);
+        let (rho, sigma, delta) = ell_calc_core.calc_parallel_bias_cut_fast(1.0, 2.0, &4.0, &2.0, &12.0);
+        assert_approx_eq!(rho, 1.2);
+        assert_approx_eq!(sigma, 0.8);
+        assert_approx_eq!(delta, 0.8);
+    }
+
+    #[test]
+    pub fn test_calc_bias_cut_fast() {
+        let ell_calc_core = EllCalcCore::new(4.0);
+        let (rho, sigma, delta) = ell_calc_core.calc_bias_cut_fast(&1.0, &2.0, &6.0);
+        assert_approx_eq!(rho, 1.2);
+        assert_approx_eq!(sigma, 0.8);
+        assert_approx_eq!(delta, 0.8);
+    }
+
+
+    #[test]
     pub fn test_calc_central_cut() {
         let ell_calc = EllCalc::new(4.0);
         // ell_calc.tsq = 0.01;
@@ -923,4 +942,120 @@ mod tests {
         let (status, _result) = ell_calc.calc_parallel_q(-0.04, 0.0625, &0.01);
         assert_eq!(status, CutStatus::NoEffect);
     }
+
+    
+    #[test]
+    fn test_construct2() {
+        let ell_calc = EllCalc::new(4.0);
+        assert_eq!(ell_calc.use_parallel_cut, true);
+        assert_eq!(ell_calc.n_f, 4.0);
+    }
+
+    #[test]
+    fn test_calc_central_cut2() {
+        let ell_calc = EllCalc::new(4.0);
+        let (status, result) = ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (rho, sigma, delta) = result;
+        assert_approx_eq!(sigma, 0.8);
+        assert_approx_eq!(rho, 0.02);
+        assert_approx_eq!(delta, 1.2);
+    }
+
+    #[test]
+    fn test_calc_deep_cut2() {
+        let ell_calc = EllCalc::new(4.0);
+        let (status, _result) = ell_calc.calc_deep_cut(&0.11, &0.01);
+        assert_eq!(status, CutStatus::NoSoln);
+        let (status, _result) = ell_calc.calc_deep_cut(&0.01, &0.01);
+        assert_eq!(status, CutStatus::Success);
+
+        let (status, result) = ell_calc.calc_deep_cut(&0.05, &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (rho, sigma, delta) = result;
+        assert_approx_eq!(rho, 0.06);
+        assert_approx_eq!(sigma, 0.8);
+        assert_approx_eq!(delta, 0.8);
+    }
+
+    #[test]
+    fn test_calc_parallel_central_cut2() {
+        let ell_calc = EllCalc::new(4.0);
+        let (status, result) = ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (rho, sigma, delta) = result;
+        assert_approx_eq!(rho, 0.02);
+        assert_approx_eq!(sigma, 0.8);
+        assert_approx_eq!(delta, 1.2);
+    }
+
+    #[test]
+    fn test_calc_parallel2() {
+        let ell_calc = EllCalc::new(4.0);
+        let (status, _result) = ell_calc.calc_parallel_deep_cut(0.07, 0.03, &0.01);
+        assert_eq!(status, CutStatus::NoSoln);
+        let (status, result) = ell_calc.calc_parallel_deep_cut(0.0, 0.05, &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (rho, sigma, delta) = result;
+        assert_approx_eq!(rho, 0.02);
+        assert_approx_eq!(sigma, 0.8);
+        assert_approx_eq!(delta, 1.2);
+        let (status, result) = ell_calc.calc_parallel_deep_cut(0.05, 0.11, &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (rho, sigma, delta) = result;
+        assert_approx_eq!(rho, 0.06);
+        assert_approx_eq!(sigma, 0.8);
+        assert_approx_eq!(delta, 0.8);
+        let (status, result) = ell_calc.calc_parallel_deep_cut(0.01, 0.04, &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (rho, sigma, delta) = result;
+        assert_approx_eq!(rho, 0.0232);
+        assert_approx_eq!(sigma, 0.928);
+        assert_approx_eq!(delta, 1.232);
+    }
+
+    #[test]
+    fn test_calc_deep_cut_q2() {
+        let ell_calc_q = EllCalc::new(4.0);
+        let (status, _result) = ell_calc_q.calc_bias_cut_q(&0.11, &0.01);
+        assert_eq!(status, CutStatus::NoSoln);
+        let (status, _result) = ell_calc_q.calc_bias_cut_q(&0.01, &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (status, _result) = ell_calc_q.calc_bias_cut_q(&-0.05, &0.01);
+        assert_eq!(status, CutStatus::NoEffect);
+        let (status, result) = ell_calc_q.calc_bias_cut_q(&0.05, &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (rho, sigma, delta) = result;
+        assert_approx_eq!(rho, 0.06);
+        assert_approx_eq!(sigma, 0.8);
+        assert_approx_eq!(delta, 0.8);
+    }
+
+    #[test]
+    fn test_calc_parallel_q2() {
+        let ell_calc = EllCalc::new(4.0);
+        let (status, _result) = ell_calc.calc_parallel_q(0.07, 0.03, &0.01);
+        assert_eq!(status, CutStatus::NoSoln);
+        let (status, _result) = ell_calc.calc_parallel_q(-0.04, 0.0625, &0.01);
+        assert_eq!(status, CutStatus::NoEffect);
+        let (status, result) = ell_calc.calc_parallel_q(0.0, 0.05, &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (rho, sigma, delta) = result;
+        assert_approx_eq!(rho, 0.02);
+        assert_approx_eq!(sigma, 0.8);
+        assert_approx_eq!(delta, 1.2);
+        let (status, result) = ell_calc.calc_parallel_q(0.05, 0.11, &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (rho, sigma, delta) = result;
+        assert_approx_eq!(rho, 0.06);
+        assert_approx_eq!(sigma, 0.8);
+        assert_approx_eq!(delta, 0.8);
+        let (status, result) = ell_calc.calc_parallel_q(0.01, 0.04, &0.01);
+        assert_eq!(status, CutStatus::Success);
+        let (rho, sigma, delta) = result;
+        assert_approx_eq!(rho, 0.0232);
+        assert_approx_eq!(sigma, 0.928);
+        assert_approx_eq!(delta, 1.232);
+    }
+
 }

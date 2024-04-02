@@ -93,7 +93,7 @@ mod tests {
         let mut oracle = MyOracleFeas::new();
         let options = Options {
             max_iters: 2000,
-            tol: 1e-12,
+            tolerance: 1e-12,
         };
         let (feasible, _niter) = cutting_plane_feas(&mut oracle, &mut ell, &options);
         assert!(feasible);

@@ -329,7 +329,7 @@ mod tests {
         let mut gamma = 0.0;
         let options = Options {
             max_iters: 2000,
-            tol: 1e-20,
+            tolerance: 1e-20,
         };
         let (y_opt, niter) = cutting_plane_optim(&mut omega, &mut ellip, &mut gamma, &options);
         assert!(y_opt.is_some());
@@ -352,7 +352,7 @@ mod tests {
         let mut gamma = 0.0;
         let options = Options {
             max_iters: 2000,
-            tol: 1e-20,
+            tolerance: 1e-20,
         };
         let (y_opt, niter) = cutting_plane_optim_q(&mut omega, &mut ellip, &mut gamma, &options);
         assert!(y_opt.is_some());
