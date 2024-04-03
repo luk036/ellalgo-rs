@@ -66,7 +66,7 @@ impl EllCalc {
         if let Some(beta1) = beta1_opt {
             self.calc_parallel_core(beta0, beta1)
         } else {
-            self.calc_bias_cut(&beta0)
+            self.calc_bias_cut(beta0)
         }
     }
 
@@ -95,7 +95,7 @@ impl EllCalc {
         let b1sqn = beta1 * (beta1 / self.tsq);
         let t1n = 1.0 - b1sqn;
         if t1n < 0.0 || !self.use_parallel_cut {
-            return self.calc_bias_cut(&beta0);
+            return self.calc_bias_cut(beta0);
         }
 
         // if beta0 == 0.0 {
@@ -152,14 +152,14 @@ impl EllCalc {
      * @param[in] beta
      * @return i32
      */
-    pub fn calc_bias_cut(&mut self, beta: &f64) -> CutStatus {
+    pub fn calc_bias_cut(&mut self, beta: f64) -> CutStatus {
         let tau = (self.tsq).sqrt();
 
         if tau < *beta {
             return CutStatus::NoSoln; // no sol'n
         }
 
-        // if beta == &0.0 {
+        // if beta == 0.0 {
         //     return self.calc_central_cut();
         // }
 
@@ -228,15 +228,15 @@ mod tests {
     pub fn test_calc_bias_cut() {
         let mut ell_calc = EllCalc::new(4.0);
         ell_calc.tsq = 0.01;
-        let status = ell_calc.calc_bias_cut(&0.11);
+        let status = ell_calc.calc_bias_cut(0.11);
         assert_eq!(status, CutStatus::NoSoln);
-        let status = ell_calc.calc_bias_cut(&0.0);
+        let status = ell_calc.calc_bias_cut(0.0);
         assert_eq!(status, CutStatus::Success);
-        let status = ell_calc.calc_bias_cut(&-0.05);
+        let status = ell_calc.calc_bias_cut(-0.05);
         assert_eq!(status, CutStatus::NoEffect);
 
         ell_calc.tsq = 0.01;
-        let status = ell_calc.calc_bias_cut(&0.05);
+        let status = ell_calc.calc_bias_cut(0.05);
         assert_eq!(status, CutStatus::Success);
         assert_approx_eq!(ell_calc.sigma, 0.8);
         assert_approx_eq!(ell_calc.rho, 0.06);

@@ -155,14 +155,14 @@ impl Ell {
     fn update_core<T, F>(&mut self, grad: &Array1<f64>, beta: &T, cut_strategy: F) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Array1<f64>>,
-        F: FnOnce(&T, &f64) -> (CutStatus, (f64, f64, f64)),
+        F: FnOnce(&T, f64) -> (CutStatus, (f64, f64, f64)),
     {
         let grad_t = self.mq.dot(grad);
         let omega = grad.dot(&grad_t);
 
         self.tsq = self.kappa * omega;
         // let status = self.helper.calc_bias_cut(*beta);
-        let (status, (rho, sigma, delta)) = cut_strategy(beta, &self.tsq);
+        let (status, (rho, sigma, delta)) = cut_strategy(beta, self.tsq);
         if status != CutStatus::Success {
             return status;
         }
@@ -286,7 +286,7 @@ impl UpdateByCutChoices<Ell> for f64 {
     fn update_bias_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut(beta, tsq))
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut(*beta, tsq))
     }
 
     fn update_central_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
@@ -298,7 +298,7 @@ impl UpdateByCutChoices<Ell> for f64 {
     fn update_q_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut_q(beta, tsq))
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut_q(*beta, tsq))
     }
 }
 

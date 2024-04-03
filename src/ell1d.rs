@@ -51,7 +51,7 @@ impl Ell1D {
     /// gradient of the function at a particular point.
     /// * `beta0`: The parameter `beta0` represents the value of the constant term in the inequality constraint
     /// equation. In the code, it is referred to as `beta`.
-    fn update_single(&mut self, grad: &f64, beta0: &f64) -> (CutStatus, f64) {
+    fn update_single(&mut self, grad: f64, beta0: f64) -> (CutStatus, f64) {
         let g = *grad;
         let beta = *beta0;
         let temp = self.r * g;
@@ -120,6 +120,6 @@ impl UpdateByCutChoices<Ell1D> for f64 {
 //     type ArrayType = Arr;
 //     fn update_by(&self, ell: &mut Ell1D, grad: &Self::ArrayType) -> (CutStatus, f64) {
 //         let beta = self;
-//         ell.update_parallel(grad, &beta)
+//         ell.update_parallel(grad, beta)
 //     }
 // }

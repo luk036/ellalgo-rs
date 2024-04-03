@@ -131,7 +131,7 @@ impl EllStable {
     fn update_core<T, F>(&mut self, grad: &Array1<f64>, beta: &T, f_core: F) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Array1<f64>>,
-        F: FnOnce(&T, &f64) -> (CutStatus, (f64, f64, f64)),
+        F: FnOnce(&T, f64) -> (CutStatus, (f64, f64, f64)),
     {
         // calculate inv(L)*grad: (n-1)*n/2 multiplications
         let mut inv_ml_g = grad.clone(); // initial x0
@@ -158,7 +158,7 @@ impl EllStable {
         }
 
         self.tsq = self.kappa * omega;
-        let (status, (rho, sigma, delta)) = f_core(beta, &self.tsq);
+        let (status, (rho, sigma, delta)) = f_core(beta, self.tsq);
 
         if status != CutStatus::Success {
             return status;
@@ -309,7 +309,7 @@ impl UpdateByCutChoices<EllStable> for f64 {
     fn update_bias_cut_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut(beta, tsq))
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut(*beta, tsq))
     }
 
     fn update_central_cut_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
@@ -321,7 +321,7 @@ impl UpdateByCutChoices<EllStable> for f64 {
     fn update_q_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut_q(beta, tsq))
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut_q(*beta, tsq))
     }
 }
 
