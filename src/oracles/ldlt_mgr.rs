@@ -1,4 +1,4 @@
-use ndarray::{Array1, Array2, s};
+use ndarray::{s, Array1, Array2};
 // use ndarray_linalg::Lapack;
 // use std::cmp::min;
 
@@ -132,7 +132,11 @@ impl LDLTMgr {
                 // for k in 0..stop {
                 //     diag -= self.storage[[i, k]] * self.storage[[k, stop]];
                 // }
-                diag = get_elem(i, stop) - self.storage.slice(s![i, 0..stop]).dot(&self.storage.slice(s![0..stop, stop]));
+                diag = get_elem(i, stop)
+                    - self
+                        .storage
+                        .slice(s![i, 0..stop])
+                        .dot(&self.storage.slice(s![0..stop, stop]));
             }
             self.storage[[i, i]] = diag;
             if diag <= 0.0 {
@@ -184,7 +188,11 @@ impl LDLTMgr {
                 // for k in start..stop {
                 //     diag -= self.storage[[i, k]] * self.storage[[k, stop]];
                 // }
-                diag = get_elem(i, stop) - self.storage.slice(s![i, start..stop]).dot(&self.storage.slice(s![start..stop, stop]));
+                diag = get_elem(i, stop)
+                    - self
+                        .storage
+                        .slice(s![i, start..stop])
+                        .dot(&self.storage.slice(s![start..stop, stop]));
             }
             self.storage[[i, i]] = diag;
             if diag < 0.0 {
@@ -339,7 +347,10 @@ mod tests {
 
     #[test]
     fn test_chol1() -> Result<(), ShapeError> {
-        let l1 = Array2::from_shape_vec((3, 3), vec![25.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0])?;
+        let l1 = Array2::from_shape_vec(
+            (3, 3),
+            vec![25.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0],
+        )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
         assert!(ldlt_mgr.factorize(&l1));
         Ok(())
@@ -347,7 +358,13 @@ mod tests {
 
     #[test]
     fn test_chol2() -> Result<(), ShapeError> {
-        let l2 = Array2::from_shape_vec((4, 4), vec![18.0, 22.0, 54.0, 42.0, 22.0, -70.0, 86.0, 62.0, 54.0, 86.0, -174.0, 134.0, 42.0, 62.0, 134.0, -106.0])?;
+        let l2 = Array2::from_shape_vec(
+            (4, 4),
+            vec![
+                18.0, 22.0, 54.0, 42.0, 22.0, -70.0, 86.0, 62.0, 54.0, 86.0, -174.0, 134.0, 42.0,
+                62.0, 134.0, -106.0,
+            ],
+        )?;
         let mut ldlt_mgr = LDLTMgr::new(4);
         assert!(!ldlt_mgr.factorize(&l2));
         ldlt_mgr.witness();
@@ -357,7 +374,10 @@ mod tests {
 
     #[test]
     fn test_chol3() -> Result<(), ShapeError> {
-        let l3 = Array2::from_shape_vec((3, 3), vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0])?;
+        let l3 = Array2::from_shape_vec(
+            (3, 3),
+            vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0],
+        )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
         assert!(!ldlt_mgr.factorize(&l3));
         let ep = ldlt_mgr.witness();
@@ -369,7 +389,10 @@ mod tests {
 
     #[test]
     fn test_chol4() -> Result<(), ShapeError> {
-        let l1 = Array2::from_shape_vec((3, 3), vec![25.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0])?;
+        let l1 = Array2::from_shape_vec(
+            (3, 3),
+            vec![25.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0],
+        )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
         assert!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l1[[i, j]]));
         Ok(())
@@ -377,7 +400,13 @@ mod tests {
 
     #[test]
     fn test_chol5() -> Result<(), ShapeError> {
-        let l2 = Array2::from_shape_vec((4, 4), vec![18.0, 22.0, 54.0, 42.0, 22.0, -70.0, 86.0, 62.0, 54.0, 86.0, -174.0, 134.0, 42.0, 62.0, 134.0, -106.0])?;
+        let l2 = Array2::from_shape_vec(
+            (4, 4),
+            vec![
+                18.0, 22.0, 54.0, 42.0, 22.0, -70.0, 86.0, 62.0, 54.0, 86.0, -174.0, 134.0, 42.0,
+                62.0, 134.0, -106.0,
+            ],
+        )?;
         let mut ldlt_mgr = LDLTMgr::new(4);
         assert!(!ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l2[[i, j]]));
         ldlt_mgr.witness();
@@ -387,7 +416,10 @@ mod tests {
 
     #[test]
     fn test_chol6() -> Result<(), ShapeError> {
-        let l3 = Array2::from_shape_vec((3, 3), vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0])?;
+        let l3 = Array2::from_shape_vec(
+            (3, 3),
+            vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0],
+        )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
         assert!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l3[[i, j]]));
         Ok(())
@@ -395,7 +427,10 @@ mod tests {
 
     #[test]
     fn test_chol7() -> Result<(), ShapeError> {
-        let l3 = Array2::from_shape_vec((3, 3), vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, -20.0])?;
+        let l3 = Array2::from_shape_vec(
+            (3, 3),
+            vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, -20.0],
+        )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
         assert!(!ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l3[[i, j]]));
         let ep = ldlt_mgr.witness();
@@ -405,7 +440,10 @@ mod tests {
 
     #[test]
     fn test_chol8() -> Result<(), ShapeError> {
-        let l3 = Array2::from_shape_vec((3, 3), vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 20.0])?;
+        let l3 = Array2::from_shape_vec(
+            (3, 3),
+            vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 20.0],
+        )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
         assert!(!ldlt_mgr.factorize(&l3));
         Ok(())
@@ -413,7 +451,10 @@ mod tests {
 
     #[test]
     fn test_chol9() -> Result<(), ShapeError> {
-        let l3 = Array2::from_shape_vec((3, 3), vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 20.0])?;
+        let l3 = Array2::from_shape_vec(
+            (3, 3),
+            vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 20.0],
+        )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
         assert!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l3[[i, j]]));
         Ok(())
@@ -421,12 +462,16 @@ mod tests {
 
     #[test]
     fn test_ldlt_mgr_sqrt() -> Result<(), ShapeError> {
-        let a = Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.5, 0.5, 1.25, 0.75, 0.5, 0.75, 1.5])?;
+        let a =
+            Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.5, 0.5, 1.25, 0.75, 0.5, 0.75, 1.5])?;
         let mut ldlt_mgr = LDLTMgr::new(3);
         ldlt_mgr.factorize(&a);
         assert!(ldlt_mgr.is_spd());
         let r = ldlt_mgr.sqrt();
-        assert_eq!(r, Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.5, 0.0, 1.0, 0.5, 0.0, 0.0, 1.0])?);
+        assert_eq!(
+            r,
+            Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.5, 0.0, 1.0, 0.5, 0.0, 0.0, 1.0])?
+        );
         Ok(())
     }
 }

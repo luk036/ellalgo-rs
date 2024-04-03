@@ -330,7 +330,6 @@ impl UpdateByCutChoices<Ell> for (f64, Option<f64>) {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -344,7 +343,7 @@ mod tests {
         assert_eq!(ellip.mq, Array2::eye(4));
         assert_eq!(ellip.xc, Array1::zeros(4));
         assert_approx_eq!(ellip.tsq, 0.0);
-    }   
+    }
 
     #[test]
     fn test_update_central_cut() {
@@ -356,7 +355,7 @@ mod tests {
         assert_eq!(ellip.mq, Array2::eye(4) - 0.1 * Array2::ones((4, 4)));
         assert_approx_eq!(ellip.kappa, 0.16 / 15.0);
         assert_approx_eq!(ellip.tsq, 0.01);
-    }   
+    }
 
     #[test]
     fn test_update_bias_cut() {
@@ -368,7 +367,7 @@ mod tests {
         assert_approx_eq!(ellip.mq[(0, 0)], 0.8);
         assert_approx_eq!(ellip.kappa, 0.008);
         assert_approx_eq!(ellip.tsq, 0.01);
-    }   
+    }
 
     #[test]
     fn test_update_parallel_central_cut() {
@@ -380,7 +379,7 @@ mod tests {
         assert_eq!(ellip.mq, Array2::eye(4) - 0.2 * Array2::ones((4, 4)));
         assert_approx_eq!(ellip.kappa, 0.012);
         assert_approx_eq!(ellip.tsq, 0.01);
-    }   
+    }
 
     #[test]
     fn test_update_parallel() {
@@ -392,7 +391,7 @@ mod tests {
         assert_approx_eq!(ellip.mq[(0, 0)], 1.0 - 0.232);
         assert_approx_eq!(ellip.kappa, 0.01232);
         assert_approx_eq!(ellip.tsq, 0.01);
-    }   
+    }
 
     #[test]
     fn test_update_parallel_no_effect() {
@@ -403,7 +402,7 @@ mod tests {
         assert_eq!(ellip.xc, Array1::zeros(4));
         assert_eq!(ellip.mq, Array2::eye(4));
         assert_approx_eq!(ellip.kappa, 0.01);
-    }   
+    }
 
     #[test]
     fn test_update_q_no_effect() {

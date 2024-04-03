@@ -353,7 +353,6 @@ impl UpdateByCutChoices<EllStable> for (f64, Option<f64>) {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -366,7 +365,7 @@ mod tests {
         assert_approx_eq!(ellip.kappa, 0.01);
         assert_eq!(ellip.xc, Array1::zeros(4));
         assert_approx_eq!(ellip.tsq, 0.0);
-    }   
+    }
 
     #[test]
     fn test_update_central_cut() {
@@ -377,7 +376,7 @@ mod tests {
         assert_eq!(ellip.xc, -0.01 * Array1::ones(4));
         assert_approx_eq!(ellip.kappa, 0.16 / 15.0);
         assert_approx_eq!(ellip.tsq, 0.01);
-    }   
+    }
 
     #[test]
     fn test_update_bias_cut() {
@@ -388,7 +387,7 @@ mod tests {
         assert_approx_eq!(ellip.xc[0], -0.03);
         assert_approx_eq!(ellip.kappa, 0.008);
         assert_approx_eq!(ellip.tsq, 0.01);
-    }   
+    }
 
     #[test]
     fn test_update_parallel_central_cut() {
@@ -399,7 +398,7 @@ mod tests {
         assert_eq!(ellip.xc, -0.01 * Array1::ones(4));
         assert_approx_eq!(ellip.kappa, 0.012);
         assert_approx_eq!(ellip.tsq, 0.01);
-    }   
+    }
 
     #[test]
     fn test_update_parallel() {
@@ -410,7 +409,7 @@ mod tests {
         assert_approx_eq!(ellip.xc[0], -0.0116);
         assert_approx_eq!(ellip.kappa, 0.01232);
         assert_approx_eq!(ellip.tsq, 0.01);
-    }   
+    }
 
     #[test]
     fn test_update_parallel_no_effect() {
@@ -420,7 +419,7 @@ mod tests {
         assert_eq!(status, CutStatus::Success);
         assert_eq!(ellip.xc, Array1::zeros(4));
         assert_approx_eq!(ellip.kappa, 0.01);
-    }   
+    }
 
     #[test]
     fn test_update_q_no_effect() {
