@@ -25,7 +25,7 @@ use ndarray::Array2;
 /// * `ndim`: The `ndim` property represents the number of dimensions of the ellipsoid search space.
 /// * `helper`: The `helper` property is an instance of the `EllCalc` struct, which is used to perform
 /// calculations related to the ellipsoid search space. It provides methods for calculating the distance
-/// constant (`dc`), the center constant (`cc`), and the quadratic constant (`q`) used in the ell
+/// constant (`dc`), the center constant (`cc`), and the quadratic constant (`q`) used in the ellip
 /// * `tsq`: The `tsq` property represents the squared Mahalanobis distance threshold of the ellipsoid.
 /// It is used to determine whether a point is inside or outside the ellipsoid.
 #[derive(Debug, Clone)]
@@ -49,7 +49,7 @@ impl EllStable {
     /// ellipse. It determines the shape of the ellipse, with higher values resulting in a more elongated
     /// shape and lower values resulting in a more circular shape.
     /// * `mq`: The `mq` parameter is of type `Array2<f64>`, which represents a 2-dimensional array of `f64`
-    /// (floating-point) values. It is used to store the matrix `mq` in the `Ell` object.
+    /// (floating-point) values. It is used to store the matrix `mq` in the `EllStable` object.
     /// * `xc`: The parameter `xc` represents the center of the ellipsoid in n-dimensional space. It is an
     /// array of length `ndim`, where each element represents the coordinate of the center along a specific
     /// dimension.
@@ -74,7 +74,7 @@ impl EllStable {
 
     /// Creates a new [`EllStable`].
     ///
-    /// The function `new` creates a new `Ell` object with the given values.
+    /// The function `new` creates a new `EllStable` object with the given values.
     ///
     /// Arguments:
     ///
@@ -94,7 +94,7 @@ impl EllStable {
     /// Arguments:
     ///
     /// * `val`: The `val` parameter is a scalar value of type `f64`. It represents the value of the scalar
-    /// component of the `Ell` object.
+    /// component of the `EllStable` object.
     /// * `xc`: The parameter `xc` is an array of type `Array1<f64>`. It represents the center coordinates
     /// of the ellipse.
     ///
@@ -350,5 +350,85 @@ impl UpdateByCutChoices<EllStable> for (f64, Option<f64>) {
         ellip.update_core(grad, beta, |beta, tsq| {
             helper.calc_single_or_parallel_q(beta, tsq)
         })
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx_eq::assert_approx_eq;
+
+    #[test]
+    fn test_construct() {
+        let ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
+        assert_eq!(ellip.no_defer_trick, false);
+        assert_approx_eq!(ellip.kappa, 0.01);
+        assert_eq!(ellip.xc, Array1::zeros(4));
+        assert_approx_eq!(ellip.tsq, 0.0);
+    }   
+
+    #[test]
+    fn test_update_central_cut() {
+        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
+        let cut = (0.5 * Array1::ones(4), 0.0);
+        let status = ellip.update_central_cut(&cut);
+        assert_eq!(status, CutStatus::Success);
+        assert_eq!(ellip.xc, -0.01 * Array1::ones(4));
+        assert_approx_eq!(ellip.kappa, 0.16 / 15.0);
+        assert_approx_eq!(ellip.tsq, 0.01);
+    }   
+
+    #[test]
+    fn test_update_bias_cut() {
+        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
+        let cut = (0.5 * Array1::ones(4), 0.05);
+        let status = ellip.update_bias_cut(&cut);
+        assert_eq!(status, CutStatus::Success);
+        assert_approx_eq!(ellip.xc[0], -0.03);
+        assert_approx_eq!(ellip.kappa, 0.008);
+        assert_approx_eq!(ellip.tsq, 0.01);
+    }   
+
+    #[test]
+    fn test_update_parallel_central_cut() {
+        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
+        let cut = (0.5 * Array1::ones(4), (0.0, Some(0.05)));
+        let status = ellip.update_central_cut(&cut);
+        assert_eq!(status, CutStatus::Success);
+        assert_eq!(ellip.xc, -0.01 * Array1::ones(4));
+        assert_approx_eq!(ellip.kappa, 0.012);
+        assert_approx_eq!(ellip.tsq, 0.01);
+    }   
+
+    #[test]
+    fn test_update_parallel() {
+        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
+        let cut = (0.5 * Array1::ones(4), (0.01, Some(0.04)));
+        let status = ellip.update_bias_cut(&cut);
+        assert_eq!(status, CutStatus::Success);
+        assert_approx_eq!(ellip.xc[0], -0.0116);
+        assert_approx_eq!(ellip.kappa, 0.01232);
+        assert_approx_eq!(ellip.tsq, 0.01);
+    }   
+
+    #[test]
+    fn test_update_parallel_no_effect() {
+        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
+        let cut = (0.5 * Array1::ones(4), (-0.04, Some(0.0625)));
+        let status = ellip.update_bias_cut(&cut);
+        assert_eq!(status, CutStatus::Success);
+        assert_eq!(ellip.xc, Array1::zeros(4));
+        assert_approx_eq!(ellip.kappa, 0.01);
+    }   
+
+    #[test]
+    fn test_update_q_no_effect() {
+        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
+        let cut = (0.5 * Array1::ones(4), (-0.04, Some(0.0625)));
+        let status = ellip.update_q(&cut);
+        assert_eq!(status, CutStatus::NoEffect);
+        assert_eq!(ellip.xc, Array1::zeros(4));
+        assert_approx_eq!(ellip.kappa, 0.01);
     }
 }
