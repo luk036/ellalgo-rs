@@ -161,7 +161,7 @@ impl Ell {
         let omega = grad.dot(&grad_t);
 
         self.tsq = self.kappa * omega;
-        // let status = self.helper.calc_deep_cut(*beta);
+        // let status = self.helper.calc_bias_cut(*beta);
         let (status, (rho, sigma, delta)) = cut_strategy(beta, &self.tsq);
         if status != CutStatus::Success {
             return status;
@@ -209,7 +209,7 @@ impl SearchSpace for Ell {
         self.tsq
     }
 
-    /// The `update_deep_cut` function updates the decision variable based on the given cut.
+    /// The `update_bias_cut` function updates the decision variable based on the given cut.
     ///
     /// Arguments:
     ///
@@ -217,13 +217,13 @@ impl SearchSpace for Ell {
     ///
     /// Returns:
     ///
-    /// The `update_deep_cut` function returns a value of type `CutStatus`.
-    fn update_deep_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    /// The `update_bias_cut` function returns a value of type `CutStatus`.
+    fn update_bias_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
-        beta.update_deep_cut_by(self, grad)
+        beta.update_bias_cut_by(self, grad)
     }
 
     /// The `update_central_cut` function updates the cut choices using the gradient and beta values.
@@ -270,7 +270,7 @@ impl SearchSpaceQ for Ell {
     ///
     /// Returns:
     ///
-    /// The `update_deep_cut` function returns a value of type `CutStatus`.
+    /// The `update_bias_cut` function returns a value of type `CutStatus`.
     fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
@@ -283,10 +283,10 @@ impl SearchSpaceQ for Ell {
 impl UpdateByCutChoices<Ell> for f64 {
     type ArrayType = Array1<f64>;
 
-    fn update_deep_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
+    fn update_bias_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_deep_cut(beta, tsq))
+        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut(beta, tsq))
     }
 
     fn update_central_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
@@ -305,11 +305,11 @@ impl UpdateByCutChoices<Ell> for f64 {
 impl UpdateByCutChoices<Ell> for (f64, Option<f64>) {
     type ArrayType = Array1<f64>;
 
-    fn update_deep_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
+    fn update_bias_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let helper = ellip.helper.clone();
         ellip.update_core(grad, beta, |beta, tsq| {
-            helper.calc_single_or_parallel_deep_cut(beta, tsq)
+            helper.calc_single_or_parallel_bias_cut(beta, tsq)
         })
     }
 

@@ -91,7 +91,7 @@ impl Ell {
         }
 
         self.helper.tsq = self.kappa * omega;
-        // let status = self.helper.calc_deep_cut(*beta);
+        // let status = self.helper.calc_bias_cut(*beta);
         let status = f_core(beta);
         if status != CutStatus::Success {
             return status;
@@ -167,7 +167,7 @@ impl UpdateByCutChoices<Ell> for f64 {
     fn update_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
         let beta = self;
         let mut helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta| helper.calc_deep_cut(beta))
+        ellip.update_core(grad, beta, |beta| helper.calc_bias_cut(beta))
     }
 
     fn update_central_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {

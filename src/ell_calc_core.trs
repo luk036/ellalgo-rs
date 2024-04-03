@@ -45,7 +45,7 @@ impl EllCalcCore {
         (rho, sigma, delta)
     }
 
-    fn calc_parallel_deep_cut(&self, beta0: f64, beta1: f64, tsq: f64) -> (f64, f64, f64) {
+    fn calc_parallel_bias_cut(&self, beta0: f64, beta1: f64, tsq: f64) -> (f64, f64, f64) {
         let b0b1 = beta0 * beta1;
         let bsum = beta0 + beta1;
         let bsumsq = bsum * bsum;

@@ -17,7 +17,7 @@ type CInfo = (bool, usize);
 
 pub trait UpdateByCutChoices<SearchSpace> {
     type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
-    fn update_deep_cut_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
+    fn update_bias_cut_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
     fn update_central_cut_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
     fn update_q_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
 }
@@ -61,7 +61,7 @@ pub trait SearchSpace {
 
     fn tsq(&self) -> f64; // measure of the search space
 
-    fn update_deep_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
+    fn update_bias_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
         Self: Sized;
@@ -122,7 +122,7 @@ where
             // feasible sol'n obtained
             return (true, niter);
         }
-        let status = space.update_deep_cut::<T>(&cut.unwrap()); // update space
+        let status = space.update_bias_cut::<T>(&cut.unwrap()); // update space
         if status != CutStatus::Success || space.tsq() < options.tolerance {
             return (false, niter);
         }
@@ -165,7 +165,7 @@ where
         let status = if shrunk {
             // better gamma obtained
             x_best = Some(space.xc());
-            space.update_deep_cut::<T>(&cut) // update space
+            space.update_bias_cut::<T>(&cut) // update space
         } else {
             space.update_central_cut::<T>(&cut) // update space
         };
