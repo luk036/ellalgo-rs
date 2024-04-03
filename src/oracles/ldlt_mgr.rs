@@ -1,11 +1,11 @@
-use ndarray::{Array1, Array2};
+use ndarray::{Array1, Array2, s};
 // use ndarray_linalg::Lapack;
 // use std::cmp::min;
 
-/// The `LDLTMgr` struct is a manager for LDLT factorization in Rust.
+/// The `LDLTMgr` struct is a manager for LDLTMgr factorization in Rust.
 ///
-/// `LDLTMgr` is a class that performs the LDLT factorization for a given
-/// symmetric matrix. The LDLT factorization decomposes a symmetric matrix A into
+/// `LDLTMgr` is a class that performs the LDLTMgr factorization for a given
+/// symmetric matrix. The LDLTMgr factorization decomposes a symmetric matrix A into
 /// the product of a lower triangular matrix L, a diagonal matrix D, and the
 /// transpose of L. This factorization is useful for solving linear systems and
 /// eigenvalue problems. The class provides methods to perform the factorization,
@@ -20,17 +20,17 @@ use ndarray::{Array1, Array2};
 ///
 /// Properties:
 ///
-/// * `pos`: A tuple containing two usize values. It represents the dimensions of the LDLT factorization.
-/// * `witness`: The `witness` property is an Array1 of f64 values.
-/// * `ndim`: The `ndim` property represents the size of the matrix that will be factorized using LDLT
+/// * `pos`: A tuple containing two usize values. It represents the dimensions of the LDLTMgr factorization.
+/// * `wit`: The `wit` property is an Array1 of f64 values.
+/// * `ndim`: The `ndim` property represents the size of the matrix that will be factorized using LDLTMgr
 /// factorization.
-/// * `mat_t`: The `mat_t` property is a 2-dimensional array of type `f64`. It is used to store the LDLT
+/// * `storage`: The `storage` property is a 2-dimensional array of type `f64`. It is used to store the LDLTMgr
 /// factorization of a matrix.
 pub struct LDLTMgr {
     pub pos: (usize, usize),
-    pub witness: Array1<f64>,
+    pub wit: Array1<f64>,
     pub ndim: usize,
-    pub mat_t: Array2<f64>,
+    pub storage: Array2<f64>,
 }
 
 impl LDLTMgr {
@@ -50,18 +50,18 @@ impl LDLTMgr {
     /// ```
     /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
     /// use ndarray::{array, Array1};
-    /// let ldl_mgr = LDLTMgr::new(3);
-    /// assert_eq!(ldl_mgr.pos, (0, 0));
-    /// assert_eq!(ldl_mgr.witness.len(), 3);
-    /// assert_eq!(ldl_mgr.ndim, 3);
-    /// assert_eq!(ldl_mgr.mat_t.len(), 9);
+    /// let ldlt_mgr = LDLTMgr::new(3);
+    /// assert_eq!(ldlt_mgr.pos, (0, 0));
+    /// assert_eq!(ldlt_mgr.wit.len(), 3);
+    /// assert_eq!(ldlt_mgr.ndim, 3);
+    /// assert_eq!(ldlt_mgr.storage.len(), 9);
     /// ```
     pub fn new(ndim: usize) -> Self {
         Self {
             pos: (0, 0),
-            witness: Array1::zeros(ndim),
+            wit: Array1::zeros(ndim),
             ndim,
-            mat_t: Array2::zeros((ndim, ndim)),
+            storage: Array2::zeros((ndim, ndim)),
         }
     }
 
@@ -80,19 +80,19 @@ impl LDLTMgr {
     /// ```
     /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
     /// use ndarray::array;
-    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mut ldlt_mgr = LDLTMgr::new(3);
     /// let mat_a = array![
     ///     [1.0, 2.0, 3.0],
     ///     [2.0, 4.0, 5.0],
     ///     [3.0, 5.0, 6.0],
     /// ];
-    /// assert_eq!(ldl_mgr.factorize(&mat_a), false);
+    /// assert_eq!(ldlt_mgr.factorize(&mat_a), false);
     /// ```
     pub fn factorize(&mut self, mat_a: &Array2<f64>) -> bool {
         self.factor(&|i, j| mat_a[[i, j]])
     }
 
-    /// The `factor` function performs LDLT factorization on a matrix and checks if it is symmetric
+    /// The `factor` function performs LDLTMgr factorization on a matrix and checks if it is symmetric
     /// positive definite.
     ///
     /// Arguments:
@@ -109,13 +109,13 @@ impl LDLTMgr {
     /// ```
     /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
     /// use ndarray::array;
-    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mut ldlt_mgr = LDLTMgr::new(3);
     /// let mat_a = array![
     ///     [1.0, 2.0, 3.0],
     ///     [2.0, 4.0, 5.0],
     ///     [3.0, 5.0, 6.0],
     /// ];
-    /// assert_eq!(ldl_mgr.factor(&|i, j| mat_a[[i, j]]), false);
+    /// assert_eq!(ldlt_mgr.factor(&|i, j| mat_a[[i, j]]), false);
     /// ```
     pub fn factor<F>(&mut self, get_elem: &F) -> bool
     where
@@ -123,18 +123,19 @@ impl LDLTMgr {
     {
         self.pos = (0, 0);
         for i in 0..self.ndim {
-            let mut d = get_elem(i, 0);
+            let mut diag = get_elem(i, 0);
             for j in 0..i {
-                self.mat_t[[j, i]] = d;
-                self.mat_t[[i, j]] = d / self.mat_t[[j, j]];
-                let s = j + 1;
-                d = get_elem(i, s);
-                for k in 0..s {
-                    d -= self.mat_t[[i, k]] * self.mat_t[[k, s]];
-                }
+                self.storage[[j, i]] = diag;
+                self.storage[[i, j]] = diag / self.storage[[j, j]];
+                let stop = j + 1;
+                // diag = get_elem(i, stop);
+                // for k in 0..stop {
+                //     diag -= self.storage[[i, k]] * self.storage[[k, stop]];
+                // }
+                diag = get_elem(i, stop) - self.storage.slice(s![i, 0..stop]).dot(&self.storage.slice(s![0..stop, stop]));
             }
-            self.mat_t[[i, i]] = d;
-            if d <= 0.0 {
+            self.storage[[i, i]] = diag;
+            if diag <= 0.0 {
                 self.pos = (0, i + 1);
                 break;
             }
@@ -159,13 +160,13 @@ impl LDLTMgr {
     /// ```
     /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
     /// use ndarray::array;
-    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mut ldlt_mgr = LDLTMgr::new(3);
     /// let mat_a = array![
     ///     [1.0, 2.0, 3.0],
     ///     [2.0, 4.0, 5.0],
     ///     [3.0, 5.0, 6.0],
     /// ];
-    /// assert_eq!(ldl_mgr.factor_with_allow_semidefinite(&|i, j| mat_a[[i, j]]), true);
+    /// assert_eq!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| mat_a[[i, j]]), true);
     /// ```
     pub fn factor_with_allow_semidefinite<F>(&mut self, get_elem: &F) -> bool
     where
@@ -174,22 +175,23 @@ impl LDLTMgr {
         self.pos = (0, 0);
         let mut start = 0;
         for i in 0..self.ndim {
-            let mut d = get_elem(i, start);
+            let mut diag = get_elem(i, start);
             for j in start..i {
-                self.mat_t[[j, i]] = d;
-                self.mat_t[[i, j]] = d / self.mat_t[[j, j]];
-                let s = j + 1;
-                d = get_elem(i, s);
-                for k in start..s {
-                    d -= self.mat_t[[i, k]] * self.mat_t[[k, s]];
-                }
+                self.storage[[j, i]] = diag;
+                self.storage[[i, j]] = diag / self.storage[[j, j]];
+                let stop = j + 1;
+                // diag = get_elem(i, stop);
+                // for k in start..stop {
+                //     diag -= self.storage[[i, k]] * self.storage[[k, stop]];
+                // }
+                diag = get_elem(i, stop) - self.storage.slice(s![i, start..stop]).dot(&self.storage.slice(s![start..stop, stop]));
             }
-            self.mat_t[[i, i]] = d;
-            if d < 0.0 {
+            self.storage[[i, i]] = diag;
+            if diag < 0.0 {
                 self.pos = (start, i + 1);
                 break;
             }
-            if d == 0.0 {
+            if diag == 0.0 {
                 start = i + 1;
                 // restart at i + 1, special as an LMI oracle
             }
@@ -208,14 +210,14 @@ impl LDLTMgr {
     /// ```
     /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
     /// use ndarray::array;
-    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mut ldlt_mgr = LDLTMgr::new(3);
     /// let mat_a = array![
     ///     [1.0, 2.0, 3.0],
     ///     [2.0, 4.0, 5.0],
     ///     [3.0, 5.0, 6.0],
     /// ];
-    /// assert_eq!(ldl_mgr.factor(&|i, j| mat_a[[i, j]]), false);
-    /// assert_eq!(ldl_mgr.is_spd(), false);
+    /// assert_eq!(ldlt_mgr.factor(&|i, j| mat_a[[i, j]]), false);
+    /// assert_eq!(ldlt_mgr.is_spd(), false);
     /// ```
     pub fn is_spd(&self) -> bool {
         self.pos.1 == 0
@@ -232,32 +234,32 @@ impl LDLTMgr {
     /// ```
     /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
     /// use ndarray::array;
-    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mut ldlt_mgr = LDLTMgr::new(3);
     /// let mat_a = array![
     ///     [1.0, 2.0, 3.0],
     ///     [2.0, 4.0, 5.0],
     ///     [3.0, 5.0, 6.0],
     /// ];
-    /// assert_eq!(ldl_mgr.factor(&|i, j| mat_a[[i, j]]), false);
-    /// assert_eq!(ldl_mgr.witness(), 0.0);
-    /// assert_eq!(ldl_mgr.witness[0], -2.0);
-    /// assert_eq!(ldl_mgr.witness[1], 1.0);
-    /// assert_eq!(ldl_mgr.pos.1, 2);
+    /// assert_eq!(ldlt_mgr.factor(&|i, j| mat_a[[i, j]]), false);
+    /// assert_eq!(ldlt_mgr.witness(), 0.0);
+    /// assert_eq!(ldlt_mgr.wit[0], -2.0);
+    /// assert_eq!(ldlt_mgr.wit[1], 1.0);
+    /// assert_eq!(ldlt_mgr.pos.1, 2);
     /// ```
     pub fn witness(&mut self) -> f64 {
         if self.is_spd() {
-            panic!("Matrix is SPD");
+            panic!("Matrix is symmetric positive definite");
         }
         let (start, ndim) = self.pos;
         let m = ndim - 1;
-        self.witness[m] = 1.0;
+        self.wit[m] = 1.0;
         for i in (start..m).rev() {
-            self.witness[i] = 0.0;
+            self.wit[i] = 0.0;
             for k in i..ndim {
-                self.witness[i] -= self.mat_t[[k, i]] * self.witness[k]
+                self.wit[i] -= self.storage[[k, i]] * self.wit[k];
             }
         }
-        -self.mat_t[[m, m]]
+        -self.storage[[m, m]]
     }
 
     /// The `sym_quad` function calculates the quadratic form of a symmetric matrix and a vector.
@@ -275,29 +277,43 @@ impl LDLTMgr {
     /// ```
     /// use ellalgo_rs::oracles::ldlt_mgr::LDLTMgr;
     /// use ndarray::array;
-    /// let mut ldl_mgr = LDLTMgr::new(3);
+    /// let mut ldlt_mgr = LDLTMgr::new(3);
     /// let mat_a = array![
     ///     [1.0, 2.0, 3.0],
     ///     [2.0, 4.0, 5.0],
     ///     [3.0, 5.0, 6.0],
     /// ];
-    /// assert_eq!(ldl_mgr.factor(&|i, j| mat_a[[i, j]]), false);
-    /// assert_eq!(ldl_mgr.witness(), 0.0);
+    /// assert_eq!(ldlt_mgr.factor(&|i, j| mat_a[[i, j]]), false);
+    /// assert_eq!(ldlt_mgr.witness(), 0.0);
     /// let mat_b = array![
     ///     [1.0, 2.0, 3.0],
     ///     [2.0, 6.0, 5.0],
     ///     [3.0, 5.0, 4.0],
     /// ];
-    /// assert_eq!(ldl_mgr.sym_quad(&mat_b), 2.0);
+    /// assert_eq!(ldlt_mgr.sym_quad(&mat_b), 2.0);
     pub fn sym_quad(&self, mat_a: &Array2<f64>) -> f64 {
         let mut res = 0.0;
         let (start, stop) = self.pos;
         for i in start..stop {
             let mut s = 0.0;
             for j in (i + 1)..stop {
-                s += mat_a[[i, j]] * self.witness[j];
+                s += mat_a[[i, j]] * self.wit[j];
             }
-            res += self.witness[i] * (mat_a[[i, i]] * self.witness[i] + 2.0 * s);
+            res += self.wit[i] * (mat_a[[i, i]] * self.wit[i] + 2.0 * s);
+        }
+        res
+    }
+
+    pub fn sqrt(&self) -> Array2<f64> {
+        if !self.is_spd() {
+            panic!("Matrix is not symmetric positive definite");
+        }
+        let mut res = Array2::zeros((self.ndim, self.ndim));
+        for i in 0..self.ndim {
+            res[[i, i]] = self.storage[[i, i]].sqrt();
+            for j in (i + 1)..self.ndim {
+                res[[i, j]] = self.storage[[j, i]] * res[[i, i]];
+            }
         }
         res
     }
@@ -305,13 +321,112 @@ impl LDLTMgr {
 
 // pub fn test_ldlt() {
 //     let ndim = 3;
-//     let mut ldlt = LDLTMgr::new(ndim);
+//     let mut ldlt_mgr = LDLTMgr::new(ndim);
 //     let a = Array::from_shape_vec((ndim, ndim), vec![4.0, 12.0, -16.0, 12.0, 37.0, -43.0, -16.0, -43.0, 98.0]).unwrap();
-//     ldlt.factorize(&a);
-//     assert!(ldlt.is_spd());
+//     ldlt_mgr.factorize(&a);
+//     assert!(ldlt_mgr.is_spd());
 //     let b = Array::from_shape_vec((ndim, ndim), vec![4.0, 12.0, -16.0, 12.0, 37.0, -43.0, -16.0, -43.0, 99.0]).unwrap();
-//     ldlt.factorize(&b);
-//     assert!(!ldlt.is_spd());
-//     assert_eq!(ldlt.witness(), -1.0);
-//     assert_eq!(ldlt.sym_quad(&a), 16.0);
+//     ldlt_mgr.factorize(&b);
+//     assert!(!ldlt_mgr.is_spd());
+//     assert_eq!(ldlt_mgr.witness(), -1.0);
+//     assert_eq!(ldlt_mgr.sym_quad(&a), 16.0);
 // }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::{Array2, ShapeError};
+
+    #[test]
+    fn test_chol1() -> Result<(), ShapeError> {
+        let l1 = Array2::from_shape_vec((3, 3), vec![25.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0])?;
+        let mut ldlt_mgr = LDLTMgr::new(3);
+        assert!(ldlt_mgr.factorize(&l1));
+        Ok(())
+    }
+
+    #[test]
+    fn test_chol2() -> Result<(), ShapeError> {
+        let l2 = Array2::from_shape_vec((4, 4), vec![18.0, 22.0, 54.0, 42.0, 22.0, -70.0, 86.0, 62.0, 54.0, 86.0, -174.0, 134.0, 42.0, 62.0, 134.0, -106.0])?;
+        let mut ldlt_mgr = LDLTMgr::new(4);
+        assert!(!ldlt_mgr.factorize(&l2));
+        ldlt_mgr.witness();
+        assert_eq!(ldlt_mgr.pos, (0, 2));
+        Ok(())
+    }
+
+    #[test]
+    fn test_chol3() -> Result<(), ShapeError> {
+        let l3 = Array2::from_shape_vec((3, 3), vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0])?;
+        let mut ldlt_mgr = LDLTMgr::new(3);
+        assert!(!ldlt_mgr.factorize(&l3));
+        let ep = ldlt_mgr.witness();
+        assert_eq!(ldlt_mgr.pos, (0, 1));
+        assert_eq!(ldlt_mgr.wit[0], 1.0);
+        assert_eq!(ep, 0.0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_chol4() -> Result<(), ShapeError> {
+        let l1 = Array2::from_shape_vec((3, 3), vec![25.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0])?;
+        let mut ldlt_mgr = LDLTMgr::new(3);
+        assert!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l1[[i, j]]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_chol5() -> Result<(), ShapeError> {
+        let l2 = Array2::from_shape_vec((4, 4), vec![18.0, 22.0, 54.0, 42.0, 22.0, -70.0, 86.0, 62.0, 54.0, 86.0, -174.0, 134.0, 42.0, 62.0, 134.0, -106.0])?;
+        let mut ldlt_mgr = LDLTMgr::new(4);
+        assert!(!ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l2[[i, j]]));
+        ldlt_mgr.witness();
+        assert_eq!(ldlt_mgr.pos, (0, 2));
+        Ok(())
+    }
+
+    #[test]
+    fn test_chol6() -> Result<(), ShapeError> {
+        let l3 = Array2::from_shape_vec((3, 3), vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0])?;
+        let mut ldlt_mgr = LDLTMgr::new(3);
+        assert!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l3[[i, j]]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_chol7() -> Result<(), ShapeError> {
+        let l3 = Array2::from_shape_vec((3, 3), vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, -20.0])?;
+        let mut ldlt_mgr = LDLTMgr::new(3);
+        assert!(!ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l3[[i, j]]));
+        let ep = ldlt_mgr.witness();
+        assert_eq!(ep, 20.0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_chol8() -> Result<(), ShapeError> {
+        let l3 = Array2::from_shape_vec((3, 3), vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 20.0])?;
+        let mut ldlt_mgr = LDLTMgr::new(3);
+        assert!(!ldlt_mgr.factorize(&l3));
+        Ok(())
+    }
+
+    #[test]
+    fn test_chol9() -> Result<(), ShapeError> {
+        let l3 = Array2::from_shape_vec((3, 3), vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 20.0])?;
+        let mut ldlt_mgr = LDLTMgr::new(3);
+        assert!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l3[[i, j]]));
+        Ok(())
+    }
+
+    #[test]
+    fn test_ldlt_mgr_sqrt() -> Result<(), ShapeError> {
+        let a = Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.5, 0.5, 1.25, 0.75, 0.5, 0.75, 1.5])?;
+        let mut ldlt_mgr = LDLTMgr::new(3);
+        ldlt_mgr.factorize(&a);
+        assert!(ldlt_mgr.is_spd());
+        let r = ldlt_mgr.sqrt();
+        assert_eq!(r, Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.5, 0.0, 1.0, 0.5, 0.0, 0.0, 1.0])?);
+        Ok(())
+    }
+}
