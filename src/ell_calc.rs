@@ -849,7 +849,8 @@ mod tests {
     #[test]
     pub fn test_calc_parallel_bias_cut_fast() {
         let ell_calc_core = EllCalcCore::new(4.0);
-        let (rho, sigma, delta) = ell_calc_core.calc_parallel_bias_cut_fast(1.0, 2.0, 4.0, 2.0, 12.0);
+        let (rho, sigma, delta) =
+            ell_calc_core.calc_parallel_bias_cut_fast(1.0, 2.0, 4.0, 2.0, 12.0);
         assert_approx_eq!(rho, 1.2);
         assert_approx_eq!(sigma, 0.8);
         assert_approx_eq!(delta, 0.8);
@@ -863,7 +864,6 @@ mod tests {
         assert_approx_eq!(sigma, 0.8);
         assert_approx_eq!(delta, 0.8);
     }
-
 
     #[test]
     pub fn test_calc_central_cut() {
@@ -943,7 +943,6 @@ mod tests {
         assert_eq!(status, CutStatus::NoEffect);
     }
 
-    
     #[test]
     fn test_construct2() {
         let ell_calc = EllCalc::new(4.0);
@@ -954,7 +953,8 @@ mod tests {
     #[test]
     fn test_calc_central_cut2() {
         let ell_calc = EllCalc::new(4.0);
-        let (status, result) = ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), 0.01);
+        let (status, result) =
+            ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), 0.01);
         assert_eq!(status, CutStatus::Success);
         let (rho, sigma, delta) = result;
         assert_approx_eq!(sigma, 0.8);
@@ -981,7 +981,8 @@ mod tests {
     #[test]
     fn test_calc_parallel_central_cut2() {
         let ell_calc = EllCalc::new(4.0);
-        let (status, result) = ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), 0.01);
+        let (status, result) =
+            ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), 0.01);
         assert_eq!(status, CutStatus::Success);
         let (rho, sigma, delta) = result;
         assert_approx_eq!(rho, 0.02);
@@ -1057,5 +1058,4 @@ mod tests {
         assert_approx_eq!(sigma, 0.928);
         assert_approx_eq!(delta, 1.232);
     }
-
 }
