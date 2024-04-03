@@ -536,10 +536,11 @@ impl EllCalc {
     ///
     /// ```rust
     /// use ellalgo_rs::ell_calc::EllCalc;
-    /// let ell_calc = EllCalc::new(4.0);
+    /// let ell_calc = EllCalc::new(4);
     /// assert!(ell_calc.use_parallel_cut);
     /// ```
-    pub fn new(n_f: f64) -> EllCalc {
+    pub fn new(n: usize) -> EllCalc {
+        let n_f = n as f64;
         let helper = EllCalcCore::new(n_f);
 
         EllCalc {
@@ -620,7 +621,7 @@ impl EllCalc {
     /// use ellalgo_rs::ell_calc::EllCalc;
     /// use ellalgo_rs::cutting_plane::CutStatus;
     ///
-    /// let ell_calc = EllCalc::new(4.0);
+    /// let ell_calc = EllCalc::new(4);
     /// let (status, _result) = ell_calc.calc_parallel_bias_cut(0.07, 0.03, 0.01);
     /// assert_eq!(status, CutStatus::NoSoln);
     ///
@@ -673,7 +674,7 @@ impl EllCalc {
     /// use ellalgo_rs::ell_calc::EllCalc;
     /// use ellalgo_rs::cutting_plane::CutStatus;
     ///
-    /// let ell_calc = EllCalc::new(4.0);
+    /// let ell_calc = EllCalc::new(4);
     /// let (status, _result) = ell_calc.calc_parallel_q(-0.07, 0.07, 0.01);
     /// assert_eq!(status, CutStatus::NoEffect);
     ///
@@ -716,7 +717,7 @@ impl EllCalc {
     /// use ellalgo_rs::ell_calc::EllCalc;
     /// use ellalgo_rs::cutting_plane::CutStatus;
     ///
-    /// let ell_calc = EllCalc::new(4.0);
+    /// let ell_calc = EllCalc::new(4);
     /// let (status, (rho, sigma, delta)) = ell_calc.calc_parallel_central_cut(0.11, 0.01);
     /// assert_eq!(status, CutStatus::Success);
     /// assert_approx_eq!(sigma, 0.4);
@@ -753,7 +754,7 @@ impl EllCalc {
     /// use ellalgo_rs::ell_calc::EllCalc;
     /// use ellalgo_rs::cutting_plane::CutStatus;
     ///
-    /// let ell_calc = EllCalc::new(4.0);
+    /// let ell_calc = EllCalc::new(4);
     /// let (status, _result) = ell_calc.calc_bias_cut(0.11, 0.01);
     /// assert_eq!(status, CutStatus::NoSoln);
     /// let (status, _result) = ell_calc.calc_bias_cut(0.0, 0.01);
@@ -783,7 +784,7 @@ impl EllCalc {
     /// use ellalgo_rs::ell_calc::EllCalc;
     /// use ellalgo_rs::cutting_plane::CutStatus;
     ///
-    /// let ell_calc = EllCalc::new(4.0);
+    /// let ell_calc = EllCalc::new(4);
     /// let (status, _result) = ell_calc.calc_bias_cut_q(-0.05, 0.01);
     /// assert_eq!(status, CutStatus::NoEffect);
     /// ```
@@ -814,7 +815,7 @@ impl EllCalc {
     /// use ellalgo_rs::ell_calc::EllCalc;
     /// use ellalgo_rs::cutting_plane::CutStatus;
     ///
-    /// let ell_calc = EllCalc::new(4.0);
+    /// let ell_calc = EllCalc::new(4);
     /// let (status, (rho, sigma, delta)) = ell_calc.calc_central_cut(0.01);
     ///
     /// assert_eq!(status, CutStatus::Success);
@@ -867,7 +868,7 @@ mod tests {
 
     #[test]
     pub fn test_calc_central_cut() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         // ell_calc.tsq = 0.01;
         let (status, (rho, sigma, delta)) = ell_calc.calc_central_cut(0.01);
         assert_eq!(status, CutStatus::Success);
@@ -878,7 +879,7 @@ mod tests {
 
     #[test]
     pub fn test_calc_bias_cut() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         // ell_calc.tsq = 0.01;
         let (status, _result) = ell_calc.calc_bias_cut(0.11, 0.01);
         assert_eq!(status, CutStatus::NoSoln);
@@ -897,7 +898,7 @@ mod tests {
 
     #[test]
     pub fn test_calc_parallel_central_cut() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         let (status, (rho, sigma, delta)) = ell_calc.calc_parallel_central_cut(0.11, 0.01);
         assert_eq!(status, CutStatus::Success);
         assert_approx_eq!(sigma, 0.4);
@@ -913,7 +914,7 @@ mod tests {
 
     #[test]
     pub fn test_calc_parallel() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         // ell_calc.tsq = 0.01;
         let (status, _result) = ell_calc.calc_parallel_bias_cut(0.07, 0.03, 0.01);
         assert_eq!(status, CutStatus::NoSoln);
@@ -945,14 +946,14 @@ mod tests {
 
     #[test]
     fn test_construct2() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         assert!(ell_calc.use_parallel_cut);
         assert_eq!(ell_calc.n_f, 4.0);
     }
 
     #[test]
     fn test_calc_central_cut2() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         let (status, result) =
             ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), 0.01);
         assert_eq!(status, CutStatus::Success);
@@ -964,7 +965,7 @@ mod tests {
 
     #[test]
     fn test_calc_bias_cut2() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         let (status, _result) = ell_calc.calc_bias_cut(0.11, 0.01);
         assert_eq!(status, CutStatus::NoSoln);
         let (status, _result) = ell_calc.calc_bias_cut(0.01, 0.01);
@@ -980,7 +981,7 @@ mod tests {
 
     #[test]
     fn test_calc_parallel_central_cut2() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         let (status, result) =
             ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), 0.01);
         assert_eq!(status, CutStatus::Success);
@@ -992,7 +993,7 @@ mod tests {
 
     #[test]
     fn test_calc_parallel2() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         let (status, _result) = ell_calc.calc_parallel_bias_cut(0.07, 0.03, 0.01);
         assert_eq!(status, CutStatus::NoSoln);
         let (status, result) = ell_calc.calc_parallel_bias_cut(0.0, 0.05, 0.01);
@@ -1017,7 +1018,7 @@ mod tests {
 
     #[test]
     fn test_calc_bias_cut_q2() {
-        let ell_calc_q = EllCalc::new(4.0);
+        let ell_calc_q = EllCalc::new(4);
         let (status, _result) = ell_calc_q.calc_bias_cut_q(0.11, 0.01);
         assert_eq!(status, CutStatus::NoSoln);
         let (status, _result) = ell_calc_q.calc_bias_cut_q(0.01, 0.01);
@@ -1034,7 +1035,7 @@ mod tests {
 
     #[test]
     fn test_calc_parallel_q2() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         let (status, _result) = ell_calc.calc_parallel_q(0.07, 0.03, 0.01);
         assert_eq!(status, CutStatus::NoSoln);
         let (status, _result) = ell_calc.calc_parallel_q(-0.04, 0.0625, 0.01);

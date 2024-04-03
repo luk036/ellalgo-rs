@@ -58,7 +58,7 @@ impl Ell {
     /// an instance of the `Ell` struct.
     pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Array1<f64>) -> Ell {
         let ndim = xc.len();
-        let helper = EllCalc::new(ndim as f64);
+        let helper = EllCalc::new(ndim);
 
         Ell {
             kappa,

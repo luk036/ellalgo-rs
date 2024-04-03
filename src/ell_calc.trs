@@ -205,7 +205,7 @@ mod tests {
 
     #[test]
     pub fn test_construct() {
-        let ell_calc = EllCalc::new(4.0);
+        let ell_calc = EllCalc::new(4);
         assert!(ell_calc.use_parallel_cut);
         assert_eq!(ell_calc.n_f, 4.0);
         assert_eq!(ell_calc.half_n, 2.0);
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     pub fn test_calc_central_cut() {
-        let mut ell_calc = EllCalc::new(4.0);
+        let mut ell_calc = EllCalc::new(4);
         ell_calc.tsq = 0.01;
         ell_calc.calc_central_cut();
         assert_approx_eq!(ell_calc.sigma, 0.4);
@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     pub fn test_calc_bias_cut() {
-        let mut ell_calc = EllCalc::new(4.0);
+        let mut ell_calc = EllCalc::new(4);
         ell_calc.tsq = 0.01;
         let status = ell_calc.calc_bias_cut(0.11);
         assert_eq!(status, CutStatus::NoSoln);
@@ -245,7 +245,7 @@ mod tests {
 
     #[test]
     pub fn test_calc_parallel_central_cut() {
-        let mut ell_calc = EllCalc::new(4.0);
+        let mut ell_calc = EllCalc::new(4);
         ell_calc.tsq = 0.01;
         let status = ell_calc.calc_parallel_central_cut_core(0.11);
         assert_eq!(status, CutStatus::Success);
@@ -263,7 +263,7 @@ mod tests {
 
     #[test]
     pub fn test_calc_parallel() {
-        let mut ell_calc = EllCalc::new(4.0);
+        let mut ell_calc = EllCalc::new(4);
         ell_calc.tsq = 0.01;
         let status = ell_calc.calc_parallel_core(0.07, 0.03);
         assert_eq!(status, CutStatus::NoSoln);
