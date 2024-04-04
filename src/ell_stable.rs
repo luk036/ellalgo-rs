@@ -361,7 +361,7 @@ mod tests {
     #[test]
     fn test_construct() {
         let ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
-        assert_eq!(ellip.no_defer_trick, false);
+        assert!(!ellip.no_defer_trick);
         assert_approx_eq!(ellip.kappa, 0.01);
         assert_eq!(ellip.xc, Array1::zeros(4));
         assert_approx_eq!(ellip.tsq, 0.0);

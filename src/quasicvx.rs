@@ -11,9 +11,7 @@ pub struct MyOracle {
 impl Default for MyOracle {
     #[inline]
     fn default() -> Self {
-        MyOracle {
-            idx: 0,
-        }
+        MyOracle { idx: 0 }
     }
 }
 
@@ -53,7 +51,8 @@ impl OracleOptim<Arr> for MyOracle {
                 );
             }
         }
-        return ((array![-1.0, sqrtx], 0.0), true);
+        *gamma = sqrtx / ly.exp();
+        ((array![-1.0, sqrtx], 0.0), true)
     }
 }
 
@@ -79,7 +78,7 @@ mod tests {
             assert!(x[0] * x[0] >= 0.49 && x[0] * x[0] <= 0.51);
             assert!(x[1].exp() >= 1.6 && x[1].exp() <= 1.7);
         }
-        assert_eq!(num_iters, 47); // why not 35?
+        assert_eq!(num_iters, 35); // why not 35?
     }
 
     #[test]
@@ -97,6 +96,6 @@ mod tests {
             assert!(x[0] * x[0] >= 0.49 && x[0] * x[0] <= 0.51);
             assert!(x[1].exp() >= 1.6 && x[1].exp() <= 1.7);
         }
-        assert_eq!(num_iters, 47); // why not 35?
+        assert_eq!(num_iters, 35); // why not 35?
     }
 }

@@ -96,11 +96,12 @@ mod tests {
     #[test]
     pub fn test_infeasible1() {
         let mut ellip = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
-                                                                          // or ellipsoid is too small
+                                                                            // or ellipsoid is too small
         let mut oracle = MyOracle::new();
         let mut gamma = f64::NEG_INFINITY;
         let options = Options::default();
-        let (xbest, _num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+        let (xbest, _num_iters) =
+            cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
         assert!(xbest.is_none());
     }
 

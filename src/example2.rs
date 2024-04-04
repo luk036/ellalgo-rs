@@ -105,7 +105,7 @@ mod tests {
         let mut oracle = MyOracleFeas::default();
         let options = Options::default();
         let (x_opt, num_iters) = cutting_plane_feas(&mut oracle, &mut ellip, &options);
-        assert!(!x_opt.is_some());
+        assert!(x_opt.is_none());
         assert_eq!(num_iters, 1)
     }
 }
