@@ -196,6 +196,7 @@ impl SearchSpace for Ell {
     type ArrayType = Array1<f64>;
 
     /// The function `xc` returns a copy of the `xc` array.
+    #[inline]
     fn xc(&self) -> Self::ArrayType {
         self.xc.clone()
     }
@@ -205,6 +206,7 @@ impl SearchSpace for Ell {
     /// Returns:
     ///
     /// The method `tsq` is returning a value of type `f64`.
+    #[inline]
     fn tsq(&self) -> f64 {
         self.tsq
     }
@@ -249,6 +251,7 @@ impl SearchSpaceQ for Ell {
     type ArrayType = Array1<f64>;
 
     /// The function `xc` returns a copy of the `xc` array.
+    #[inline]
     fn xc(&self) -> Self::ArrayType {
         self.xc.clone()
     }
@@ -258,6 +261,7 @@ impl SearchSpaceQ for Ell {
     /// Returns:
     ///
     /// The method `tsq` is returning a value of type `f64`.
+    #[inline]
     fn tsq(&self) -> f64 {
         self.tsq
     }

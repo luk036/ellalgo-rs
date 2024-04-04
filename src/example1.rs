@@ -9,14 +9,16 @@ pub struct MyOracle {
 }
 
 impl MyOracle {
+    #[inline]
     pub fn new() -> Self {
         MyOracle { idx: 0 }
     }
 }
 
 impl Default for MyOracle {
+    #[inline]
     fn default() -> Self {
-        Self::new()
+        MyOracle { idx: 0 }
     }
 }
 
@@ -37,15 +39,14 @@ impl OracleOptim<Arr> for MyOracle {
         let y = z[1];
         let f0 = x + y;
 
-        for _ in 0..3 {
+        for _ in 0..2 {
             self.idx += 1;
-            if self.idx == 3 {
+            if self.idx == 2 {
                 self.idx = 0; // round robin
             }
             let fj = match self.idx {
                 0 => f0 - 3.0,
                 1 => -x + y + 1.0,
-                2 => *gamma - f0,
                 _ => unreachable!(),
             };
             if fj > 0.0 {
@@ -54,7 +55,6 @@ impl OracleOptim<Arr> for MyOracle {
                         match self.idx {
                             0 => array![1.0, 1.0],
                             1 => array![-1.0, 1.0],
-                            2 => array![-1.0, -1.0],
                             _ => unreachable!(),
                         },
                         fj,
@@ -64,11 +64,10 @@ impl OracleOptim<Arr> for MyOracle {
             }
         }
 
-        // let f0 = x + y;
-        // let fj = *gamma - f0;
-        // if fj > 0.0 {
-        //     return ((array![-1.0, -1.0], fj), false)
-        // }
+        let fj = *gamma - f0;
+        if fj > 0.0 {
+            return ((array![-1.0, -1.0], fj), false);
+        }
         *gamma = f0;
         ((array![-1.0, -1.0], 0.0), true)
     }
@@ -84,44 +83,34 @@ mod tests {
 
     #[test]
     pub fn test_feasible() {
-        let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut ellip = Ell::new_with_scalar(10.0, array![0.0, 0.0]);
         let mut oracle = MyOracle::default();
-        let mut gamma = -1.0e100; // std::numeric_limits<double>::min()
-        let options = Options {
-            max_iters: 2000,
-            tolerance: 1e-10,
-        };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
-        assert!(x_opt.is_some());
-        if let Some(x) = x_opt {
-            assert!(x[0] >= 0.0);
-        }
+        let mut gamma = f64::NEG_INFINITY;
+        let mut options = Options::default();
+        options.tolerance = 1e-10;
+        let (xbest, num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+        assert!(xbest.is_some());
+        assert_eq!(num_iters, 25);
     }
 
     #[test]
     pub fn test_infeasible1() {
-        let mut ell = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
+        let mut ellip = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
                                                                           // or ellipsoid is too small
         let mut oracle = MyOracle::new();
-        let mut gamma = -1.0e100; // std::numeric_limits<double>::min()
-        let options = Options {
-            max_iters: 2000,
-            tolerance: 1e-12,
-        };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
-        assert_eq!(x_opt, None);
+        let mut gamma = f64::NEG_INFINITY;
+        let options = Options::default();
+        let (xbest, _num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+        assert!(xbest.is_none());
     }
 
     #[test]
     pub fn test_infeasible2() {
-        let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut ellip = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
         let mut oracle = MyOracle::new();
         // wrong initial guess
-        let options = Options {
-            max_iters: 2000,
-            tolerance: 1e-12,
-        };
-        let (x_opt, _niter) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100.0, &options);
-        assert_eq!(x_opt, None);
+        let options = Options::default();
+        let (xbest, _niter) = cutting_plane_optim(&mut oracle, &mut ellip, &mut 100.0, &options);
+        assert!(xbest.is_none());
     }
 }

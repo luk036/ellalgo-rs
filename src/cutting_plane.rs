@@ -13,6 +13,15 @@ pub struct Options {
     pub tolerance: f64,   // error tolerrance
 }
 
+impl Default for Options {
+    fn default() -> Options {
+        Options {
+            max_iters: 2000,
+            tolerance: 1e-20,
+        }
+    }
+}
+
 type CInfo = (bool, usize);
 
 pub trait UpdateByCutChoices<SearchSpace> {
@@ -110,7 +119,7 @@ pub fn cutting_plane_feas<T, Oracle, Space>(
     omega: &mut Oracle,
     space: &mut Space,
     options: &Options,
-) -> CInfo
+) -> (Option<Space::ArrayType>, usize)
 where
     T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
     Oracle: OracleFeas<Space::ArrayType, CutChoices = T>,
@@ -120,14 +129,14 @@ where
         let cut = omega.assess_feas(&space.xc()); // query the oracle at &space.xc()
         if cut.is_none() {
             // feasible sol'n obtained
-            return (true, niter);
+            return (Some(space.xc()), niter);
         }
         let status = space.update_bias_cut::<T>(&cut.unwrap()); // update space
         if status != CutStatus::Success || space.tsq() < options.tolerance {
-            return (false, niter);
+            return (None, niter);
         }
     }
-    (false, options.max_iters)
+    (None, options.max_iters)
 }
 
 /// The function `cutting_plane_optim` performs cutting plane optimization on a given search space using
@@ -165,9 +174,9 @@ where
         let status = if shrunk {
             // better gamma obtained
             x_best = Some(space.xc());
-            space.update_bias_cut::<T>(&cut) // update space
-        } else {
             space.update_central_cut::<T>(&cut) // update space
+        } else {
+            space.update_bias_cut::<T>(&cut) // update space
         };
         if status != CutStatus::Success || space.tsq() < options.tolerance {
             return (x_best, niter);

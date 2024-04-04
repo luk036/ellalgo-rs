@@ -26,9 +26,11 @@ impl MyOracleFeas {
     fn grad2(&self) -> Arr {
         array![-1.0, 1.0]
     }
+}
 
-    #[allow(dead_code)]
-    pub fn new() -> Self {
+impl Default for MyOracleFeas {
+    #[inline]
+    fn default() -> Self {
         MyOracleFeas { idx: 0 }
     }
 }
@@ -88,14 +90,22 @@ mod tests {
     // use super::ell_stable::EllStable;
 
     #[test]
-    pub fn test_example2() {
-        let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
-        let mut oracle = MyOracleFeas::new();
-        let options = Options {
-            max_iters: 2000,
-            tolerance: 1e-12,
-        };
-        let (feasible, _niter) = cutting_plane_feas(&mut oracle, &mut ell, &options);
-        assert!(feasible);
+    pub fn test_feasible() {
+        let mut ellip = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut oracle = MyOracleFeas::default();
+        let options = Options::default();
+        let (x_opt, num_iters) = cutting_plane_feas(&mut oracle, &mut ellip, &options);
+        assert!(x_opt.is_some());
+        assert_eq!(num_iters, 1)
+    }
+
+    #[test]
+    pub fn test_infeasible() {
+        let mut ellip = Ell::new(array![10.0, 10.0], array![100.0, 100.0]);
+        let mut oracle = MyOracleFeas::default();
+        let options = Options::default();
+        let (x_opt, num_iters) = cutting_plane_feas(&mut oracle, &mut ellip, &options);
+        assert!(!x_opt.is_some());
+        assert_eq!(num_iters, 1)
     }
 }
