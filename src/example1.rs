@@ -86,8 +86,10 @@ mod tests {
         let mut ellip = Ell::new_with_scalar(10.0, array![0.0, 0.0]);
         let mut oracle = MyOracle::default();
         let mut gamma = f64::NEG_INFINITY;
-        let mut options = Options::default();
-        options.tolerance = 1e-10;
+        let options = Options {
+            tolerance: 1e-10,
+            ..Default::default()
+        };
         let (xbest, num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
         assert!(xbest.is_some());
         assert_eq!(num_iters, 25);

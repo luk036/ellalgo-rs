@@ -186,11 +186,20 @@ impl ProfitRbOracle {
     /// Returns:
     ///
     /// The `new` function is returning an instance of the `ProfitRbOracle` struct.
-    pub fn new(params: (f64, f64, f64), aa: Arr, price_out: Arr, vparams: (f64, f64, f64, f64, f64)) -> Self {
+    pub fn new(
+        params: (f64, f64, f64),
+        aa: Arr,
+        price_out: Arr,
+        vparams: (f64, f64, f64, f64, f64),
+    ) -> Self {
         let (e1, e2, e3, e4, e5) = vparams;
         let uie = [e1, e2];
         let params_rb = (params.0 - e3, params.1, params.2 - e4);
-        let omega = ProfitOracle::new(params_rb, aa.clone(), price_out + Arr::from_vec(vec![e5, e5]));
+        let omega = ProfitOracle::new(
+            params_rb,
+            aa.clone(),
+            price_out + Arr::from_vec(vec![e5, e5]),
+        );
         ProfitRbOracle {
             uie,
             omega,
@@ -213,7 +222,11 @@ impl OracleOptim<Arr> for ProfitRbOracle {
     fn assess_optim(&mut self, y: &Arr, gamma: &mut f64) -> (Cut, bool) {
         let mut a_rb = self.elasticities.clone();
         for i in 0..2 {
-            a_rb[i] += if y[i] > 0.0 { -self.uie[i] } else { self.uie[i] };
+            a_rb[i] += if y[i] > 0.0 {
+                -self.uie[i]
+            } else {
+                self.uie[i]
+            };
         }
         self.omega.elasticities = a_rb;
         self.omega.assess_optim(y, gamma)
@@ -298,7 +311,7 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
 
 #[cfg(test)]
 mod tests {
-    use super::{ProfitOracle, ProfitRbOracle, ProfitOracleQ};
+    use super::{ProfitOracle, ProfitOracleQ, ProfitRbOracle};
     // use super::{ProfitOracle, ProfitOracleQ, ProfitRbOracle};
     use crate::cutting_plane::{cutting_plane_optim, cutting_plane_optim_q, Options};
     use crate::ell::Ell;
@@ -339,7 +352,7 @@ mod tests {
         let e4 = 1.0;
         let e5 = 1.0;
         let vparams = (e1, e2, e3, e4, e5);
-    
+
         let mut ellip = Ell::new(array![100.0, 100.0], array![0.0, 0.0]);
         let mut omega = ProfitRbOracle::new(params, elasticities, price_out, vparams);
         let mut gamma = 0.0;
