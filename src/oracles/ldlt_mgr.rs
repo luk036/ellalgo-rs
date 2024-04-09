@@ -117,7 +117,7 @@ impl LDLTMgr {
     /// ];
     /// assert_eq!(ldlt_mgr.factor(&|i, j| mat_a[[i, j]]), false);
     /// ```
-    pub fn factor<F>(&mut self, get_elem: &F) -> bool
+    pub fn factor<F>(&mut self, get_elem: F) -> bool
     where
         F: Fn(usize, usize) -> f64,
     {
@@ -172,7 +172,7 @@ impl LDLTMgr {
     /// ];
     /// assert_eq!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| mat_a[[i, j]]), true);
     /// ```
-    pub fn factor_with_allow_semidefinite<F>(&mut self, get_elem: &F) -> bool
+    pub fn factor_with_allow_semidefinite<F>(&mut self, get_elem: F) -> bool
     where
         F: Fn(usize, usize) -> f64,
     {
@@ -394,7 +394,7 @@ mod tests {
             vec![25.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0],
         )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
-        assert!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l1[[i, j]]));
+        assert!(ldlt_mgr.factor_with_allow_semidefinite(|i, j| l1[[i, j]]));
         Ok(())
     }
 
@@ -408,7 +408,7 @@ mod tests {
             ],
         )?;
         let mut ldlt_mgr = LDLTMgr::new(4);
-        assert!(!ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l2[[i, j]]));
+        assert!(!ldlt_mgr.factor_with_allow_semidefinite(|i, j| l2[[i, j]]));
         ldlt_mgr.witness();
         assert_eq!(ldlt_mgr.pos, (0, 2));
         Ok(())
@@ -421,7 +421,7 @@ mod tests {
             vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 11.0],
         )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
-        assert!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l3[[i, j]]));
+        assert!(ldlt_mgr.factor_with_allow_semidefinite(|i, j| l3[[i, j]]));
         Ok(())
     }
 
@@ -432,7 +432,7 @@ mod tests {
             vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, -20.0],
         )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
-        assert!(!ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l3[[i, j]]));
+        assert!(!ldlt_mgr.factor_with_allow_semidefinite(|i, j| l3[[i, j]]));
         let ep = ldlt_mgr.witness();
         assert_eq!(ep, 20.0);
         Ok(())
@@ -456,7 +456,7 @@ mod tests {
             vec![0.0, 15.0, -5.0, 15.0, 18.0, 0.0, -5.0, 0.0, 20.0],
         )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
-        assert!(ldlt_mgr.factor_with_allow_semidefinite(&|i, j| l3[[i, j]]));
+        assert!(ldlt_mgr.factor_with_allow_semidefinite(|i, j| l3[[i, j]]));
         Ok(())
     }
 
