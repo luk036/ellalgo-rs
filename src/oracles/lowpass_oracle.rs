@@ -1,7 +1,7 @@
 use std::f64::consts::PI;
 // use ndarray::{stack, Axis, Array, Array1, Array2};
-use ndarray::{Array, Array1};
 use crate::cutting_plane::{OracleFeas, OracleOptim};
+use ndarray::{Array, Array1};
 
 type Arr = Array1<f64>;
 pub type Cut = (Arr, (f64, Option<f64>));
@@ -27,7 +27,7 @@ impl LowpassOracle {
         let w: Array1<f64> = Array::linspace(0.0, std::f64::consts::PI, mdim);
         // let tmp: Array2<f64> = Array::from_shape_fn((mdim, ndim - 1), |(i, j)| 2.0 * (w[i] * (j + 1) as f64).cos());
         // let spectrum: Array2<f64> = stack![Axis(1), Array::ones(mdim).insert_axis(Axis(1)), tmp];
-    
+
         let mut spectrum = vec![Arr::zeros(ndim); mdim];
         for i in 0..mdim {
             spectrum[i][0] = 1.0;
@@ -97,7 +97,10 @@ impl OracleFeas<Arr> for LowpassOracle {
                 return Some((col_k.clone(), (v - self.sp_sq, Some(v))));
             }
             if v < 0.0 {
-                return Some((col_k.iter().map(|&a| -a).collect(), (-v, Some(-v + self.sp_sq))));
+                return Some((
+                    col_k.iter().map(|&a| -a).collect(),
+                    (-v, Some(-v + self.sp_sq)),
+                ));
             }
             if v > self.fmax {
                 self.fmax = v;
@@ -164,7 +167,6 @@ pub fn create_lowpass_case(ndim: usize) -> LowpassOracle {
     LowpassOracle::new(ndim, 0.12, 0.20, lp_sq, up_sq, sp_sq)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -179,7 +181,10 @@ mod tests {
         // ellip.helper.use_parallel_cut = use_parallel_cut;
         let mut omega = create_lowpass_case(ndim);
         let mut sp_sq = omega.sp_sq;
-        let options = Options { max_iters: 50000, tolerance: 1e-14};
+        let options = Options {
+            max_iters: 50000,
+            tolerance: 1e-14,
+        };
         let (h, num_iters) = cutting_plane_optim(&mut omega, &mut ellip, &mut sp_sq, &options);
         (h.is_some(), num_iters)
     }
