@@ -47,7 +47,7 @@ impl OracleFeas<Arr> for LMIOracle {
 
         let get_elem = |i: usize, j: usize| get_elem(&self.mat_f0, &self.mat_f, x, i, j);
 
-        if self.ldlt_mgr.factor(&get_elem) {
+        if self.ldlt_mgr.factor(get_elem) {
             None
         } else {
             let ep = self.ldlt_mgr.witness();
