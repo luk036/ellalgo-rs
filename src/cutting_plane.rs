@@ -310,17 +310,12 @@ where
 //     /**
 //      * @brief Construct a new bsearch adaptor object
 //      *
-//      * @param omega perform assessment on x0
-//      * @param space search Space containing x*
 //      */
 //     bsearch_adaptor(Oracle& omega, Space& space) : bsearch_adaptor{omega, space, Options()} {}
 
 //     /**
 //      * @brief Construct a new bsearch adaptor object
 //      *
-//      * @param omega perform assessment on x0
-//      * @param space search Space containing x*
-//      * @param options maximum iteration and error tolerance etc.
 //      */
 //     bsearch_adaptor(Oracle& omega, Space& space, const Options& options)
 //         : _omega{omega}, _S{space}, _options{options} {}
@@ -335,7 +330,6 @@ where
 //     /**
 //      * @brief
 //      *
-//      * @param gamma the best-so-far optimal value
 //      * @return bool
 //      */
 //     template <typename Num> let mut operator()(const Num& gamma) -> bool {
