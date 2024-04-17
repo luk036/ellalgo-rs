@@ -34,7 +34,7 @@ fn update(tea: &mut T) -> bool {
     if condition {
         return false;
     }
-    tea += ... // update tea 
+    tea += ... // update tea
     true
 }
 ```
@@ -71,7 +71,7 @@ auto solve(SS& ss) -> std::optional<Arr> {
 auto x_opt = solve(ss);
 if (x_opt) {
    process(*x_opt);
-} 
+}
 ```
 
 Rust:
