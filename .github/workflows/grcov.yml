@@ -40,5 +40,6 @@ jobs:
         # Repository upload token - get it from codecov.io. Required only for private repositories
         # token: # optional
         # Specify whether the Codecov output should be verbose
+        token: f446a210-4bad-47dd-9160-3e34892a43d1
         verbose: true
         fail_ci_if_error: true
