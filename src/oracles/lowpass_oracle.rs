@@ -8,9 +8,9 @@ pub type Cut = (Arr, (f64, Option<f64>));
 
 /// The `LowpassOracle` struct in Rust represents a lowpass filter with various configuration
 /// parameters.
-/// 
+///
 /// Properties:
-/// 
+///
 /// * `more_alt`: The `more_alt` property is a boolean flag indicating whether there are more
 /// alternative options available.
 /// * `idx1`: The `idx1` property in the `LowpassOracle` struct is of type `usize`.
@@ -51,9 +51,9 @@ pub struct LowpassOracle {
 
 impl LowpassOracle {
     /// The `new` function in Rust initializes a struct with specified parameters for spectral analysis.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `ndim`: `ndim` represents the number of dimensions for the filter design.
     /// * `wpass`: The `wpass` parameter represents the passband edge frequency in the provided
     /// function.
@@ -68,9 +68,9 @@ impl LowpassOracle {
     /// ripple level in the spectral domain. It is used in digital signal processing to define the
     /// desired characteristics of a filter, specifically in this context for designing a filter with
     /// given passband and stopband specifications.
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// The `new` function is returning an instance of the struct that it belongs to. The struct
     /// contains several fields such as `more_alt`, `idx1`, `spectrum`, `nwpass`, `nwstop`, `lp_sq`,
     /// `up_sq`, `sp_sq`, `idx2`, `idx3`, `fmax`, and `kmax`. The function initializes these fields with
@@ -115,15 +115,15 @@ impl OracleFeas<Arr> for LowpassOracle {
 
     /// The `assess_feas` function in Rust assesses the feasibility of a given array `x` based on
     /// certain conditions and returns a corresponding `Cut` option.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `x`: The `x` parameter in the `assess_feas` function is an array (`Arr`) that is passed by
     /// reference (`&`). It is used to perform calculations and comparisons with the elements of the
     /// `spectrum` array in the function.
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// The function `assess_feas` returns an `Option` containing a tuple of type `Cut`. The `Cut` tuple
     /// consists of two elements: a vector of coefficients (`Arr`) and a tuple of two optional values.
     /// The first optional value represents the violation amount if the constraint is violated, and the
@@ -208,9 +208,9 @@ impl OracleOptim<Arr> for LowpassOracle {
 
     /// The function assess_optim takes in parameters x and sp_sq, updates the value of sp_sq, assesses
     /// feasibility of x, and returns a tuple containing a cut and a boolean value.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `x`: The `x` parameter is of type `Arr`, which is likely an array or a slice of some kind. It
     /// is passed by reference to the `assess_optim` function.
     /// * `sp_sq`: The `sp_sq` parameter in the `assess_optim` function is a mutable reference to a
@@ -231,14 +231,14 @@ impl OracleOptim<Arr> for LowpassOracle {
 
 /// The function `create_lowpass_case` in Rust calculates parameters for a lowpass filter based on given
 /// values.
-/// 
+///
 /// Arguments:
-/// 
+///
 /// * `ndim`: The `ndim` parameter represents the number of dimensions for the lowpass filter. It is
 /// used to create a `LowpassOracle` struct with specific parameters for the lowpass filter.
-/// 
+///
 /// Returns:
-/// 
+///
 /// A `LowpassOracle` struct is being returned with parameters `ndim`, `0.12`, `0.20`, `lp_sq`, `up_sq`,
 /// and `sp_sq`.
 pub fn create_lowpass_case(ndim: usize) -> LowpassOracle {

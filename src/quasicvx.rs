@@ -20,9 +20,9 @@ impl OracleOptim<Arr> for MyOracle {
 
     /// The function assesses optimization based on input values and returns a tuple along with a
     /// boolean flag.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `z`: The `z` parameter in the `assess_optim` function represents an array containing two
     /// elements. The first element, `z[0]`, is assigned to the variable `sqrtx`, and the second
     /// element, `z[1]`, is assigned to the variable `ly`. These

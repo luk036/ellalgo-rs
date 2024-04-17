@@ -17,15 +17,15 @@ pub struct LMIOracle {
 
 impl LMIOracle {
     /// This function initializes a new LMIOracle struct with given matrices and an LDLTMgr instance.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `mat_f`: The `mat_f` parameter is a vector of 2D arrays of type `f64`.
     /// * `mat_b`: The `mat_b` parameter is an Array2<f64> type, which represents a 2-dimensional array
     /// of f64 (floating point numbers).
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// An instance of the `LMIOracle` struct is being returned.
     pub fn new(mat_f: Vec<Array2<f64>>, mat_b: Array2<f64>) -> Self {
         let ldlt_mgr = LDLTMgr::new(mat_b.nrows());
@@ -42,9 +42,9 @@ impl OracleFeas<Arr> for LMIOracle {
 
     /// The function assesses the feasibility of a solution by calculating the difference between
     /// elements of matrices based on input arrays.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `mat_f0`: `mat_f0` is a reference to a 2D array of `f64` values.
     /// * `mat_f`: The `mat_f` parameter in the `get_elem` function is a slice of `Array2<f64>` types.
     /// It represents an array of 2D matrices. Each element in the slice is a 2D matrix of f64 values.
