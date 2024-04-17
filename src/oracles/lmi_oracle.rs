@@ -16,6 +16,17 @@ pub struct LMIOracle {
 }
 
 impl LMIOracle {
+    /// This function initializes a new LMIOracle struct with given matrices and an LDLTMgr instance.
+    ///
+    /// Arguments:
+    ///
+    /// * `mat_f`: The `mat_f` parameter is a vector of 2D arrays of type `f64`.
+    /// * `mat_b`: The `mat_b` parameter is an Array2<f64> type, which represents a 2-dimensional array
+    /// of f64 (floating point numbers).
+    ///
+    /// Returns:
+    ///
+    /// An instance of the `LMIOracle` struct is being returned.
     pub fn new(mat_f: Vec<Array2<f64>>, mat_b: Array2<f64>) -> Self {
         let ldlt_mgr = LDLTMgr::new(mat_b.nrows());
         LMIOracle {
@@ -29,6 +40,17 @@ impl LMIOracle {
 impl OracleFeas<Arr> for LMIOracle {
     type CutChoices = f64; // single cut
 
+    /// The function assesses the feasibility of a solution by calculating the difference between
+    /// elements of matrices based on input arrays.
+    ///
+    /// Arguments:
+    ///
+    /// * `mat_f0`: `mat_f0` is a reference to a 2D array of `f64` values.
+    /// * `mat_f`: The `mat_f` parameter in the `get_elem` function is a slice of `Array2<f64>` types.
+    /// It represents an array of 2D matrices. Each element in the slice is a 2D matrix of f64 values.
+    /// * `x`: The `x` parameter in the `assess_feas` function is a reference to an `Array1<f64>`, which
+    /// represents a one-dimensional array of floating-point numbers. This array is used as input to the
+    /// function for some calculations related to feasibility assessment.
     fn assess_feas(&mut self, x: &Array1<f64>) -> Option<Cut> {
         fn get_elem(
             mat_f0: &Array2<f64>,
@@ -47,7 +69,7 @@ impl OracleFeas<Arr> for LMIOracle {
 
         let get_elem = |i: usize, j: usize| get_elem(&self.mat_f0, &self.mat_f, x, i, j);
 
-        if self.ldlt_mgr.factor(&get_elem) {
+        if self.ldlt_mgr.factor(get_elem) {
             None
         } else {
             let ep = self.ldlt_mgr.witness();

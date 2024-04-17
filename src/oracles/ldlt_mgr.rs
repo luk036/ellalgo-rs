@@ -89,7 +89,7 @@ impl LDLTMgr {
     /// assert_eq!(ldlt_mgr.factorize(&mat_a), false);
     /// ```
     pub fn factorize(&mut self, mat_a: &Array2<f64>) -> bool {
-        self.factor(&|i, j| mat_a[[i, j]])
+        self.factor(|i, j| mat_a[[i, j]])
     }
 
     /// The `factor` function performs LDLTMgr factorization on a matrix and checks if it is symmetric
