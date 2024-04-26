@@ -1,4 +1,4 @@
-# 🏉 ellalgo-rs
+# 🫒 ellalgo-rs
 
 [![Crates.io](https://img.shields.io/crates/v/ellalgo-rs.svg)](https://crates.io/crates/ellalgo-rs)
 [![Docs.rs](https://docs.rs/ellalgo-rs/badge.svg)](https://docs.rs/ellalgo-rs)
@@ -17,15 +17,15 @@ The method has a wide range of practical applications in operations research. It
 
 In the context of the Ellipsoid Method, a parallel cut refers to a pair of linear constraints of the form aTx <= b and -aTx <= -b, where a is a vector of coefficients and b is a scalar constant. These constraints are said to be parallel because they have the same normal vector a, but opposite signs. When a parallel cut is encountered during the Ellipsoid Method, both constraints can be used simultaneously to generate a new ellipsoid. This can improve the convergence rate of the method, especially for problems with many parallel constraints.
 
-## Installation
+## 🛠️ Installation
 
-### Cargo
+### 📦 Cargo
 
 - Install the rust toolchain in order to have cargo installed by following
   [this](https://www.rust-lang.org/tools/install) guide.
 - run `cargo install ellalgo-rs`
 
-## License
+## 📜 License
 
 Licensed under either of
 
@@ -36,7 +36,7 @@ Licensed under either of
 
 at your option.
 
-## Contribution
+## 🤝 Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
