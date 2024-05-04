@@ -77,7 +77,6 @@ impl OracleFeas<Arr> for MyOracle3 {
     }
 }
 
-
 impl OracleFeas2<Arr> for MyOracle3 {
     fn update(&mut self, gamma: f64) {
         self.target = gamma;
