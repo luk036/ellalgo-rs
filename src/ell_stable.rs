@@ -266,6 +266,10 @@ impl SearchSpace for EllStable {
         let (grad, beta) = cut;
         beta.update_central_cut_by(self, grad)
     }
+
+    fn set_xc(&mut self, x: Self::ArrayType) {
+        self.xc = x;
+    }
 }
 
 impl SearchSpaceQ for EllStable {

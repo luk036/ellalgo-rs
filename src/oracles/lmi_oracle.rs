@@ -21,7 +21,7 @@ impl LMIOracle {
     /// Arguments:
     ///
     /// * `mat_f`: The `mat_f` parameter is a vector of 2D arrays of type `f64`.
-    /// * `mat_b`: The `mat_b` parameter is an Array2<f64> type, which represents a 2-dimensional array
+    /// * `mat_b`: The `mat_b` parameter is an `Array2<f64>` type, which represents a 2-dimensional array
     /// of f64 (floating point numbers).
     ///
     /// Returns:
