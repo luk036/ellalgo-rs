@@ -319,7 +319,11 @@ where
     Space: SearchSpace + Clone,
 {
     pub fn new(omega: Oracle, space: Space, options: Options) -> Self {
-        BSearchAdaptor { omega, space, options }
+        BSearchAdaptor {
+            omega,
+            space,
+            options,
+        }
     }
 }
 

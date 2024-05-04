@@ -19,7 +19,6 @@ impl MyOracle3 {
     }
 }
 
-
 impl Default for MyOracle3 {
     #[inline]
     fn default() -> Self {
@@ -85,7 +84,7 @@ impl OracleFeas2<Arr> for MyOracle3 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cutting_plane::{BSearchAdaptor, bsearch, Options};
+    use crate::cutting_plane::{bsearch, BSearchAdaptor, Options};
     use crate::ell::Ell;
     // use ndarray::array;
     // use super::ell_stable::EllStable;

@@ -7,7 +7,7 @@ pub mod ell_calc;
 pub mod ell_stable;
 pub mod example1;
 pub mod example2;
-pub mod quasicvx;
 pub mod example3;
+pub mod quasicvx;
 
 pub mod oracles;
