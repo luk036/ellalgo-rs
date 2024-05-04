@@ -38,7 +38,7 @@ pub trait OracleFeas<ArrayType> {
 }
 
 /// Oracle for feasibility problems
-pub trait OracleFeas2<ArrayType> : OracleFeas<ArrayType> {
+pub trait OracleFeas2<ArrayType>: OracleFeas<ArrayType> {
     fn update(&mut self, gamma: f64);
 }
 
