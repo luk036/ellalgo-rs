@@ -38,9 +38,7 @@ pub trait OracleFeas<ArrayType> {
 }
 
 /// Oracle for feasibility problems
-pub trait OracleFeas2<ArrayType> {
-    type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
-    fn assess_feas(&mut self, xc: &ArrayType) -> Option<(ArrayType, Self::CutChoices)>;
+pub trait OracleFeas2<ArrayType> : OracleFeas<ArrayType> {
     fn update(&mut self, gamma: f64);
 }
 
@@ -132,51 +130,6 @@ pub fn cutting_plane_feas<T, Oracle, Space>(
 where
     T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
     Oracle: OracleFeas<Space::ArrayType, CutChoices = T>,
-    Space: SearchSpace,
-{
-    for niter in 0..options.max_iters {
-        let cut = omega.assess_feas(&space.xc()); // query the oracle at &space.xc()
-        if cut.is_none() {
-            // feasible sol'n obtained
-            return (Some(space.xc()), niter);
-        }
-        let status = space.update_bias_cut::<T>(&cut.unwrap()); // update space
-        if status != CutStatus::Success || space.tsq() < options.tolerance {
-            return (None, niter);
-        }
-    }
-    (None, options.max_iters)
-}
-
-/// The function `cutting_plane_feas` iteratively updates a search space using a cutting plane oracle
-/// until a feasible solution is found or the maximum number of iterations is reached.
-///
-/// Arguments:
-///
-/// * `omega`: `omega` is an instance of the `Oracle` trait, which represents an oracle that provides
-/// information about the feasibility of a solution. The `Oracle` trait has a method `assess_feas` that
-/// takes a reference to the current solution `&space.xc()` and returns an optional `
-/// * `space`: The `space` parameter represents the search space in which the optimization problem is
-/// being solved. It is a mutable reference to an object that implements the `SearchSpace` trait.
-/// * `options`: The `options` parameter is of type `Options` and contains various settings for the
-/// cutting plane algorithm. It likely includes properties such as `max_iters` (maximum number of
-/// iterations), `` (tolerance for termination), and other parameters that control the behavior of
-/// the algorithm.
-///
-/// Returns:
-///
-/// The function `cutting_plane_feas` returns a tuple `(bool, usize)`. The first element of the tuple
-/// represents whether a feasible solution was obtained (`true` if yes, `false` if no), and the second
-/// element represents the number of iterations performed.
-#[allow(dead_code)]
-pub fn cutting_plane_feas2<T, Oracle, Space>(
-    omega: &mut Oracle,
-    space: &mut Space,
-    options: &Options,
-) -> (Option<Space::ArrayType>, usize)
-where
-    T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleFeas2<Space::ArrayType, CutChoices = T>,
     Space: SearchSpace,
 {
     for niter in 0..options.max_iters {
@@ -336,7 +289,7 @@ where
     fn assess_bs(&mut self, gamma: f64) -> bool {
         let mut space = self.space.clone();
         self.omega.update(gamma);
-        let (x_feas, _) = cutting_plane_feas2(&mut self.omega, &mut space, &self.options);
+        let (x_feas, _) = cutting_plane_feas(&mut self.omega, &mut space, &self.options);
         if let Some(x) = x_feas {
             self.space.set_xc(x);
             return true;

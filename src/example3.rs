@@ -1,4 +1,4 @@
-use super::cutting_plane::OracleFeas2;
+use super::cutting_plane::{OracleFeas, OracleFeas2};
 use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
@@ -29,7 +29,7 @@ impl Default for MyOracle3 {
     }
 }
 
-impl OracleFeas2<Arr> for MyOracle3 {
+impl OracleFeas<Arr> for MyOracle3 {
     type CutChoices = f64; // single cut
 
     /// The function assess_feas takes in an array z and checks if it satisfies two constraints,
@@ -75,7 +75,10 @@ impl OracleFeas2<Arr> for MyOracle3 {
         }
         None
     }
+}
 
+
+impl OracleFeas2<Arr> for MyOracle3 {
     fn update(&mut self, gamma: f64) {
         self.target = gamma;
     }
