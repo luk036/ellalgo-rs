@@ -3,8 +3,7 @@ use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
 
-#[derive(Debug)]
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct MyOracleFeas {
     idx: usize,
 }
@@ -28,8 +27,6 @@ impl MyOracleFeas {
         array![-1.0, 1.0]
     }
 }
-
-
 
 impl OracleFeas<Arr> for MyOracleFeas {
     type CutChoices = f64;

@@ -3,13 +3,10 @@ use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
 
-#[derive(Debug)]
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct MyOracle {
     idx: usize,
 }
-
-
 
 impl OracleOptim<Arr> for MyOracle {
     type CutChoices = f64; // single cut
