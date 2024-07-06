@@ -11,7 +11,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 ndarray = "0.15.4"
 # ndarray-linalg = "0.16.0"
-svgbobdoc = { version = "0.3", features = ["enable"] }
 
 [dev-dependencies]
 approx_eq = "0.1.8"
+svgbobdoc = { version = "0.3", features = ["enable"] }
