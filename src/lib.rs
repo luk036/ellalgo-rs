@@ -11,4 +11,4 @@ pub mod example3;
 pub mod quasicvx;
 
 pub mod oracles;
-// pub mod power_iteration;
+pub mod power_iteration;
