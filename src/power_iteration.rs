@@ -25,8 +25,7 @@ pub fn power_iteration(
             return (x.dot(&a.dot(x)), niter);
         }
     }
-    let ld = x.dot(&a.dot(x));
-    (ld, options.max_iters)
+    (x.dot(&a.dot(x)), options.max_iters)
 }
 
 pub fn power_iteration4(
@@ -41,13 +40,11 @@ pub fn power_iteration4(
         *x /= norm_l1(x);
         if norm_l1(&(&*x - &x1)) <= options.tolerance || norm_l1(&(&*x + &x1)) <= options.tolerance {
             *x /= x.dot(x).sqrt();
-            let ld = x.dot(&a.dot(x));
-            return (ld, niter);
+            return (x.dot(&a.dot(x)), niter);
         }
     }
     *x /= x.dot(x).sqrt();
-    let ld = x.dot(&a.dot(x));
-    (ld, options.max_iters)
+    (x.dot(&a.dot(x)), options.max_iters)
 }
 
 pub fn power_iteration2(
