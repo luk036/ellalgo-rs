@@ -11,17 +11,14 @@ fn norm_l1(x: &Array1<f64>) -> f64 {
     x.iter().cloned().map(|x| x.abs()).sum()
 }
 
-pub fn power_iteration(
-    a: ArrayView2<f64>,
-    x: &mut Array1<f64>,
-    options: &Options,
-) -> (f64, usize) {
+pub fn power_iteration(a: ArrayView2<f64>, x: &mut Array1<f64>, options: &Options) -> (f64, usize) {
     *x /= x.dot(x).sqrt();
     for niter in 0..options.max_iters {
         let x1 = x.clone();
         *x = a.dot(&x1);
         *x /= x.dot(x).sqrt();
-        if norm_l1(&(&*x - &x1)) <= options.tolerance || norm_l1(&(&*x + &x1)) <= options.tolerance {
+        if norm_l1(&(&*x - &x1)) <= options.tolerance || norm_l1(&(&*x + &x1)) <= options.tolerance
+        {
             return (x.dot(&a.dot(x)), niter);
         }
     }
@@ -38,7 +35,8 @@ pub fn power_iteration4(
         let x1 = x.clone();
         *x = a.dot(&x1);
         *x /= norm_l1(x);
-        if norm_l1(&(&*x - &x1)) <= options.tolerance || norm_l1(&(&*x + &x1)) <= options.tolerance {
+        if norm_l1(&(&*x - &x1)) <= options.tolerance || norm_l1(&(&*x + &x1)) <= options.tolerance
+        {
             *x /= x.dot(x).sqrt();
             return (x.dot(&a.dot(x)), niter);
         }
@@ -108,7 +106,11 @@ mod tests {
 
     #[test]
     fn test_construct() {
-        let a = Array2::from_shape_vec((3, 3), vec![3.7, -3.6, 0.7, -3.6, 4.3, -2.8, 0.7, -2.8, 5.4]).unwrap();
+        let a = Array2::from_shape_vec(
+            (3, 3),
+            vec![3.7, -3.6, 0.7, -3.6, 4.3, -2.8, 0.7, -2.8, 5.4],
+        )
+        .unwrap();
         let options = Options {
             max_iters: 2000,
             tolerance: 1e-7,
