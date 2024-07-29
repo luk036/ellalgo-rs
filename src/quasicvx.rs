@@ -16,15 +16,15 @@ impl OracleOptim<Arr> for MyOracle {
     ///
     /// Arguments:
     ///
-    /// * `z`: The `z` parameter in the `assess_optim` function represents an array containing two
-    /// elements. The first element, `z[0]`, is assigned to the variable `sqrtx`, and the second
-    /// element, `z[1]`, is assigned to the variable `ly`. These
+    /// * `xc`: The `xc` parameter in the `assess_optim` function represents an array containing two
+    /// elements. The first element, `xc[0]`, is assigned to the variable `sqrtx`, and the second
+    /// element, `xc[1]`, is assigned to the variable `ly`. These
     /// * `gamma`: The `gamma` parameter is a mutable reference to a `f64` value. It is being updated
-    /// within the `assess_optim` function based on the calculations performed on the input values `z`
+    /// within the `assess_optim` function based on the calculations performed on the input values `xc`
     /// and the internal state of the function.
-    fn assess_optim(&mut self, z: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
-        let sqrtx = z[0];
-        let ly = z[1];
+    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        let sqrtx = xc[0];
+        let ly = xc[1];
 
         for _ in 0..2 {
             self.idx += 1;

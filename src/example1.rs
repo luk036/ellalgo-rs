@@ -9,6 +9,17 @@ pub struct MyOracle {
 }
 
 impl MyOracle {
+    /// Creates a new `MyOracle` instance with the `idx` field initialized to 0.
+    ///
+    /// This is the constructor for the `MyOracle` struct, which is the main entry point for
+    /// creating new instances of this type. It initializes the `idx` field to 0, which is the
+    /// default value for this field.
+    ///
+    /// # Examples
+    ///
+    /// let oracle = MyOracle::new();
+    /// assert_eq!(oracle.idx, 0);
+    ///
     #[inline]
     pub fn new() -> Self {
         MyOracle { idx: 0 }
@@ -18,18 +29,18 @@ impl MyOracle {
 impl OracleOptim<Arr> for MyOracle {
     type CutChoices = f64; // single cut
 
-    /// The function assess_optim takes in two parameters, z and gamma, and returns a tuple containing an
+    /// The function assess_optim takes in two parameters, xc and gamma, and returns a tuple containing an
     /// array and a double, along with a boolean value.
     ///
     /// Arguments:
     ///
-    /// * `z`: The parameter `z` is an array of length 2, representing the values of `x` and `y`
+    /// * `xc`: The parameter `xc` is an array of length 2, representing the values of `x` and `y`
     /// respectively.
     /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable. It is used to store the
     /// current best solution for the optimization problem.
-    fn assess_optim(&mut self, z: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
-        let x = z[0];
-        let y = z[1];
+    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        let x = xc[0];
+        let y = xc[1];
         let f0 = x + y;
 
         for _ in 0..2 {
@@ -74,6 +85,14 @@ mod tests {
     // use ndarray::array;
     // use super::ell_stable::EllStable;
 
+    /// Tests the feasibility of the optimization problem using the cutting plane method.
+    ///
+    /// This test creates a new `Ell` instance with a scalar radius of 10.0 and a center at `[0.0, 0.0]`.
+    /// It then creates a new `MyOracle` instance as the optimization oracle.
+    /// The `gamma` variable is initialized to negative infinity.
+    /// The `Options` struct is configured with a tolerance of 1e-10.
+    /// The `cutting_plane_optim` function is called with the oracle, ellipsoid, gamma, and options.
+    /// The test asserts that the best solution `xbest` is not `None`, and that the number of iterations is 25.
     #[test]
     pub fn test_feasible() {
         let mut ellip = Ell::new_with_scalar(10.0, array![0.0, 0.0]);

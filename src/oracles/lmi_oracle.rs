@@ -48,26 +48,26 @@ impl OracleFeas<Arr> for LMIOracle {
     /// * `mat_f0`: `mat_f0` is a reference to a 2D array of `f64` values.
     /// * `mat_f`: The `mat_f` parameter in the `get_elem` function is a slice of `Array2<f64>` types.
     /// It represents an array of 2D matrices. Each element in the slice is a 2D matrix of f64 values.
-    /// * `x`: The `x` parameter in the `assess_feas` function is a reference to an `Array1<f64>`, which
+    /// * `xc`: The `xc` parameter in the `assess_feas` function is a reference to an `Array1<f64>`, which
     /// represents a one-dimensional array of floating-point numbers. This array is used as input to the
     /// function for some calculations related to feasibility assessment.
-    fn assess_feas(&mut self, x: &Array1<f64>) -> Option<Cut> {
+    fn assess_feas(&mut self, xc: &Array1<f64>) -> Option<Cut> {
         fn get_elem(
             mat_f0: &Array2<f64>,
             mat_f: &[Array2<f64>],
-            x: &Array1<f64>,
+            xc: &Array1<f64>,
             i: usize,
             j: usize,
         ) -> f64 {
             mat_f0[(i, j)]
                 - mat_f
                     .iter()
-                    .zip(x.iter())
+                    .zip(xc.iter())
                     .map(|(mat_fk, xk)| mat_fk[(i, j)] * xk)
                     .sum::<f64>()
         }
 
-        let get_elem = |i: usize, j: usize| get_elem(&self.mat_f0, &self.mat_f, x, i, j);
+        let get_elem = |i: usize, j: usize| get_elem(&self.mat_f0, &self.mat_f, xc, i, j);
 
         if self.ldlt_mgr.factor(get_elem) {
             None
