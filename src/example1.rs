@@ -7,7 +7,7 @@ type Arr = Array1<f64>;
 pub struct MyOracle;
 
 impl OracleOptim<Arr> for MyOracle {
-    type CutChoices = f64; // single cut
+    type CutChoice = f64; // single cut
 
     /// The function assess_optim takes in two parameters, xc and gamma, and returns a tuple containing an
     /// array and a double, along with a boolean value.

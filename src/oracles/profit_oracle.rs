@@ -39,7 +39,7 @@ type Cut = (Arr, f64);
 /// maximization problem.
 #[derive(Debug)]
 pub struct ProfitOracle {
-    idx: usize,
+    idx: i32,
     log_p_scale: f64,
     log_k: f64,
     price_out: Arr,
@@ -75,7 +75,7 @@ impl ProfitOracle {
         let log_p_scale = (unit_price * scale).ln();
         let log_k = limit.ln();
         ProfitOracle {
-            idx: 0,
+            idx: -1,
             log_p_scale,
             log_k,
             price_out,
@@ -127,7 +127,7 @@ impl ProfitOracle {
 }
 
 impl OracleOptim<Arr> for ProfitOracle {
-    type CutChoices = f64; // single cut
+    type CutChoice = f64; // single cut
 
     /// The function assess_optim calculates the gradient and objective function value for an optimization
     /// problem in Rust.
@@ -210,7 +210,7 @@ impl ProfitRbOracle {
 }
 
 impl OracleOptim<Arr> for ProfitRbOracle {
-    type CutChoices = f64; // single cut
+    type CutChoice = f64; // single cut
 
     /// The `assess_optim` function takes an input quantity `y` and updates the best-so-far optimal value
     /// `gamma` based on the elasticities and returns a cut and the updated best-so-far value.
@@ -276,7 +276,7 @@ impl ProfitOracleQ {
 }
 
 impl OracleOptimQ<Arr> for ProfitOracleQ {
-    type CutChoices = f64; // single cut
+    type CutChoice = f64; // single cut
 
     /// The `assess_optim_q` function takes in an input quantity `y` in log scale, updates the best-so-far
     /// optimal value `gamma`, and returns a cut and the updated best-so-far value.

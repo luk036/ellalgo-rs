@@ -7,10 +7,10 @@ type Arr = Array1<f64>;
 ///
 /// This oracle is used to evaluate the feasibility of a given solution.
 /// It keeps track of an index `idx` and a target value `target`.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct MyOracle3 {
     /// The index of the current solution being evaluated.
-    pub idx: usize,
+    pub idx: i32,
     /// The target value for the optimization problem.
     pub target: f64,
 }
@@ -25,23 +25,23 @@ pub struct MyOracle3 {
 //         }
 //     }
 // }
-//
-// impl Default for MyOracle3 {
-//     /// Creates a new `MyOracle3` instance with the index set to 0 and the target value set to a very small negative number.
-//     ///
-//     /// This is the default implementation for the `MyOracle3` struct, which is used to represent a custom oracle for some optimization problem.
-//     /// The oracle is used to evaluate the feasibility of a given solution, and this default implementation initializes the index to 0 and the target value to a very small negative number.
-//     #[inline]
-//     fn default() -> Self {
-//         MyOracle3 {
-//             idx: 0,
-//             target: -1e100,
-//         }
-//     }
-// }
+
+impl Default for MyOracle3 {
+    /// Creates a new `MyOracle3` instance with the index set to 0 and the target value set to a very small negative number.
+    ///
+    /// This is the default implementation for the `MyOracle3` struct, which is used to represent a custom oracle for some optimization problem.
+    /// The oracle is used to evaluate the feasibility of a given solution, and this default implementation initializes the index to 0 and the target value to a very small negative number.
+    #[inline]
+    fn default() -> Self {
+        MyOracle3 {
+            idx: -1,
+            target: -1e100,
+        }
+    }
+}
 
 impl OracleFeas<Arr> for MyOracle3 {
-    type CutChoices = f64; // single cut
+    type CutChoice = f64; // single cut
 
     /// The function assess_feas takes in an array xc and checks if it satisfies two constraints,
     /// returning an optional tuple of an array and a float if any constraint is violated.

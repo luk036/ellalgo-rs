@@ -33,8 +33,8 @@ pub trait UpdateByCutChoices<SearchSpace> {
 
 /// Oracle for feasibility problems
 pub trait OracleFeas<ArrayType> {
-    type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
-    fn assess_feas(&mut self, xc: &ArrayType) -> Option<(ArrayType, Self::CutChoices)>;
+    type CutChoice; // f64 for single cut; (f64, Option<f64) for parallel cut
+    fn assess_feas(&mut self, xc: &ArrayType) -> Option<(ArrayType, Self::CutChoice)>;
 }
 
 /// Oracle for feasibility problems
@@ -44,23 +44,23 @@ pub trait OracleFeas2<ArrayType>: OracleFeas<ArrayType> {
 
 /// Oracle for optimization problems
 pub trait OracleOptim<ArrayType> {
-    type CutChoices; // f64 for single cut; (f64, Option<f64>) for parallel cut
+    type CutChoice; // f64 for single cut; (f64, Option<f64>) for parallel cut
     fn assess_optim(
         &mut self,
         xc: &ArrayType,
         gamma: &mut f64,
-    ) -> ((ArrayType, Self::CutChoices), bool);
+    ) -> ((ArrayType, Self::CutChoice), bool);
 }
 
 /// Oracle for quantized optimization problems
 pub trait OracleOptimQ<ArrayType> {
-    type CutChoices; // f64 for single cut; (f64, Option<f64) for parallel cut
+    type CutChoice; // f64 for single cut; (f64, Option<f64) for parallel cut
     fn assess_optim_q(
         &mut self,
         xc: &ArrayType,
         gamma: &mut f64,
         retry: bool,
-    ) -> ((ArrayType, Self::CutChoices), bool, ArrayType, bool);
+    ) -> ((ArrayType, Self::CutChoice), bool, ArrayType, bool);
 }
 
 /// Oracle for binary search
@@ -129,7 +129,7 @@ pub fn cutting_plane_feas<T, Oracle, Space>(
 ) -> (Option<Space::ArrayType>, usize)
 where
     T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleFeas<Space::ArrayType, CutChoices = T>,
+    Oracle: OracleFeas<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace,
 {
     for niter in 0..options.max_iters {
@@ -171,7 +171,7 @@ pub fn cutting_plane_optim<T, Oracle, Space>(
 ) -> (Option<Space::ArrayType>, usize)
 where
     T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleOptim<Space::ArrayType, CutChoices = T>,
+    Oracle: OracleOptim<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace,
 {
     let mut x_best: Option<Space::ArrayType> = None;
@@ -216,7 +216,7 @@ pub fn cutting_plane_optim_q<T, Oracle, Space>(
 ) -> (Option<Space::ArrayType>, usize)
 where
     T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleOptimQ<Space::ArrayType, CutChoices = T>,
+    Oracle: OracleOptimQ<Space::ArrayType, CutChoice = T>,
     Space: SearchSpaceQ,
 {
     let mut x_best: Option<Space::ArrayType> = None;
@@ -256,7 +256,7 @@ where
 pub struct BSearchAdaptor<T, Oracle, Space>
 where
     T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleFeas2<Space::ArrayType, CutChoices = T>,
+    Oracle: OracleFeas2<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace,
 {
     pub omega: Oracle,
@@ -268,7 +268,7 @@ where
 impl<T, Oracle, Space> BSearchAdaptor<T, Oracle, Space>
 where
     T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleFeas2<Space::ArrayType, CutChoices = T>,
+    Oracle: OracleFeas2<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace + Clone,
 {
     pub fn new(omega: Oracle, space: Space, options: Options) -> Self {
@@ -283,7 +283,7 @@ where
 impl<T, Oracle, Space> OracleBS for BSearchAdaptor<T, Oracle, Space>
 where
     T: UpdateByCutChoices<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleFeas2<Space::ArrayType, CutChoices = T>,
+    Oracle: OracleFeas2<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace + Clone,
 {
     fn assess_bs(&mut self, gamma: f64) -> bool {

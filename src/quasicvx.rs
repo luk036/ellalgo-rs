@@ -3,13 +3,19 @@ use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct MyOracle {
-    idx: usize,
+    idx: i32,
+}
+
+impl Default for MyOracle {
+    fn default() -> Self {
+        MyOracle { idx: -1 }
+    }
 }
 
 impl OracleOptim<Arr> for MyOracle {
-    type CutChoices = f64; // single cut
+    type CutChoice = f64; // single cut
 
     /// The function assesses optimization based on input values and returns a tuple along with a
     /// boolean flag.

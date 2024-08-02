@@ -38,7 +38,7 @@ impl LMIOracle {
 }
 
 impl OracleFeas<Arr> for LMIOracle {
-    type CutChoices = f64; // single cut
+    type CutChoice = f64; // single cut
 
     /// The function assesses the feasibility of a solution by calculating the difference between
     /// elements of matrices based on input arrays.
@@ -98,7 +98,7 @@ mod tests {
     }
 
     impl OracleOptim<Arr> for MyOracle {
-        type CutChoices = f64; // single cut
+        type CutChoice = f64; // single cut
 
         fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
             if let Some(cut) = self.lmi1.assess_feas(xc) {

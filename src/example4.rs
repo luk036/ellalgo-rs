@@ -3,33 +3,20 @@ use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct MyOracle {
-    idx: usize,
+    idx: i32,
 }
 
-impl MyOracle {
-    /// Creates a new `MyOracle` instance with the `idx` field initialized to 0.
-    ///
-    /// This is the constructor for the `MyOracle` struct, which is the main entry point for
-    /// creating new instances of this type. It initializes the `idx` field to 0, which is the
-    /// default value for this field.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let oracle = MyOracle::new();
-    /// assert_eq!(oracle.idx, 0);
-    /// ```
-    ///
+impl Default for MyOracle {
     #[inline]
-    pub fn new() -> Self {
-        MyOracle { idx: 0 }
+    fn default() -> Self {
+        MyOracle { idx: -1 }
     }
 }
 
 impl OracleOptim<Arr> for MyOracle {
-    type CutChoices = f64; // single cut
+    type CutChoice = f64; // single cut
 
     /// The function assess_optim takes in two parameters, xc and gamma, and returns a tuple containing an
     /// array and a double, along with a boolean value.

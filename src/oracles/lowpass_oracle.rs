@@ -13,7 +13,7 @@ pub type Cut = (Arr, (f64, Option<f64>));
 ///
 /// * `more_alt`: The `more_alt` property is a boolean flag indicating whether there are more
 /// alternative options available.
-/// * `idx1`: The `idx1` property in the `LowpassOracle` struct is of type `usize`.
+/// * `idx1`: The `idx1` property in the `LowpassOracle` struct is of type `i32`.
 /// * `spectrum`: The `spectrum` property is a vector of type `Arr`.
 /// * `nwpass`: The `nwpass` property in the `LowpassOracle` struct represents the number of points in
 /// the passband of a lowpass filter.
@@ -26,27 +26,27 @@ pub type Cut = (Arr, (f64, Option<f64>));
 /// of type `f64`.
 /// * `sp_sq`: The `sp_sq` property in the `LowpassOracle` struct represents a floating-point value of
 /// type `f64`.
-/// * `idx2`: The `idx2` property in the `LowpassOracle` struct appears to be a `usize` type. It is a
+/// * `idx2`: The `idx2` property in the `LowpassOracle` struct appears to be a `i32` type. It is a
 /// field that holds an unsigned integer value representing an index or position within the context of
 /// the struct.
 /// * `idx3`: The `idx3` property in the `LowpassOracle` struct represents an unsigned integer value.
 /// * `fmax`: The `fmax` property in the `LowpassOracle` struct represents the maximum frequency value.
 /// * `kmax`: The `kmax` property in the `LowpassOracle` struct represents the maximum value for a
-/// specific type `usize`. It is used to store the maximum value for a certain index or count within the
+/// specific type `i32`. It is used to store the maximum value for a certain index or count within the
 /// context of the `LowpassOracle` struct.
 pub struct LowpassOracle {
     pub more_alt: bool,
-    pub idx1: usize,
+    pub idx1: i32,
     pub spectrum: Vec<Arr>,
-    pub nwpass: usize,
-    pub nwstop: usize,
+    pub nwpass: i32,
+    pub nwstop: i32,
     pub lp_sq: f64,
     pub up_sq: f64,
     pub sp_sq: f64,
-    pub idx2: usize,
-    pub idx3: usize,
+    pub idx2: i32,
+    pub idx3: i32,
     pub fmax: f64,
-    pub kmax: usize,
+    pub kmax: i32,
 }
 
 impl LowpassOracle {
@@ -90,28 +90,28 @@ impl LowpassOracle {
         }
         // spectrum.iter_mut().for_each(|row| row.insert(0, 1.0));
 
-        let nwpass = (wpass * (mdim - 1) as f64).floor() as usize + 1;
-        let nwstop = (wstop * (mdim - 1) as f64).floor() as usize + 1;
+        let nwpass = (wpass * (mdim - 1) as f64).floor() as i32 + 1;
+        let nwstop = (wstop * (mdim - 1) as f64).floor() as i32 + 1;
 
         Self {
             more_alt: true,
-            idx1: 0,
+            idx1: -1,
             spectrum,
             nwpass,
             nwstop,
             lp_sq,
             up_sq,
             sp_sq,
-            idx2: nwpass,
-            idx3: nwstop,
+            idx2: nwpass - 1,
+            idx3: nwstop - 1,
             fmax: f64::NEG_INFINITY,
-            kmax: 0,
+            kmax: -1,
         }
     }
 }
 
 impl OracleFeas<Arr> for LowpassOracle {
-    type CutChoices = (f64, Option<f64>); // parallel cut
+    type CutChoice = (f64, Option<f64>); // parallel cut
 
     /// The `assess_feas` function in Rust assesses the feasibility of a given array `x` based on
     /// certain conditions and returns a corresponding `Cut` option.
@@ -139,7 +139,7 @@ impl OracleFeas<Arr> for LowpassOracle {
             if self.idx1 == self.nwpass {
                 self.idx1 = 0;
             }
-            let col_k = &self.spectrum[self.idx1];
+            let col_k = &self.spectrum[self.idx1 as usize];
             // let v = col_k.iter().zip(x.iter()).map(|(&a, &b)| a * b).sum();
             let v = col_k.dot(x);
             if v > self.up_sq {
@@ -153,13 +153,13 @@ impl OracleFeas<Arr> for LowpassOracle {
         }
 
         self.fmax = f64::NEG_INFINITY;
-        self.kmax = 0;
-        for _ in self.nwstop..mdim {
+        self.kmax = -1;
+        for _ in self.nwstop..mdim as i32 {
             self.idx3 += 1;
-            if self.idx3 == mdim {
+            if self.idx3 == mdim as i32 {
                 self.idx3 = self.nwstop;
             }
-            let col_k = &self.spectrum[self.idx3];
+            let col_k = &self.spectrum[self.idx3 as usize];
             // let v = col_k.iter().zip(x.iter()).map(|(&a, &b)| a * b).sum();
             let v = col_k.dot(x);
             if v > self.sp_sq {
@@ -182,7 +182,7 @@ impl OracleFeas<Arr> for LowpassOracle {
             if self.idx2 == self.nwstop {
                 self.idx2 = self.nwpass;
             }
-            let col_k = &self.spectrum[self.idx2];
+            let col_k = &self.spectrum[self.idx2 as usize];
             // let v = col_k.iter().zip(x.iter()).map(|(&a, &b)| a * b).sum();
             let v = col_k.dot(x);
             if v < 0.0 {
@@ -204,7 +204,7 @@ impl OracleFeas<Arr> for LowpassOracle {
 }
 
 impl OracleOptim<Arr> for LowpassOracle {
-    type CutChoices = (f64, Option<f64>); // parallel cut
+    type CutChoice = (f64, Option<f64>); // parallel cut
 
     /// The function assess_optim takes in parameters x and sp_sq, updates the value of sp_sq, assesses
     /// feasibility of x, and returns a tuple containing a cut and a boolean value.
@@ -223,7 +223,7 @@ impl OracleOptim<Arr> for LowpassOracle {
             return (cut, false);
         }
 
-        let cut = (self.spectrum[self.kmax].clone(), (0.0, Some(self.fmax)));
+        let cut = (self.spectrum[self.kmax as usize].clone(), (0.0, Some(self.fmax)));
         *sp_sq = self.fmax;
         (cut, true)
     }
