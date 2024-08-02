@@ -94,9 +94,10 @@ impl ProfitOracle {
     /// * `y`: A reference to an array of f64 values.
     /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable.
     fn assess_feas(&mut self, y: &Arr, gamma: &mut f64) -> Option<(Arr, f64)> {
-        for _ in 0..2 {
+        let num_constraints = 2;
+        for _ in 0..num_constraints {
             self.idx += 1;
-            if self.idx == 2 {
+            if self.idx == num_constraints {
                 self.idx = 0; // round robin
             }
             let fj = match self.idx {

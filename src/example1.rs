@@ -4,29 +4,7 @@ use ndarray::prelude::*;
 type Arr = Array1<f64>;
 
 #[derive(Debug, Default)]
-pub struct MyOracle {
-    idx: usize,
-}
-
-impl MyOracle {
-    /// Creates a new `MyOracle` instance with the `idx` field initialized to 0.
-    ///
-    /// This is the constructor for the `MyOracle` struct, which is the main entry point for
-    /// creating new instances of this type. It initializes the `idx` field to 0, which is the
-    /// default value for this field.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let oracle = MyOracle::new();
-    /// assert_eq!(oracle.idx, 0);
-    /// ```
-    ///
-    #[inline]
-    pub fn new() -> Self {
-        MyOracle { idx: 0 }
-    }
-}
+pub struct MyOracle;
 
 impl OracleOptim<Arr> for MyOracle {
     type CutChoices = f64; // single cut
@@ -44,32 +22,17 @@ impl OracleOptim<Arr> for MyOracle {
         let x = xc[0];
         let y = xc[1];
         let f0 = x + y;
-
-        for _ in 0..3 {
-            self.idx += 1;
-            if self.idx == 3 {
-                self.idx = 0; // round robin
-            }
-            let fj = match self.idx {
-                0 => f0 - 3.0,
-                1 => -x + y + 1.0,
-                2 => *gamma - f0,
-                _ => unreachable!(),
-            };
-            if fj > 0.0 {
-                return (
-                    (
-                        match self.idx {
-                            0 => array![1.0, 1.0],
-                            1 => array![-1.0, 1.0],
-                            2 => array![-1.0, -1.0],
-                            _ => unreachable!(),
-                        },
-                        fj,
-                    ),
-                    false,
-                );
-            }
+        let f1 = f0 - 3.0;
+        if f1 > 0.0 {
+            return ((array![1.0, 1.0], f1), false);
+        }
+        let f2 = -x + y + 1.0;
+        if f2 > 0.0 {
+            return ((array![-1.0, 1.0], f2), false);
+        }
+        let f3 = *gamma - f0;
+        if f3 > 0.0 {
+            return ((array![-1.0, -1.0], f3), false);
         }
         *gamma = f0;
         ((array![-1.0, -1.0], 0.0), true)
@@ -110,7 +73,7 @@ mod tests {
     pub fn test_infeasible1() {
         let mut ellip = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
                                                                             // or ellipsoid is too small
-        let mut oracle = MyOracle::new();
+        let mut oracle = MyOracle::default();
         let mut gamma = f64::NEG_INFINITY;
         let options = Options::default();
         let (xbest, _num_iters) =
@@ -121,7 +84,7 @@ mod tests {
     #[test]
     pub fn test_infeasible2() {
         let mut ellip = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
-        let mut oracle = MyOracle::new();
+        let mut oracle = MyOracle::default();
         // wrong initial guess
         let options = Options::default();
         let (xbest, _niter) = cutting_plane_optim(&mut oracle, &mut ellip, &mut 100.0, &options);

@@ -5,27 +5,8 @@ type Arr = Array1<f64>;
 
 #[derive(Debug, Default)]
 pub struct MyOracle {
+    /// for round robin
     idx: usize,
-}
-
-impl MyOracle {
-    /// Creates a new `MyOracle` instance with the `idx` field initialized to 0.
-    ///
-    /// This is the constructor for the `MyOracle` struct, which is the main entry point for
-    /// creating new instances of this type. It initializes the `idx` field to 0, which is the
-    /// default value for this field.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let oracle = MyOracle::new();
-    /// assert_eq!(oracle.idx, 0);
-    /// ```
-    ///
-    #[inline]
-    pub fn new() -> Self {
-        MyOracle { idx: 0 }
-    }
 }
 
 impl OracleOptim<Arr> for MyOracle {
@@ -43,29 +24,27 @@ impl OracleOptim<Arr> for MyOracle {
     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
         let x = xc[0];
         let y = xc[1];
-        let f0 = 2.0 * x - 3.0 * y;
+        let f0 = x + y;
 
-        let num_constraints = 4;
+        let num_constraints = 3;
         for _ in 0..num_constraints {
             self.idx += 1;
             if self.idx == num_constraints {
                 self.idx = 0; // round robin
             }
             let fj = match self.idx {
-                0 => -x - 1.0,
-                1 => -y - 2.0,
-                2 => x + y - 1.0,
-                3 => *gamma - f0,
+                0 => f0 - 3.0,
+                1 => -x + y + 1.0,
+                2 => *gamma - f0,
                 _ => unreachable!(),
             };
             if fj > 0.0 {
                 return (
                     (
                         match self.idx {
-                            0 => array![-1.0, 0.0],
-                            1 => array![0.0, -1.0],
-                            2 => array![1.0, 1.0],
-                            3 => array![-2.0, 3.0],
+                            0 => array![1.0, 1.0],
+                            1 => array![-1.0, 1.0],
+                            2 => array![-1.0, -1.0],
                             _ => unreachable!(),
                         },
                         fj,
@@ -75,7 +54,7 @@ impl OracleOptim<Arr> for MyOracle {
             }
         }
         *gamma = f0;
-        ((array![-2.0, 3.0], 0.0), true)
+        ((array![-1.0, -1.0], 0.0), true)
     }
 }
 
@@ -106,6 +85,28 @@ mod tests {
         };
         let (xbest, num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
         assert!(xbest.is_some());
-        assert_eq!(num_iters, 82);
+        assert_eq!(num_iters, 25);
+    }
+
+    #[test]
+    pub fn test_infeasible1() {
+        let mut ellip = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
+                                                                            // or ellipsoid is too small
+        let mut oracle = MyOracle::default();
+        let mut gamma = f64::NEG_INFINITY;
+        let options = Options::default();
+        let (xbest, _num_iters) =
+            cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+        assert!(xbest.is_none());
+    }
+
+    #[test]
+    pub fn test_infeasible2() {
+        let mut ellip = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut oracle = MyOracle::default();
+        // wrong initial guess
+        let options = Options::default();
+        let (xbest, _niter) = cutting_plane_optim(&mut oracle, &mut ellip, &mut 100.0, &options);
+        assert!(xbest.is_none());
     }
 }

@@ -7,7 +7,7 @@ type Arr = Array1<f64>;
 ///
 /// This oracle is used to evaluate the feasibility of a given solution.
 /// It keeps track of an index `idx` and a target value `target`.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct MyOracle3 {
     /// The index of the current solution being evaluated.
     pub idx: usize,
@@ -15,30 +15,30 @@ pub struct MyOracle3 {
     pub target: f64,
 }
 
-impl MyOracle3 {
-    /// Creates a new `MyOracle3` instance with the index set to 0 and the target value set to a very small negative number.
-    #[inline]
-    pub fn new() -> Self {
-        MyOracle3 {
-            idx: 0,
-            target: -1e100,
-        }
-    }
-}
-
-impl Default for MyOracle3 {
-    /// Creates a new `MyOracle3` instance with the index set to 0 and the target value set to a very small negative number.
-    ///
-    /// This is the default implementation for the `MyOracle3` struct, which is used to represent a custom oracle for some optimization problem.
-    /// The oracle is used to evaluate the feasibility of a given solution, and this default implementation initializes the index to 0 and the target value to a very small negative number.
-    #[inline]
-    fn default() -> Self {
-        MyOracle3 {
-            idx: 0,
-            target: -1e100,
-        }
-    }
-}
+// impl MyOracle3 {
+//     /// Creates a new `MyOracle3` instance with the index set to 0 and the target value set to a very small negative number.
+//     #[inline]
+//     pub fn new() -> Self {
+//         MyOracle3 {
+//             idx: 0,
+//             target: -1e100,
+//         }
+//     }
+// }
+//
+// impl Default for MyOracle3 {
+//     /// Creates a new `MyOracle3` instance with the index set to 0 and the target value set to a very small negative number.
+//     ///
+//     /// This is the default implementation for the `MyOracle3` struct, which is used to represent a custom oracle for some optimization problem.
+//     /// The oracle is used to evaluate the feasibility of a given solution, and this default implementation initializes the index to 0 and the target value to a very small negative number.
+//     #[inline]
+//     fn default() -> Self {
+//         MyOracle3 {
+//             idx: 0,
+//             target: -1e100,
+//         }
+//     }
+// }
 
 impl OracleFeas<Arr> for MyOracle3 {
     type CutChoices = f64; // single cut
@@ -59,9 +59,10 @@ impl OracleFeas<Arr> for MyOracle3 {
         let x = xc[0];
         let y = xc[1];
 
-        for _ in 0..4 {
+        let num_constraints = 4;
+        for _ in 0..num_constraints {
             self.idx += 1;
-            if self.idx == 4 {
+            if self.idx == num_constraints {
                 self.idx = 0; // round robin
             }
             let fj = match self.idx {
