@@ -830,7 +830,7 @@ impl EllCalc {
     }
 }
 
-// pub trait UpdateByCutChoices {
+// pub trait UpdateByCutChoice {
 //     fn update_by(self, ell: &mut EllCalc) -> CutStatus;
 // }
 #[cfg(test)]

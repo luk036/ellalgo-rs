@@ -223,7 +223,10 @@ impl OracleOptim<Arr> for LowpassOracle {
             return (cut, false);
         }
 
-        let cut = (self.spectrum[self.kmax as usize].clone(), (0.0, Some(self.fmax)));
+        let cut = (
+            self.spectrum[self.kmax as usize].clone(),
+            (0.0, Some(self.fmax)),
+        );
         *sp_sq = self.fmax;
         (cut, true)
     }

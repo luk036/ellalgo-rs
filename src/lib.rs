@@ -1,6 +1,6 @@
 // pub mod conceptual;
 pub mod cutting_plane;
-pub use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoices};
+pub use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoice};
 
 pub mod ell;
 pub mod ell_calc;

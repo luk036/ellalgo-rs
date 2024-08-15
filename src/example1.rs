@@ -58,7 +58,7 @@ mod tests {
     #[test]
     pub fn test_feasible() {
         let mut ellip = Ell::new_with_scalar(10.0, array![0.0, 0.0]);
-        let mut oracle = MyOracle::default();
+        let mut oracle = MyOracle;
         let mut gamma = f64::NEG_INFINITY;
         let options = Options {
             tolerance: 1e-10,
@@ -73,7 +73,7 @@ mod tests {
     pub fn test_infeasible1() {
         let mut ellip = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
                                                                             // or ellipsoid is too small
-        let mut oracle = MyOracle::default();
+        let mut oracle = MyOracle;
         let mut gamma = f64::NEG_INFINITY;
         let options = Options::default();
         let (xbest, _num_iters) =
@@ -84,7 +84,7 @@ mod tests {
     #[test]
     pub fn test_infeasible2() {
         let mut ellip = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
-        let mut oracle = MyOracle::default();
+        let mut oracle = MyOracle;
         // wrong initial guess
         let options = Options::default();
         let (xbest, _niter) = cutting_plane_optim(&mut oracle, &mut ellip, &mut 100.0, &options);

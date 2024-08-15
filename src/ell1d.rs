@@ -1,4 +1,4 @@
-use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoices};
+use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoice};
 // #[macro_use]
 // extern crate ndarray;
 
@@ -99,14 +99,14 @@ impl SearchSpace for Ell1D {
     /// The `update` function returns a value of type `CutStatus`.
     fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> (CutStatus, f64)
     where
-        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
+        T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
         beta.update_by(self, grad)
     }
 }
 
-impl UpdateByCutChoices<Ell1D> for f64 {
+impl UpdateByCutChoice<Ell1D> for f64 {
     type ArrayType = f64;
 
     fn update_by(&self, ell: &mut Ell1D, grad: &Self::ArrayType) -> (CutStatus, f64) {
@@ -116,7 +116,7 @@ impl UpdateByCutChoices<Ell1D> for f64 {
 }
 
 // TODO: Support Parallel Cut
-// impl UpdateByCutChoices<Ell1D> for (f64, Option<f64>) {
+// impl UpdateByCutChoice<Ell1D> for (f64, Option<f64>) {
 //     type ArrayType = Arr;
 //     fn update_by(&self, ell: &mut Ell1D, grad: &Self::ArrayType) -> (CutStatus, f64) {
 //         let beta = self;

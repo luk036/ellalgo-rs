@@ -1,5 +1,5 @@
 // mod lib;
-use crate::cutting_plane::{CutStatus, SearchSpace, SearchSpaceQ, UpdateByCutChoices};
+use crate::cutting_plane::{CutStatus, SearchSpace, SearchSpaceQ, UpdateByCutChoice};
 use crate::ell_calc::EllCalc;
 // #[macro_use]
 // extern crate ndarray;
@@ -130,7 +130,7 @@ impl EllStable {
     /// The `update_core` function returns a value of type `CutStatus`.
     fn update_core<T, F>(&mut self, grad: &Array1<f64>, beta: &T, f_core: F) -> CutStatus
     where
-        T: UpdateByCutChoices<Self, ArrayType = Array1<f64>>,
+        T: UpdateByCutChoice<Self, ArrayType = Array1<f64>>,
         F: FnOnce(&T, f64) -> (CutStatus, (f64, f64, f64)),
     {
         // calculate inv(L)*grad: (n-1)*n/2 multiplications
@@ -243,7 +243,7 @@ impl SearchSpace for EllStable {
     /// The `update_bias_cut` function returns a value of type `CutStatus`.
     fn update_bias_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
-        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
+        T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
         beta.update_bias_cut_by(self, grad)
@@ -261,7 +261,7 @@ impl SearchSpace for EllStable {
     /// The function `update_central_cut` returns a value of type `CutStatus`.
     fn update_central_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
-        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
+        T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
         beta.update_central_cut_by(self, grad)
@@ -300,14 +300,14 @@ impl SearchSpaceQ for EllStable {
     /// The `update_bias_cut` function returns a value of type `CutStatus`.
     fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
-        T: UpdateByCutChoices<Self, ArrayType = Self::ArrayType>,
+        T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
         beta.update_q_by(self, grad)
     }
 }
 
-impl UpdateByCutChoices<EllStable> for f64 {
+impl UpdateByCutChoice<EllStable> for f64 {
     type ArrayType = Array1<f64>;
 
     fn update_bias_cut_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
@@ -329,7 +329,7 @@ impl UpdateByCutChoices<EllStable> for f64 {
     }
 }
 
-impl UpdateByCutChoices<EllStable> for (f64, Option<f64>) {
+impl UpdateByCutChoice<EllStable> for (f64, Option<f64>) {
     type ArrayType = Array1<f64>;
 
     fn update_bias_cut_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
