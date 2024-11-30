@@ -22,7 +22,7 @@ impl LMIOracle {
     ///
     /// * `mat_f`: The `mat_f` parameter is a vector of 2D arrays of type `f64`.
     /// * `mat_b`: The `mat_b` parameter is an `Array2<f64>` type, which represents a 2-dimensional array
-    /// of f64 (floating point numbers).
+    ///            of f64 (floating point numbers).
     ///
     /// Returns:
     ///
@@ -47,10 +47,10 @@ impl OracleFeas<Arr> for LMIOracle {
     ///
     /// * `mat_f0`: `mat_f0` is a reference to a 2D array of `f64` values.
     /// * `mat_f`: The `mat_f` parameter in the `get_elem` function is a slice of `Array2<f64>` types.
-    /// It represents an array of 2D matrices. Each element in the slice is a 2D matrix of f64 values.
+    ///            It represents an array of 2D matrices. Each element in the slice is a 2D matrix of f64 values.
     /// * `xc`: The `xc` parameter in the `assess_feas` function is a reference to an `Array1<f64>`, which
-    /// represents a one-dimensional array of floating-point numbers. This array is used as input to the
-    /// function for some calculations related to feasibility assessment.
+    ///         represents a one-dimensional array of floating-point numbers. This array is used as input to the
+    ///         function for some calculations related to feasibility assessment.
     fn assess_feas(&mut self, xc: &Array1<f64>) -> Option<Cut> {
         fn get_elem(
             mat_f0: &Array2<f64>,

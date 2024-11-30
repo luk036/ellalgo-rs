@@ -7,17 +7,17 @@ use crate::cutting_plane::CutStatus;
 ///
 /// * `n_f`: The `n_f` property represents the number of variables in the ellipsoid search space.
 /// * `n_plus_1`: The `n_plus_1` property represents the value of `n + 1`, where `n` is the dimension of
-/// the search space. It is used in calculations related to the ellipsoid search space.
+///             the search space. It is used in calculations related to the ellipsoid search space.
 /// * `half_n`: The `half_n` property represents half of the dimension of the ellipsoid search space. It
-/// is used in the calculation of the parameters for the ellipsoid search space.
+///             is used in the calculation of the parameters for the ellipsoid search space.
 /// * `cst1`: The `cst1` property is a constant used in the calculation of the parameters for the new
-/// Ellipsoid Search Space. Its specific purpose and value are not provided in the code snippet.
+///             Ellipsoid Search Space. Its specific purpose and value are not provided in the code snippet.
 /// * `cst2`: The `cst2` property is a constant used in the calculation of the parameters for the new
-/// Ellipsoid Search Space. It is not specified what exactly it represents or how it is used in the
-/// calculation.
+///             Ellipsoid Search Space. It is not specified what exactly it represents or how it is used in the
+///             calculation.
 /// * `cst3`: The `cst3` property is a constant value used in the calculation of the parameters for the
-/// new Ellipsoid Search Space. It is not specified what exactly this constant represents or how it is
-/// used in the calculations.
+///             new Ellipsoid Search Space. It is not specified what exactly this constant represents or how it is
+///             used in the calculations.
 #[derive(Debug, Clone)]
 pub struct EllCalcCore {
     pub n_f: f64,
@@ -40,7 +40,7 @@ impl EllCalcCore {
     /// Arguments:
     ///
     /// * `n_f`: The parameter `n_f` represents the value of `n` in the calculations. It is a floating-point
-    /// number.
+    ///          number.
     ///
     /// Returns:
     ///
@@ -84,10 +84,10 @@ impl EllCalcCore {
     /// Arguments:
     ///
     /// * `beta0`: The parameter `beta0` represents the semi-minor axis of the ellipsoid before the cut. It is
-    /// a floating-point number.
+    ///            a floating-point number.
     /// * `beta1`: The parameter `beta1` represents the length of the semi-minor axis of the ellipsoid.
     /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
-    /// of the ellipsoid.
+    ///            of the ellipsoid.
     ///
     /// ```svgbob
     ///      _.-'''''''-._
@@ -172,10 +172,10 @@ impl EllCalcCore {
     /// Arguments:
     ///
     /// * `beta0`: The parameter `beta0` represents the semi-minor axis of the ellipsoid before the cut. It is
-    /// a floating-point number.
+    ///            a floating-point number.
     /// * `beta1`: The parameter `beta1` represents the length of the semi-minor axis of the ellipsoid.
     /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
-    /// of the ellipsoid.
+    ///            of the ellipsoid.
     ///
     /// ```svgbob
     ///      _.-'''''''-._
@@ -248,7 +248,7 @@ impl EllCalcCore {
     /// Arguments:
     ///
     /// * `beta1`: The parameter `beta1` represents the semi-minor axis of the ellipsoid. It is a floating-point
-    /// number.
+    ///            number.
     /// * `tsq`: The parameter `tsq` represents the square of the gamma semi-axis length of the ellipsoid.
     ///
     /// ```svgbob
@@ -321,12 +321,12 @@ impl EllCalcCore {
     /// Arguments:
     ///
     /// * `beta`: The `beta` parameter represents a value used in the calculation of the core of updating
-    /// the ellipsoid with the deep-cut. It is of type `f64`, which means it is a 64-bit floating-point
-    /// number.
+    ///          the ellipsoid with the deep-cut. It is of type `f64`, which means it is a 64-bit floating-point
+    ///          number.
     /// * `tau`: The parameter `tau` represents the time constant of the system. It is a measure of how
-    /// quickly the system responds to changes.
+    ///          quickly the system responds to changes.
     /// * `eta`: The parameter `eta` represents the deep-cut factor. It is a measure of how much the
-    /// ellipsoid is being updated or modified.
+    ///          ellipsoid is being updated or modified.
     ///
     /// ```svgbob
     ///       _.-'''''''-._
@@ -384,12 +384,12 @@ impl EllCalcCore {
     /// Arguments:
     ///
     /// * `beta`: The `beta` parameter represents a value used in the calculation of the core of updating
-    /// the ellipsoid with the deep-cut. It is of type `f64`, which means it is a 64-bit floating-point
-    /// number.
+    ///          the ellipsoid with the deep-cut. It is of type `f64`, which means it is a 64-bit floating-point
+    ///          number.
     /// * `tau`: The parameter `tau` represents the time constant of the system. It is a measure of how
-    /// quickly the system responds to changes.
+    ///          quickly the system responds to changes.
     /// * `eta`: The parameter `eta` represents the deep-cut factor. It is a measure of how much the
-    /// ellipsoid is being updated or modified.
+    ///          ellipsoid is being updated or modified.
     ///
     /// ```svgbob
     ///       _.-'''''''-._
@@ -448,7 +448,7 @@ impl EllCalcCore {
     /// Arguments:
     ///
     /// * `tsq`: The parameter `tsq` represents the square of the time taken to update the ellipsoid with
-    /// the central-cut.
+    ///          the central-cut.
     ///
     /// ```svgbob
     ///       _.-'''''''-._
@@ -507,10 +507,10 @@ impl EllCalcCore {
 /// Properties:
 ///
 /// * `n_f`: The `n_f` property is a floating-point number that represents the dimensionality of the
-/// search space. It indicates the number of variables or dimensions in the ellipsoid search space.
+///          search space. It indicates the number of variables or dimensions in the ellipsoid search space.
 /// * `helper`: The `helper` property is of type `EllCalcCore` and is used to perform
-/// calculations related to the ellipsoid search space. It is a separate struct that contains the
-/// necessary methods and data for these calculations.
+///          calculations related to the ellipsoid search space. It is a separate struct that contains the
+///          necessary methods and data for these calculations.
 /// * `use_parallel_cut`: A boolean flag indicating whether to use parallel cut or not.
 #[derive(Debug, Clone)]
 pub struct EllCalc {
@@ -526,7 +526,7 @@ impl EllCalc {
     /// Arguments:
     ///
     /// * `n_f`: The parameter `n_f` is a floating-point number that is used to initialize the `EllCalc`
-    /// struct.
+    ///          struct.
     ///
     /// Returns:
     ///
@@ -557,7 +557,7 @@ impl EllCalc {
     /// Arguments:
     ///
     /// * `beta`: The `beta` parameter is a tuple containing two values: `beta0` and `beta1_opt`. `beta0` is of type
-    /// `f64` and `beta1_opt` is an optional value of type `Option<f64>`.
+    ///           `f64` and `beta1_opt` is an optional value of type `Option<f64>`.
     /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
     pub fn calc_single_or_parallel_bias_cut(
         &self,
@@ -577,7 +577,7 @@ impl EllCalc {
     /// Arguments:
     ///
     /// * `beta`: The `beta` parameter is a tuple containing two values: `f64` and `Option<f64>`.
-    /// The first value, denoted as `_b0`, is of type `f64`. The second value, `beta1_opt`, is of type `Option<f64>`.
+    ///           The first value, denoted as `_b0`, is of type `f64`. The second value, `beta1_opt`, is of type `Option<f64>`.
     /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
     pub fn calc_single_or_parallel_central_cut(
         &self,
@@ -597,7 +597,7 @@ impl EllCalc {
     /// Arguments:
     ///
     /// * `beta`: The `beta` parameter is a tuple containing two values: `beta0` and `beta1_opt`. `beta0` is of type
-    /// `f64` and `beta1_opt` is an optional value of type `Option<f64>`.
+    ///           `f64` and `beta1_opt` is an optional value of type `Option<f64>`.
     /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
     pub fn calc_single_or_parallel_q(
         &self,

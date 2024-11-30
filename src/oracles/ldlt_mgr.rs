@@ -23,9 +23,9 @@ use ndarray::{s, Array1, Array2};
 /// * `pos`: A tuple containing two usize values. It represents the dimensions of the LDLTMgr factorization.
 /// * `wit`: The `wit` property is an Array1 of f64 values.
 /// * `ndim`: The `ndim` property represents the size of the matrix that will be factorized using LDLTMgr
-/// factorization.
+///             factorization.
 /// * `storage`: The `storage` property is a 2-dimensional array of type `f64`. It is used to store the LDLTMgr
-/// factorization of a matrix.
+///             factorization of a matrix.
 pub struct LDLTMgr {
     pub pos: (usize, usize),
     pub wit: Array1<f64>,
@@ -39,7 +39,7 @@ impl LDLTMgr {
     /// Arguments:
     ///
     /// * `ndim`: The parameter `ndim` represents the size of the arrays and matrices being initialized in the
-    /// `new` function. It is of type `usize`, which means it represents a non-negative integer.
+    ///           `new` function. It is of type `usize`, which means it represents a non-negative integer.
     ///
     /// Returns:
     ///
@@ -98,7 +98,7 @@ impl LDLTMgr {
     /// Arguments:
     ///
     /// * `get_elem`: `get_elem` is a closure that takes two `usize` parameters (`i` and `j`) and returns a
-    /// `f64` value. It is used to retrieve elements from a matrix-like data structure.
+    ///               `f64` value. It is used to retrieve elements from a matrix-like data structure.
     ///
     /// Returns:
     ///
@@ -153,7 +153,7 @@ impl LDLTMgr {
     /// Arguments:
     ///
     /// * `get_elem`: `get_elem` is a closure that takes two `usize` parameters `i` and `start` and returns
-    /// a `f64` value.
+    ///               a `f64` value.
     ///
     /// Returns:
     ///

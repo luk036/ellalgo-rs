@@ -7,9 +7,9 @@ use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoice};
 /// Properties:
 ///
 /// * `r`: The `r` property represents the radius of the ellipsoid in the 1D case. It determines the
-/// size of the ellipsoid along the x-axis.
+///         size of the ellipsoid along the x-axis.
 /// * `xc`: The property `xc` represents the center of the ellipsoid in the 1D case. It is a scalar
-/// value that specifies the position of the center along the x-axis.
+///         value that specifies the position of the center along the x-axis.
 #[derive(Debug, Clone)]
 pub struct Ell1D {
     r: f64,
@@ -48,9 +48,9 @@ impl Ell1D {
     /// Arguments:
     ///
     /// * `grad`: The `grad` parameter is the gradient value, which is of type `f64`. It represents the
-    /// gradient of the function at a particular point.
+    ///           gradient of the function at a particular point.
     /// * `beta0`: The parameter `beta0` represents the value of the constant term in the inequality constraint
-    /// equation. In the code, it is referred to as `beta`.
+    ///           equation. In the code, it is referred to as `beta`.
     fn update_single(&mut self, grad: f64, beta0: f64) -> (CutStatus, f64) {
         let g = *grad;
         let beta = *beta0;

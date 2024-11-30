@@ -23,11 +23,11 @@ impl OracleOptim<Arr> for MyOracle {
     /// Arguments:
     ///
     /// * `xc`: The `xc` parameter in the `assess_optim` function represents an array containing two
-    /// elements. The first element, `xc[0]`, is assigned to the variable `sqrtx`, and the second
-    /// element, `xc[1]`, is assigned to the variable `logy`. These
+    ///         elements. The first element, `xc[0]`, is assigned to the variable `sqrtx`, and the second
+    ///         element, `xc[1]`, is assigned to the variable `logy`. These
     /// * `gamma`: The `gamma` parameter is a mutable reference to a `f64` value. It is being updated
-    /// within the `assess_optim` function based on the calculations performed on the input values `xc`
-    /// and the internal state of the function.
+    ///         within the `assess_optim` function based on the calculations performed on the input values `xc`
+    ///         and the internal state of the function.
     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
         let sqrtx = xc[0];
         let logy = xc[1];

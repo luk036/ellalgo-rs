@@ -15,19 +15,19 @@ use ndarray::Array2;
 /// Properties:
 ///
 /// * `no_defer_trick`: A boolean flag indicating whether the defer trick should be used. The defer
-/// trick is a technique used in the Ellipsoid method to improve efficiency by deferring the update of
-/// the ellipsoid until a certain condition is met.
+///         trick is a technique used in the Ellipsoid method to improve efficiency by deferring the update of
+///         the ellipsoid until a certain condition is met.
 /// * `mq`: A matrix representing the shape of the ellipsoid. It is a 2-dimensional array of f64 values.
 /// * `xc`: The `xc` property represents the center of the ellipsoid search space. It is a 1-dimensional
-/// array of floating-point numbers.
+///         array of floating-point numbers.
 /// * `kappa`: A scalar value that determines the size of the ellipsoid. A larger value of kappa results
-/// in a larger ellipsoid.
+///         in a larger ellipsoid.
 /// * `ndim`: The `ndim` property represents the number of dimensions of the ellipsoid search space.
 /// * `helper`: The `helper` property is an instance of the `EllCalc` struct, which is used to perform
-/// calculations related to the ellipsoid search space. It provides methods for calculating the distance
-/// constant (`dc`), the center constant (`cc`), and the quadratic constant (`q`) used in the ellip
+///         calculations related to the ellipsoid search space. It provides methods for calculating the distance
+///         constant (`dc`), the center constant (`cc`), and the quadratic constant (`q`) used in the ellip
 /// * `tsq`: The `tsq` property represents the squared Mahalanobis distance threshold of the ellipsoid.
-/// It is used to determine whether a point is inside or outside the ellipsoid.
+///         It is used to determine whether a point is inside or outside the ellipsoid.
 #[derive(Debug, Clone)]
 pub struct EllStable {
     pub no_defer_trick: bool,
@@ -46,13 +46,13 @@ impl EllStable {
     /// Arguments:
     ///
     /// * `kappa`: The `kappa` parameter is a floating-point number that represents the curvature of the
-    /// ellipse. It determines the shape of the ellipse, with higher values resulting in a more elongated
-    /// shape and lower values resulting in a more circular shape.
+    ///         ellipse. It determines the shape of the ellipse, with higher values resulting in a more elongated
+    ///         shape and lower values resulting in a more circular shape.
     /// * `mq`: The `mq` parameter is of type `Array2<f64>`, which represents a 2-dimensional array of `f64`
-    /// (floating-point) values. It is used to store the matrix `mq` in the `EllStable` object.
+    ///         (floating-point) values. It is used to store the matrix `mq` in the `EllStable` object.
     /// * `xc`: The parameter `xc` represents the center of the ellipsoid in n-dimensional space. It is an
-    /// array of length `ndim`, where each element represents the coordinate of the center along a specific
-    /// dimension.
+    ///         array of length `ndim`, where each element represents the coordinate of the center along a specific
+    ///         dimension.
     ///
     /// Returns:
     ///
@@ -80,7 +80,7 @@ impl EllStable {
     ///
     /// * `val`: An array of f64 values representing the diagonal elements of a matrix.
     /// * `xc`: `xc` is an `Array1<f64>` which represents the center of the ellipse. It contains the x and y
-    /// coordinates of the center point.
+    ///         coordinates of the center point.
     ///
     /// Returns:
     ///
@@ -94,9 +94,9 @@ impl EllStable {
     /// Arguments:
     ///
     /// * `val`: The `val` parameter is a scalar value of type `f64`. It represents the value of the scalar
-    /// component of the `EllStable` object.
+    ///         component of the `EllStable` object.
     /// * `xc`: The parameter `xc` is an array of type `Array1<f64>`. It represents the center coordinates
-    /// of the ellipse.
+    ///         of the ellipse.
     ///
     /// Returns:
     ///
@@ -119,11 +119,11 @@ impl EllStable {
     ///
     /// * `grad`: A reference to an Array1<f64> representing the gradient vector.
     /// * `beta`: The `beta` parameter is a value that is used in the inequality constraint of the ellipsoid
-    /// core function. It represents the threshold for the constraint, and the function checks if the dot
-    /// product of the gradient and the difference between `x` and `xc` plus `beta` is less than or
+    ///             core function. It represents the threshold for the constraint, and the function checks if the dot
+    ///             product of the gradient and the difference between `x` and `xc` plus `beta` is less than or
     /// * `f_core`: The `f_core` parameter is a closure that takes two arguments: `beta` and `tsq`. It
-    /// returns a tuple containing a `CutStatus` and a tuple `(rho, sigma, delta)`. The `f_core` function is
-    /// used to determine the values of `rho`, `
+    ///             returns a tuple containing a `CutStatus` and a tuple `(rho, sigma, delta)`. The `f_core` function is
+    ///             used to determine the values of `rho`, `
     ///
     /// Returns:
     ///
@@ -254,7 +254,7 @@ impl SearchSpace for EllStable {
     /// Arguments:
     ///
     /// * `cut`: The `cut` parameter is a tuple containing two elements. The first element is of type
-    /// `Self::ArrayType`, and the second element is of type `T`.
+    ///          `Self::ArrayType`, and the second element is of type `T`.
     ///
     /// Returns:
     ///

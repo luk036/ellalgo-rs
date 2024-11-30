@@ -25,18 +25,18 @@ type Cut = (Arr, f64);
 /// Reference:
 ///
 /// * Aliabadi, Hossein, and Maziar Salahi. "Robust Geometric Programming Approach to Profit Maximization
-/// with Interval Uncertainty." Computer Science Journal Of Moldova 61.1 (2013): 86-96.
+///     with Interval Uncertainty." Computer Science Journal Of Moldova 61.1 (2013): 86-96.
 ///
 /// Properties:
 ///
 /// * `log_p_scale`: The natural logarithm of the scale parameter of the Cobb-Douglas production
-/// function. It represents the overall scale of production.
+///         function. It represents the overall scale of production.
 /// * `log_k`: The natural logarithm of the constant k that restricts the quantity of x1.
 /// * `price_out`: The `price_out` property represents the output prices `v1` and `v2` in the profit
-/// maximization problem. It is of type `Arr`, which is likely a shorthand for an array or vector data
-/// structure.
+///         maximization problem. It is of type `Arr`, which is likely a shorthand for an array or vector data
+///         structure.
 /// * `elasticities`: An array representing the output elasticities (alpha and beta) in the profit
-/// maximization problem.
+///         maximization problem.
 #[derive(Debug)]
 pub struct ProfitOracle {
     idx: i32,
@@ -55,17 +55,17 @@ impl ProfitOracle {
     /// Arguments:
     ///
     /// * `p`: The parameter `p` represents the market price per unit. It is a floating-point number (f64)
-    /// that indicates the price at which the product is sold in the market.
+    ///         that indicates the price at which the product is sold in the market.
     /// * `scale`: The scale parameter represents the scale of production. It determines the quantity of
-    /// output produced.
+    ///         output produced.
     /// * `k`: The parameter `k` is a given constant that restricts the quantity of `x1`. It is used in the
-    /// calculation of the profit oracle object.
+    ///         calculation of the profit oracle object.
     /// * `elasticities`: The parameter "elasticities" represents the output elasticities, which are
-    /// coefficients that measure the responsiveness of the quantity of output to changes in the inputs. It
-    /// is expected to be an array or list of values.
+    ///         coefficients that measure the responsiveness of the quantity of output to changes in the inputs. It
+    ///         is expected to be an array or list of values.
     /// * `price_out`: The `price_out` parameter represents the output price. It is of type `Arr`, which
-    /// suggests that it is an array or collection of values. The specific type of `Arr` is not specified in
-    /// the code snippet, so it could be an array, a vector, or any other collection type
+    ///         suggests that it is an array or collection of values. The specific type of `Arr` is not specified in
+    ///         the code snippet, so it could be an array, a vector, or any other collection type
     ///
     /// Returns:
     ///
@@ -158,7 +158,7 @@ impl OracleOptim<Arr> for ProfitOracle {
 /// Reference:
 ///
 /// * Aliabadi, Hossein, and Maziar Salahi. "Robust Geometric Programming Approach to Profit Maximization
-/// with Interval Uncertainty." Computer Science Journal Of Moldova 61.1 (2013): 86-96.
+///         with Interval Uncertainty." Computer Science Journal Of Moldova 61.1 (2013): 86-96.
 #[derive(Debug)]
 pub struct ProfitRbOracle {
     uie: [f64; 2],
@@ -173,16 +173,16 @@ impl ProfitRbOracle {
     ///
     /// * `p`: The market price per unit.
     /// * `scale`: The `scale` parameter represents the scale of production. It determines the level of
-    /// output or production for a given set of inputs. It can be thought of as the size or capacity of the
-    /// production process.
+    ///         output or production for a given set of inputs. It can be thought of as the size or capacity of the
+    ///         production process.
     /// * `k`: A given constant that restricts the quantity of x1.
     /// * `aa`: The parameter `aa` represents the output elasticities. It is an array that contains the
-    /// elasticities of each output variable.
+    ///         elasticities of each output variable.
     /// * `price_out`: The parameter `price_out` represents the output price. It is of type `Arr`, which
-    /// suggests that it is an array or vector of values.
+    ///         suggests that it is an array or vector of values.
     /// * `e`: Parameters for uncertainty.
     /// * `e3`: The parameter `e3` represents the uncertainty in the market price per unit. It is used to
-    /// adjust the market price in the calculation of the `omega` variable.
+    ///         adjust the market price in the calculation of the `omega` variable.
     ///
     /// Returns:
     ///
@@ -219,7 +219,7 @@ impl OracleOptim<Arr> for ProfitRbOracle {
     ///
     /// * `y`: The parameter `y` is an input quantity represented as an array (`Arr`) in log scale.
     /// * `gamma`: The parameter `gamma` is the best-so-far optimal value. It is passed as a mutable reference
-    /// (`&mut f64`) so that its value can be updated within the function.
+    ///            (`&mut f64`) so that its value can be updated within the function.
     fn assess_optim(&mut self, y: &Arr, gamma: &mut f64) -> (Cut, bool) {
         let mut a_rb = self.elasticities.clone();
         for i in 0..2 {
@@ -239,7 +239,7 @@ impl OracleOptim<Arr> for ProfitRbOracle {
 /// Properties:
 ///
 /// * `omega`: The `omega` property is an instance of the `ProfitOracle` struct. It is used to calculate
-/// the profit for a given input.
+///            the profit for a given input.
 /// * `yd`: The variable `yd` is an array that represents the discrete version of y values
 pub struct ProfitOracleQ {
     omega: ProfitOracle,
@@ -252,17 +252,17 @@ impl ProfitOracleQ {
     /// Arguments:
     ///
     /// * `p`: The parameter `p` represents the market price per unit. It is a floating-point number (f64)
-    /// that indicates the price at which a unit of the product is sold in the market.
+    ///         that indicates the price at which a unit of the product is sold in the market.
     /// * `scale`: The "scale" parameter represents the scale of production, which refers to the level of
-    /// output or production of a particular good or service. It indicates the quantity of goods or services
-    /// produced within a given time period.
+    ///         output or production of a particular good or service. It indicates the quantity of goods or services
+    ///         produced within a given time period.
     /// * `k`: A given constant that restricts the quantity of x1. It is used to limit the quantity of a
-    /// particular input (x1) in the production process.
+    ///         particular input (x1) in the production process.
     /// * `elasticities`: The parameter `elasticities` represents the output elasticities. Output elasticity measures the
-    /// responsiveness of the quantity of output to a change in the input quantity. It indicates how much
-    /// the quantity of output changes in response to a change in the quantity of input.
+    ///         responsiveness of the quantity of output to a change in the input quantity. It indicates how much
+    ///         the quantity of output changes in response to a change in the quantity of input.
     /// * `price_out`: The parameter `price_out` represents the output price. It is an array that contains
-    /// the prices of the outputs.
+    ///         the prices of the outputs.
     ///
     /// Returns:
     ///
@@ -284,9 +284,9 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
     /// Arguments:
     ///
     /// * `y`: The parameter `y` is an input quantity in log scale. It is of type `Arr`, which is likely an
-    /// array or vector type.
+    ///         array or vector type.
     /// * `gamma`: The parameter `gamma` represents the best-so-far optimal value. It is a mutable reference to
-    /// a `f64` value, which means it can be modified within the function.
+    ///         a `f64` value, which means it can be modified within the function.
     /// * `retry`: A boolean value indicating whether it is a retry or not.
     fn assess_optim_q(&mut self, y: &Arr, gamma: &mut f64, retry: bool) -> (Cut, bool, Arr, bool) {
         if !retry {

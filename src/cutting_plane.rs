@@ -107,14 +107,14 @@ pub trait SearchSpaceQ {
 /// Arguments:
 ///
 /// * `omega`: `omega` is an instance of the `Oracle` trait, which represents an oracle that provides
-/// information about the feasibility of a solution. The `Oracle` trait has a method `assess_feas` that
-/// takes a reference to the current solution `&space.xc()` and returns an optional `
+///             information about the feasibility of a solution. The `Oracle` trait has a method `assess_feas` that
+///             takes a reference to the current solution `&space.xc()` and returns an optional `
 /// * `space`: The `space` parameter represents the search space in which the optimization problem is
-/// being solved. It is a mutable reference to an object that implements the `SearchSpace` trait.
+///             being solved. It is a mutable reference to an object that implements the `SearchSpace` trait.
 /// * `options`: The `options` parameter is of type `Options` and contains various settings for the
-/// cutting plane algorithm. It likely includes properties such as `max_iters` (maximum number of
-/// iterations), `` (tolerance for termination), and other parameters that control the behavior of
-/// the algorithm.
+///             cutting plane algorithm. It likely includes properties such as `max_iters` (maximum number of
+///             iterations), `` (tolerance for termination), and other parameters that control the behavior of
+///             the algorithm.
 ///
 /// Returns:
 ///
@@ -152,16 +152,16 @@ where
 /// Arguments:
 ///
 /// * `omega`: The `omega` parameter is an instance of the `Oracle` trait, which represents an
-/// optimization oracle. The oracle provides information about the optimization problem, such as the
-/// objective function and constraints.
+///             optimization oracle. The oracle provides information about the optimization problem, such as the
+///             objective function and constraints.
 /// * `space`: The `space` parameter represents the search space, which is a type that implements the
-/// `SearchSpace` trait. It contains the current state of the optimization problem, including the
-/// decision variables and any additional information needed for the optimization algorithm.
+///             `SearchSpace` trait. It contains the current state of the optimization problem, including the
+///             decision variables and any additional information needed for the optimization algorithm.
 /// * `gamma`: The parameter `gamma` represents the current value of the gamma function that the
-/// optimization algorithm is trying to minimize.
+///             optimization algorithm is trying to minimize.
 /// * `options`: The `options` parameter is of type `Options` and contains various settings for the
-/// optimization algorithm. It likely includes parameters such as the maximum number of iterations
-/// (`max_iters`) and the tolerance (``) for convergence.
+///             optimization algorithm. It likely includes parameters such as the maximum number of iterations
+///             (`max_iters`) and the tolerance (``) for convergence.
 #[allow(dead_code)]
 pub fn cutting_plane_optim<T, Oracle, Space>(
     omega: &mut Oracle,
@@ -197,16 +197,16 @@ where
 /// Arguments:
 ///
 /// * `omega`: The parameter "omega" is an instance of the OracleOptimQ trait, which represents an
-/// oracle that provides assessments for the cutting-plane method. It is used to query the oracle for
-/// assessments on the current solution.
+///             oracle that provides assessments for the cutting-plane method. It is used to query the oracle for
+///             assessments on the current solution.
 /// * `space_q`: The parameter `space_q` is a mutable reference to a `Space` object, which represents
-/// the search space containing the optimal solution `x*`. It is used to update the space based on the
-/// cuts obtained from the oracle.
+///             the search space containing the optimal solution `x*`. It is used to update the space based on the
+///             cuts obtained from the oracle.
 /// * `gamma`: The parameter "gamma" represents the best-so-far optimal solution. It is a mutable reference
-/// to a floating-point number (f64).
+///             to a floating-point number (f64).
 /// * `options`: The `options` parameter is a struct that contains various options for the cutting-plane
-/// method. It includes parameters such as the maximum number of iterations (`max_iters`) and the error
-/// tolerance (``). These options control the termination criteria for the method.
+///             method. It includes parameters such as the maximum number of iterations (`max_iters`) and the error
+///             tolerance (``). These options control the termination criteria for the method.
 #[allow(dead_code)]
 pub fn cutting_plane_optim_q<T, Oracle, Space>(
     omega: &mut Oracle,
@@ -303,15 +303,15 @@ where
 /// Arguments:
 ///
 /// * `omega`: The parameter `omega` is an instance of the `Oracle` trait, which is used to perform
-/// assessments on a value `x0`. The specific implementation of the `Oracle` trait is not provided in
-/// the code snippet, so it could be any type that implements the necessary methods for the binary
-/// search
+///             assessments on a value `x0`. The specific implementation of the `Oracle` trait is not provided in
+///             the code snippet, so it could be any type that implements the necessary methods for the binary
+///             search
 /// * `intrvl`: The `intrvl` parameter is an interval containing the gamma value `x*`. It is
-/// represented as a mutable reference to a tuple `(f64, f64)`, where the first element is the lower
-/// bound of the interval and the second element is the upper bound of the interval.
+///             represented as a mutable reference to a tuple `(f64, f64)`, where the first element is the lower
+///             bound of the interval and the second element is the upper bound of the interval.
 /// * `options`: The `options` parameter is a struct that contains various options for the binary search
-/// algorithm. It includes properties such as the maximum number of iterations (`max_iters`) and the
-/// error tolerance (``). These options control the termination criteria for the algorithm.
+///             algorithm. It includes properties such as the maximum number of iterations (`max_iters`) and the
+///             error tolerance (``). These options control the termination criteria for the algorithm.
 ///
 /// Returns:
 ///
