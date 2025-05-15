@@ -1,4 +1,4 @@
-# 🫒 ellalgo-rs
+# 👁️ ellalgo-rs
 
 [![Crates.io](https://img.shields.io/crates/v/ellalgo-rs.svg)](https://crates.io/crates/ellalgo-rs)
 [![Docs.rs](https://docs.rs/ellalgo-rs/badge.svg)](https://docs.rs/ellalgo-rs)
