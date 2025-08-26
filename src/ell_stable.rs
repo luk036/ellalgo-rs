@@ -434,4 +434,15 @@ mod tests {
         assert_eq!(ellip.xc, Array1::zeros(4));
         assert_approx_eq!(ellip.kappa, 0.01);
     }
+
+    #[test]
+    fn test_update_q() {
+        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
+        let cut = (0.5 * Array1::ones(4), (0.01, Some(0.04)));
+        let status = ellip.update_q(&cut);
+        assert_eq!(status, CutStatus::Success);
+        assert_approx_eq!(ellip.xc[0], -0.0116);
+        assert_approx_eq!(ellip.kappa, 0.01232);
+        assert_approx_eq!(ellip.tsq, 0.01);
+    }
 }

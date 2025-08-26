@@ -313,8 +313,7 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
 #[cfg(test)]
 mod tests {
     use super::{ProfitOracle, ProfitOracleQ, ProfitRbOracle};
-    // use super::{ProfitOracle, ProfitOracleQ, ProfitRbOracle};
-    use crate::cutting_plane::{cutting_plane_optim, cutting_plane_optim_q, Options};
+    use crate::cutting_plane::{cutting_plane_optim, cutting_plane_optim_q, Options, OracleOptim};
     use crate::ell::Ell;
     use ndarray::array;
 
@@ -385,5 +384,27 @@ mod tests {
             assert!(y[0] <= limit.ln());
         }
         assert_eq!(niter, 29, "regression test");
+    }
+
+    #[test]
+    fn test_profit_oracle_direct() {
+        let unit_price = 20.0;
+        let scale = 40.0;
+        let limit = 30.5;
+        let params = (unit_price, scale, limit);
+        let elasticities = array![0.1, 0.4];
+        let price_out = array![10.0, 35.0];
+        let mut omega = ProfitOracle::new(params, elasticities, price_out);
+        let mut gamma = 0.0;
+        // Infeasible case
+        let y = array![3.5, 2.0];
+        let (cut, feasible) = omega.assess_optim(&y, &mut gamma);
+        assert!(!feasible);
+        assert_eq!(cut.1, 3.5 - limit.ln());
+        // Feasible but not optimal case
+        let y2 = array![3.0, 2.0];
+        let (cut2, feasible2) = omega.assess_optim(&y2, &mut gamma);
+        assert!(feasible2);
+        assert_eq!(cut2.1, 0.0);
     }
 }

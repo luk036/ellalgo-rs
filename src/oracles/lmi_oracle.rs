@@ -168,4 +168,21 @@ mod tests {
         assert_eq!(result, 281);
         Ok(())
     }
+
+    #[test]
+    fn test_lmi_oracle() {
+        let f1 = vec![
+            Array2::from_shape_vec((2, 2), vec![-7.0, -11.0, -11.0, 3.0]).unwrap(),
+            Array2::from_shape_vec((2, 2), vec![7.0, -18.0, -18.0, 8.0]).unwrap(),
+            Array2::from_shape_vec((2, 2), vec![-2.0, -8.0, -8.0, 1.0]).unwrap(),
+        ];
+        let b1 = Array2::from_shape_vec((2, 2), vec![33.0, -9.0, -9.0, 26.0]).unwrap();
+        let mut oracle = LMIOracle::new(f1, b1);
+        let x = Array1::from(vec![1.0, 1.0, 1.0]);
+        let res = oracle.assess_feas(&x);
+        assert!(res.is_some());
+        let x2 = Array1::from(vec![0.0, 0.0, 0.0]);
+        let res2 = oracle.assess_feas(&x2);
+        assert!(res2.is_none());
+    }
 }

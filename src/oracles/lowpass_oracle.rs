@@ -289,4 +289,12 @@ mod tests {
         // assert!(num_iters >= 23000);
         // assert!(num_iters <= 24000);
     }
+
+    #[test]
+    fn test_lowpass_oracle() {
+        let mut oracle = create_lowpass_case(32);
+        let x = Arr::zeros(32);
+        let res = oracle.assess_feas(&x);
+        assert!(res.is_some());
+    }
 }
