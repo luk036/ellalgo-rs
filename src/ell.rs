@@ -434,4 +434,33 @@ mod tests {
         assert_approx_eq!(ellip.kappa, 0.01232);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
+
+    #[test]
+    fn test_update_central_cut_mq() {
+        let mut ellip = Ell::new_with_scalar(0.01, Array1::zeros(4));
+        let cut = (0.5 * Array1::ones(4), 0.0);
+        let _ = ellip.update_central_cut(&cut);
+        let mq_expected: Array2<f64> = Array2::eye(4) - 0.1 * Array2::ones((4, 4));
+        for i in 0..4 {
+            for j in 0..4 {
+                assert_approx_eq!(ellip.mq[[i, j]], mq_expected[[i, j]]);
+            }
+        }
+    }
+
+    #[test]
+    fn test_no_defer_trick() {
+        let mut ellip = Ell::new_with_scalar(0.01, Array1::zeros(4));
+        ellip.no_defer_trick = true;
+        let cut = (0.5 * Array1::ones(4), 0.0);
+        let _ = ellip.update_central_cut(&cut);
+        assert_approx_eq!(ellip.kappa, 1.0);
+        let mq_expected: Array2<f64> =
+            (Array2::eye(4) - 0.1 * Array2::ones((4, 4))) * (0.16 / 15.0);
+        for i in 0..4 {
+            for j in 0..4 {
+                assert_approx_eq!(ellip.mq[[i, j]], mq_expected[[i, j]]);
+            }
+        }
+    }
 }

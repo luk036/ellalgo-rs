@@ -30,8 +30,6 @@ use ndarray::Array2;
 ///         It is used to determine whether a point is inside or outside the ellipsoid.
 #[derive(Debug, Clone)]
 pub struct EllStable {
-    pub no_defer_trick: bool,
-
     mq: Array2<f64>,
     xc: Array1<f64>,
     kappa: f64,
@@ -67,7 +65,6 @@ impl EllStable {
             xc,
             ndim,
             helper,
-            no_defer_trick: false,
             tsq: 0.0,
         }
     }
@@ -365,7 +362,6 @@ mod tests {
     #[test]
     fn test_construct() {
         let ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
-        assert!(!ellip.no_defer_trick);
         assert_approx_eq!(ellip.kappa, 0.01);
         assert_eq!(ellip.xc, Array1::zeros(4));
         assert_approx_eq!(ellip.tsq, 0.0);
