@@ -54,7 +54,7 @@ pub trait OracleOptim<ArrayType> {
 
 /// Oracle for quantized optimization problems
 pub trait OracleOptimQ<ArrayType> {
-    type CutChoice; // f64 for single cut; (f64, Option<f64) for parallel cut
+    type CutChoice; // f64 for single cut; (f64, Option<f64>) for parallel cut
     fn assess_optim_q(
         &mut self,
         xc: &ArrayType,

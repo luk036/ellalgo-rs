@@ -33,7 +33,6 @@ pub struct EllStable {
     mq: Array2<f64>,
     xc: Array1<f64>,
     kappa: f64,
-    ndim: usize,
     helper: EllCalc,
     tsq: f64,
 }
@@ -56,14 +55,12 @@ impl EllStable {
     ///
     /// an instance of the [`EllStable`] struct.
     pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Array1<f64>) -> EllStable {
-        let ndim = xc.len();
-        let helper = EllCalc::new(ndim);
+        let helper = EllCalc::new(xc.len());
 
         EllStable {
             kappa,
             mq,
             xc,
-            ndim,
             helper,
             tsq: 0.0,
         }
@@ -132,7 +129,8 @@ impl EllStable {
     {
         // calculate inv(L)*grad: (n-1)*n/2 multiplications
         let mut inv_ml_g = grad.clone(); // initial x0
-        for i in 1..self.ndim {
+        let ndim = self.xc.len();
+        for i in 1..ndim {
             for j in 0..i {
                 self.mq[[i, j]] = self.mq[[j, i]] * inv_ml_g[j];
                 // keep for rank-one update
@@ -142,14 +140,14 @@ impl EllStable {
 
         // calculate inv(D)*inv(L)*grad: n
         let mut inv_md_inv_ml_g = inv_ml_g.clone(); // initially
-        for i in 0..self.ndim {
+        for i in 0..ndim {
             inv_md_inv_ml_g[i] *= self.mq[[i, i]];
         }
 
         // calculate omega: n
         let mut gg_t = inv_md_inv_ml_g.clone(); // initially
         let mut omega = 0.0; // initially
-        for i in 0..self.ndim {
+        for i in 0..ndim {
             gg_t[i] *= inv_ml_g[i];
             omega += gg_t[i];
         }
@@ -163,9 +161,9 @@ impl EllStable {
 
         // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad : (n-1)*n/2
         let mut g_t = inv_md_inv_ml_g.clone(); // initially
-        for i in (1..self.ndim).rev() {
+        for i in (1..ndim).rev() {
             // backward subsituition
-            for j in i..self.ndim {
+            for j in i..ndim {
                 g_t[i - 1] -= self.mq[[i - 1, j]] * g_t[j]; // ???
             }
         }
@@ -181,7 +179,7 @@ impl EllStable {
         // let r = self.sigma / omega;
         let mu = sigma / (1.0 - sigma);
         let mut oldt = omega / mu; // initially
-        let m = self.ndim - 1;
+        let m = ndim - 1;
         for j in 0..m {
             // p=sqrt(k)*vv[j];
             // let p = inv_ml_g[j];
@@ -190,7 +188,7 @@ impl EllStable {
             // self.mq[[j, j]] /= t; // update invD
             let beta2 = inv_md_inv_ml_g[j] / t;
             self.mq[[j, j]] *= oldt / t; // update invD
-            for l in (j + 1)..self.ndim {
+            for l in (j + 1)..ndim {
                 // v(l) -= p * self.mq(j, l);
                 self.mq[[j, l]] += beta2 * self.mq[[l, j]];
             }

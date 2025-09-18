@@ -6,6 +6,7 @@ use crate::ell_calc::EllCalc;
 // use ndarray::prelude::*;
 use ndarray::Array1;
 use ndarray::Array2;
+use ndarray::Axis;
 
 /// The code defines a struct called "Ell" that represents an ellipsoid search space in the Ellipsoid
 /// method.
@@ -34,7 +35,6 @@ pub struct Ell {
     pub mq: Array2<f64>,
     pub xc: Array1<f64>,
     pub kappa: f64,
-    ndim: usize,
     helper: EllCalc,
     pub tsq: f64,
 }
@@ -57,14 +57,12 @@ impl Ell {
     ///
     /// an instance of the `Ell` struct.
     pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Array1<f64>) -> Ell {
-        let ndim = xc.len();
-        let helper = EllCalc::new(ndim);
+        let helper = EllCalc::new(xc.len());
 
         Ell {
             kappa,
             mq,
             xc,
-            ndim,
             helper,
             no_defer_trick: false,
             tsq: 0.0,
@@ -170,16 +168,12 @@ impl Ell {
         self.xc -= &((rho / omega) * &grad_t); // n
 
         // n*(n+1)/2 + n
-        // self.mq -= (self.sigma / omega) * xt::linalg::outer(grad_t, grad_t);
         let r = sigma / omega;
-        for i in 0..self.ndim {
-            let r_grad_t = r * grad_t[i];
-            for j in 0..i {
-                self.mq[[i, j]] -= r_grad_t * grad_t[j];
-                self.mq[[j, i]] = self.mq[[i, j]];
-            }
-            self.mq[[i, i]] -= r_grad_t * grad_t[i];
-        }
+        let grad_t_view = grad_t.view();
+        self.mq.scaled_add(
+            -r,
+            &(&grad_t_view.insert_axis(Axis(1)) * &grad_t_view.insert_axis(Axis(0))),
+        );
 
         self.kappa *= delta;
 
@@ -288,53 +282,56 @@ impl SearchSpaceQ for Ell {
     }
 }
 
-impl UpdateByCutChoice<Ell> for f64 {
-    type ArrayType = Array1<f64>;
+trait CutType {
+    fn call_bias_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64));
+    fn call_central_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64));
+    fn call_q_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64));
+}
 
-    fn update_bias_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
-        let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut(*beta, tsq))
+impl CutType for f64 {
+    fn call_bias_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
+        helper.calc_bias_cut(*self, tsq)
     }
 
-    fn update_central_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
-        let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |_beta, tsq| helper.calc_central_cut(tsq))
+    fn call_central_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
+        helper.calc_central_cut(tsq)
     }
 
-    fn update_q_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
-        let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut_q(*beta, tsq))
+    fn call_q_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
+        helper.calc_bias_cut_q(*self, tsq)
     }
 }
 
-impl UpdateByCutChoice<Ell> for (f64, Option<f64>) {
+impl CutType for (f64, Option<f64>) {
+    fn call_bias_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
+        helper.calc_single_or_parallel_bias_cut(self, tsq)
+    }
+
+    fn call_central_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
+        helper.calc_single_or_parallel_central_cut(self, tsq)
+    }
+
+    fn call_q_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
+        helper.calc_single_or_parallel_q(self, tsq)
+    }
+}
+
+impl<T: CutType> UpdateByCutChoice<Ell> for T {
     type ArrayType = Array1<f64>;
 
     fn update_bias_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| {
-            helper.calc_single_or_parallel_bias_cut(beta, tsq)
-        })
+        ellip.update_core(grad, self, |beta, tsq| beta.call_bias_cut(&helper, tsq))
     }
 
     fn update_central_cut_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| {
-            helper.calc_single_or_parallel_central_cut(beta, tsq)
-        })
+        ellip.update_core(grad, self, |beta, tsq| beta.call_central_cut(&helper, tsq))
     }
 
     fn update_q_by(&self, ellip: &mut Ell, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| {
-            helper.calc_single_or_parallel_q(beta, tsq)
-        })
+        ellip.update_core(grad, self, |beta, tsq| beta.call_q_cut(&helper, tsq))
     }
 }
 
