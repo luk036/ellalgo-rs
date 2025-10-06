@@ -56,6 +56,22 @@ impl Ell {
     /// Returns:
     ///
     /// an instance of the `Ell` struct.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::ell::Ell;
+    /// use ndarray::{arr1, arr2};
+    /// let mq = arr2(&[[1.0, 0.0], [0.0, 1.0]]);
+    /// let xc = arr1(&[0.0, 0.0]);
+    /// let ellip = Ell::new_with_matrix(1.0, mq, xc);
+    /// assert_eq!(ellip.kappa, 1.0);
+    /// assert_eq!(ellip.mq.shape(), &[2, 2]);
+    /// assert_eq!(ellip.xc.shape(), &[2]);
+    /// assert_eq!(ellip.xc[0], 0.0);
+    /// assert_eq!(ellip.xc[1], 0.0);
+    /// assert_eq!(ellip.tsq, 0.0);
+    /// ```
     pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Array1<f64>) -> Ell {
         let helper = EllCalc::new(xc.len());
 
@@ -214,6 +230,24 @@ impl SearchSpace for Ell {
     /// Returns:
     ///
     /// The `update_bias_cut` function returns a value of type `CutStatus`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::ell::Ell;
+    /// use ellalgo_rs::cutting_plane::{CutStatus, SearchSpace};
+    /// use ndarray::{arr1, arr2};
+    /// use approx_eq::assert_approx_eq;
+    ///
+    /// let mut ellip = Ell::new_with_scalar(0.01, arr1(&[0.0, 0.0, 0.0, 0.0]));
+    /// let cut = (arr1(&[0.5, 0.5, 0.5, 0.5]), 0.05);
+    /// let status = ellip.update_bias_cut(&cut);
+    /// assert_eq!(status, CutStatus::Success);
+    /// assert_approx_eq!(ellip.xc[0], -0.03);
+    /// assert_approx_eq!(ellip.mq[(0, 0)], 0.8);
+    /// assert_approx_eq!(ellip.kappa, 0.008);
+    /// assert_approx_eq!(ellip.tsq, 0.01);
+    /// ```
     fn update_bias_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
