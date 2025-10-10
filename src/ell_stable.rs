@@ -7,27 +7,27 @@ use crate::ell_calc::EllCalc;
 use ndarray::Array1;
 use ndarray::Array2;
 
-/// The code defines a struct called [`EllStable`] that represents the stable version of an ellipsoid
-/// search space in the Ellipsoid method.
+///  The code defines a struct called [`EllStable`] that represents the stable version of an ellipsoid
+///  search space in the Ellipsoid method.
 ///
-///   EllStable = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
+///    EllStable = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
 ///
-/// Properties:
+///  Properties:
 ///
-/// * `no_defer_trick`: A boolean flag indicating whether the defer trick should be used. The defer
-///         trick is a technique used in the Ellipsoid method to improve efficiency by deferring the update of
-///         the ellipsoid until a certain condition is met.
-/// * `mq`: A matrix representing the shape of the ellipsoid. It is a 2-dimensional array of f64 values.
-/// * `xc`: The `xc` property represents the center of the ellipsoid search space. It is a 1-dimensional
-///         array of floating-point numbers.
-/// * `kappa`: A scalar value that determines the size of the ellipsoid. A larger value of kappa results
-///         in a larger ellipsoid.
-/// * `ndim`: The `ndim` property represents the number of dimensions of the ellipsoid search space.
-/// * `helper`: The `helper` property is an instance of the `EllCalc` struct, which is used to perform
-///         calculations related to the ellipsoid search space. It provides methods for calculating the distance
-///         constant (`dc`), the center constant (`cc`), and the quadratic constant (`q`) used in the ellip
-/// * `tsq`: The `tsq` property represents the squared Mahalanobis distance threshold of the ellipsoid.
-///         It is used to determine whether a point is inside or outside the ellipsoid.
+///  * `no_defer_trick`: A boolean flag indicating whether the defer trick should be used. The defer
+///  trick is a technique used in the Ellipsoid method to improve efficiency by deferring the update of
+///  the ellipsoid until a certain condition is met.
+///  * `mq`: A matrix representing the shape of the ellipsoid. It is a 2-dimensional array of f64 values.
+///  * `xc`: The `xc` property represents the center of the ellipsoid search space. It is a 1-dimensional
+///  array of floating-point numbers.
+///  * `kappa`: A scalar value that determines the size of the ellipsoid. A larger value of kappa results
+///  in a larger ellipsoid.
+///  * `ndim`: The `ndim` property represents the number of dimensions of the ellipsoid search space.
+///  * `helper`: The `helper` property is an instance of the `EllCalc` struct, which is used to perform
+///  calculations related to the ellipsoid search space. It provides methods for calculating the distance
+///  constant (`dc`), the center constant (`cc`), and the quadratic constant (`q`) used in the ellip
+///  * `tsq`: The `tsq` property represents the squared Mahalanobis distance threshold of the ellipsoid.
+///  It is used to determine whether a point is inside or outside the ellipsoid.
 #[derive(Debug, Clone)]
 pub struct EllStable {
     mq: Array2<f64>,
@@ -38,22 +38,22 @@ pub struct EllStable {
 }
 
 impl EllStable {
-    /// The function `new_with_matrix` constructs a new [`EllStable`] object with the given parameters.
+    ///  The function `new_with_matrix` constructs a new [`EllStable`] object with the given parameters.
     ///
-    /// Arguments:
+    ///  Arguments:
     ///
-    /// * `kappa`: The `kappa` parameter is a floating-point number that represents the curvature of the
-    ///         ellipse. It determines the shape of the ellipse, with higher values resulting in a more elongated
-    ///         shape and lower values resulting in a more circular shape.
-    /// * `mq`: The `mq` parameter is of type `Array2<f64>`, which represents a 2-dimensional array of `f64`
-    ///         (floating-point) values. It is used to store the matrix `mq` in the `EllStable` object.
-    /// * `xc`: The parameter `xc` represents the center of the ellipsoid in n-dimensional space. It is an
-    ///         array of length `ndim`, where each element represents the coordinate of the center along a specific
-    ///         dimension.
+    ///  * `kappa`: The `kappa` parameter is a floating-point number that represents the curvature of the
+    ///  ellipse. It determines the shape of the ellipse, with higher values resulting in a more elongated
+    ///  shape and lower values resulting in a more circular shape.
+    ///  * `mq`: The `mq` parameter is of type `Array2<f64>`, which represents a 2-dimensional array of `f64`
+    ///  (floating-point) values. It is used to store the matrix `mq` in the `EllStable` object.
+    ///  * `xc`: The parameter `xc` represents the center of the ellipsoid in n-dimensional space. It is an
+    ///  array of length `ndim`, where each element represents the coordinate of the center along a specific
+    ///  dimension.
     ///
-    /// Returns:
+    ///  Returns:
     ///
-    /// an instance of the [`EllStable`] struct.
+    ///  an instance of the [`EllStable`] struct.
     pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Array1<f64>) -> EllStable {
         let helper = EllCalc::new(xc.len());
 
@@ -66,62 +66,62 @@ impl EllStable {
         }
     }
 
-    /// Creates a new [`EllStable`].
+    ///  Creates a new [`EllStable`].
     ///
-    /// The function `new` creates a new `EllStable` object with the given values.
+    ///  The function `new` creates a new `EllStable` object with the given values.
     ///
-    /// Arguments:
+    ///  Arguments:
     ///
-    /// * `val`: An array of f64 values representing the diagonal elements of a matrix.
-    /// * `xc`: `xc` is an `Array1<f64>` which represents the center of the ellipse. It contains the x and y
-    ///         coordinates of the center point.
+    ///  * `val`: An array of f64 values representing the diagonal elements of a matrix.
+    ///  * `xc`: `xc` is an `Array1<f64>` which represents the center of the ellipse. It contains the x and y
+    ///  coordinates of the center point.
     ///
-    /// Returns:
+    ///  Returns:
     ///
-    /// The function `new` returns an instance of the [`EllStable`] struct.
+    ///  The function `new` returns an instance of the [`EllStable`] struct.
     pub fn new(val: Array1<f64>, xc: Array1<f64>) -> EllStable {
         EllStable::new_with_matrix(1.0, Array2::from_diag(&val), xc)
     }
 
-    /// The function `new_with_scalar` constructs a new [`EllStable`] object with a scalar value and a vector.
+    ///  The function `new_with_scalar` constructs a new [`EllStable`] object with a scalar value and a vector.
     ///
-    /// Arguments:
+    ///  Arguments:
     ///
-    /// * `val`: The `val` parameter is a scalar value of type `f64`. It represents the value of the scalar
-    ///         component of the `EllStable` object.
-    /// * `xc`: The parameter `xc` is an array of type `Array1<f64>`. It represents the center coordinates
-    ///         of the ellipse.
+    ///  * `val`: The `val` parameter is a scalar value of type `f64`. It represents the value of the scalar
+    ///  component of the `EllStable` object.
+    ///  * `xc`: The parameter `xc` is an array of type `Array1<f64>`. It represents the center coordinates
+    ///  of the ellipse.
     ///
-    /// Returns:
+    ///  Returns:
     ///
-    /// an instance of the [`EllStable`] struct.
+    ///  an instance of the [`EllStable`] struct.
     pub fn new_with_scalar(val: f64, xc: Array1<f64>) -> EllStable {
         EllStable::new_with_matrix(val, Array2::eye(xc.len()), xc)
     }
 
-    /// Update ellipsoid core function using the cut
+    ///  Update ellipsoid core function using the cut
     ///
-    ///  $grad^T * (x - xc) + beta <= 0$
+    ///   $grad^T * (x - xc) + beta <= 0$
     ///
-    /// The `update_core` function in Rust updates the ellipsoid core based on a given gradient and beta
-    /// value using a cut strategy.
+    ///  The `update_core` function in Rust updates the ellipsoid core based on a given gradient and beta
+    ///  value using a cut strategy.
     ///
-    /// Reference:
-    /// Gill, Murray, and Wright, "Practical Optimization", p43. Author: Brian Borchers (borchers@nmt.edu)
+    ///  Reference:
+    ///  Gill, Murray, and Wright, "Practical Optimization", p43. Author: Brian Borchers (borchers@nmt.edu)
     ///
-    /// Arguments:
+    ///  Arguments:
     ///
-    /// * `grad`: A reference to an Array1<f64> representing the gradient vector.
-    /// * `beta`: The `beta` parameter is a value that is used in the inequality constraint of the ellipsoid
-    ///             core function. It represents the threshold for the constraint, and the function checks if the dot
-    ///             product of the gradient and the difference between `x` and `xc` plus `beta` is less than or
-    /// * `f_core`: The `f_core` parameter is a closure that takes two arguments: `beta` and `tsq`. It
-    ///             returns a tuple containing a `CutStatus` and a tuple `(rho, sigma, delta)`. The `f_core` function is
-    ///             used to determine the values of `rho`, `
+    ///  * `grad`: A reference to an Array1<f64> representing the gradient vector.
+    ///  * `beta`: The `beta` parameter is a value that is used in the inequality constraint of the ellipsoid
+    ///      core function. It represents the threshold for the constraint, and the function checks if the dot
+    ///      product of the gradient and the difference between `x` and `xc` plus `beta` is less than or
+    ///  * `f_core`: The `f_core` parameter is a closure that takes two arguments: `beta` and `tsq`. It
+    ///      returns a tuple containing a `CutStatus` and a tuple `(rho, sigma, delta)`. The `f_core` function is
+    ///      used to determine the values of `rho`, `
     ///
-    /// Returns:
+    ///  Returns:
     ///
-    /// The `update_core` function returns a value of type `CutStatus`.
+    ///  The `update_core` function returns a value of type `CutStatus`.
     fn update_core<T, F>(&mut self, grad: &Array1<f64>, beta: &T, f_core: F) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Array1<f64>>,
@@ -213,29 +213,29 @@ impl EllStable {
 impl SearchSpace for EllStable {
     type ArrayType = Array1<f64>;
 
-    /// The function `xc` returns a copy of the `xc` array.
+    ///  The function `xc` returns a copy of the `xc` array.
     fn xc(&self) -> Self::ArrayType {
         self.xc.clone()
     }
 
-    /// The `tsq` function returns the value of the `tsq` field of the struct.
+    ///  The `tsq` function returns the value of the `tsq` field of the struct.
     ///
-    /// Returns:
+    ///  Returns:
     ///
-    /// The method `tsq` is returning a value of type `f64`.
+    ///  The method `tsq` is returning a value of type `f64`.
     fn tsq(&self) -> f64 {
         self.tsq
     }
 
-    /// The `update_bias_cut` function updates the decision variable based on the given cut.
+    ///  The `update_bias_cut` function updates the decision variable based on the given cut.
     ///
-    /// Arguments:
+    ///  Arguments:
     ///
-    /// * `cut`: A tuple containing two elements:
+    ///  * `cut`: A tuple containing two elements:
     ///
-    /// Returns:
+    ///  Returns:
     ///
-    /// The `update_bias_cut` function returns a value of type `CutStatus`.
+    ///  The `update_bias_cut` function returns a value of type `CutStatus`.
     fn update_bias_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
@@ -244,16 +244,16 @@ impl SearchSpace for EllStable {
         beta.update_bias_cut_by(self, grad)
     }
 
-    /// The `update_central_cut` function updates the cut choices using the gradient and beta values.
+    ///  The `update_central_cut` function updates the cut choices using the gradient and beta values.
     ///
-    /// Arguments:
+    ///  Arguments:
     ///
-    /// * `cut`: The `cut` parameter is a tuple containing two elements. The first element is of type
-    ///          `Self::ArrayType`, and the second element is of type `T`.
+    ///  * `cut`: The `cut` parameter is a tuple containing two elements. The first element is of type
+    ///   `Self::ArrayType`, and the second element is of type `T`.
     ///
-    /// Returns:
+    ///  Returns:
     ///
-    /// The function `update_central_cut` returns a value of type `CutStatus`.
+    ///  The function `update_central_cut` returns a value of type `CutStatus`.
     fn update_central_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
@@ -270,29 +270,29 @@ impl SearchSpace for EllStable {
 impl SearchSpaceQ for EllStable {
     type ArrayType = Array1<f64>;
 
-    /// The function `xc` returns a copy of the `xc` array.
+    ///  The function `xc` returns a copy of the `xc` array.
     fn xc(&self) -> Self::ArrayType {
         self.xc.clone()
     }
 
-    /// The `tsq` function returns the value of the `tsq` field of the struct.
+    ///  The `tsq` function returns the value of the `tsq` field of the struct.
     ///
-    /// Returns:
+    ///  Returns:
     ///
-    /// The method `tsq` is returning a value of type `f64`.
+    ///  The method `tsq` is returning a value of type `f64`.
     fn tsq(&self) -> f64 {
         self.tsq
     }
 
-    /// The `update_q` function updates the decision variable based on the given cut.
+    ///  The `update_q` function updates the decision variable based on the given cut.
     ///
-    /// Arguments:
+    ///  Arguments:
     ///
-    /// * `cut`: A tuple containing two elements:
+    ///  * `cut`: A tuple containing two elements:
     ///
-    /// Returns:
+    ///  Returns:
     ///
-    /// The `update_bias_cut` function returns a value of type `CutStatus`.
+    ///  The `update_bias_cut` function returns a value of type `CutStatus`.
     fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,

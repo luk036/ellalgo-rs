@@ -49,8 +49,8 @@ impl OracleFeas<Arr> for MyOracle3 {
     /// Arguments:
     ///
     /// * `xc`: The parameter `xc` is an array of size 2, representing the coordinates of a point in a
-    ///         2-dimensional space. The first element `xc[0]` represents the x-coordinate, and the second
-    ///         element `xc[1]` represents the y-coordinate.
+    /// 2-dimensional space. The first element `xc[0]` represents the x-coordinate, and the second
+    /// element `xc[1]` represents the y-coordinate.
     ///
     /// Returns:
     ///
