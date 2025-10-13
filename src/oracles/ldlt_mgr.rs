@@ -15,7 +15,7 @@ use ndarray::{s, Array1, Array2};
 ///  - LDL^T square-root-free version
 ///  - Option allow semidefinite
 ///  - A matrix A in R^{m x m} is positive definite iff v' A v > 0
-/// for all v in R^n.
+///    for all v in R^n.
 ///  - O(p^2) per iteration, independent of N
 ///
 /// Properties:
@@ -23,9 +23,9 @@ use ndarray::{s, Array1, Array2};
 /// * `pos`: A tuple containing two usize values. It represents the dimensions of the LDLTMgr factorization.
 /// * `wit`: The `wit` property is an Array1 of f64 values.
 /// * `ndim`: The `ndim` property represents the size of the matrix that will be factorized using LDLTMgr
-/// factorization.
+///   factorization.
 /// * `storage`: The `storage` property is a 2-dimensional array of type `f64`. It is used to store the LDLTMgr
-/// factorization of a matrix.
+///   factorization of a matrix.
 pub struct LDLTMgr {
     pub pos: (usize, usize),
     pub wit: Array1<f64>,
@@ -39,7 +39,7 @@ impl LDLTMgr {
     /// Arguments:
     ///
     /// * `ndim`: The parameter `ndim` represents the size of the arrays and matrices being initialized in the
-    /// `new` function. It is of type `usize`, which means it represents a non-negative integer.
+    ///   `new` function. It is of type `usize`, which means it represents a non-negative integer.
     ///
     /// Returns:
     ///

@@ -24,9 +24,9 @@ impl OracleOptim<Arr> for MyOracle {
     /// Arguments:
     ///
     /// * `xc`: The parameter `xc` is an array of length 2, representing the values of `x` and `y`
-    /// respectively.
+    ///   respectively.
     /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable. It is used to store the
-    /// current best solution for the optimization problem.
+    ///   current best solution for the optimization problem.
     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
         let x = xc[0];
         let y = xc[1];
