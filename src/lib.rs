@@ -12,5 +12,6 @@ pub mod example4;
 pub mod quasicvx;
 
 pub mod ell_calc_additional_tests;
+pub mod ell_test;
 pub mod oracles;
 pub mod power_iteration;
