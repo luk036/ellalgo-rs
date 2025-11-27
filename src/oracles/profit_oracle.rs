@@ -238,7 +238,7 @@ impl OracleOptim<Arr> for ProfitRbOracle {
 /// Properties:
 ///
 /// * `omega`: The `omega` property is an instance of the `ProfitOracle` struct. It is used to calculate
-///    the profit for a given input.
+///   the profit for a given input.
 /// * `yd`: The variable `yd` is an array that represents the discrete version of y values
 pub struct ProfitOracleQ {
     omega: ProfitOracle,

@@ -113,11 +113,11 @@ impl EllStable {
     ///
     ///  * `grad`: A reference to an Array1<f64> representing the gradient vector.
     ///  * `beta`: The `beta` parameter is a value that is used in the inequality constraint of the ellipsoid
-    ///      core function. It represents the threshold for the constraint, and the function checks if the dot
-    ///      product of the gradient and the difference between `x` and `xc` plus `beta` is less than or
+    ///    core function. It represents the threshold for the constraint, and the function checks if the dot
+    ///    product of the gradient and the difference between `x` and `xc` plus `beta` is less than or
     ///  * `f_core`: The `f_core` parameter is a closure that takes two arguments: `beta` and `tsq`. It
-    ///      returns a tuple containing a `CutStatus` and a tuple `(rho, sigma, delta)`. The `f_core` function is
-    ///      used to determine the values of `rho`, `
+    ///    returns a tuple containing a `CutStatus` and a tuple `(rho, sigma, delta)`. The `f_core` function is
+    ///    used to determine the values of `rho`, `
     ///
     ///  Returns:
     ///

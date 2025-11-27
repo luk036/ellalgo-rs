@@ -93,7 +93,7 @@ impl Ell {
     ///
     /// * `val`: An array of f64 values representing the diagonal elements of a matrix.
     /// * `xc`: `xc` is an `Array1<f64>` which represents the center of the ellipse. It contains the x and y
-    ///       coordinates of the center point.
+    ///   coordinates of the center point.
     ///
     /// Returns:
     ///
