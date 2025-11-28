@@ -58,7 +58,7 @@ impl EllCalcCore {
     /// assert_approx_eq!(ell_calc_core.half_n, 2.0);
     /// assert_approx_eq!(ell_calc_core.n_plus_1, 5.0);
     /// ```
-    pub fn new(n_f: f64) -> EllCalcCore {
+    pub const fn new(n_f: f64) -> EllCalcCore {
         let n_plus_1 = n_f + 1.0;
         let half_n = n_f / 2.0;
         let inv_n = 1.0 / n_f;
@@ -370,7 +370,7 @@ impl EllCalcCore {
     /// assert_approx_eq!(delta, 0.8);
     /// ```
     )]
-    pub fn calc_bias_cut_fast(&self, beta: f64, tau: f64, eta: f64) -> (f64, f64, f64) {
+    pub const fn calc_bias_cut_fast(&self, beta: f64, tau: f64, eta: f64) -> (f64, f64, f64) {
         let rho = eta / self.n_plus_1;
         let sigma = 2.0 * rho / (tau + beta);
         let alpha = beta / tau;
@@ -436,7 +436,7 @@ impl EllCalcCore {
     /// ```
     )]
     #[inline]
-    pub fn calc_bias_cut(&self, beta: f64, tau: f64) -> (f64, f64, f64) {
+    pub const fn calc_bias_cut(&self, beta: f64, tau: f64) -> (f64, f64, f64) {
         let eta = tau + self.n_f * beta;
         self.calc_bias_cut_fast(beta, tau, eta)
     }
@@ -520,12 +520,12 @@ pub struct EllCalc {
 }
 
 impl EllCalc {
-    /// The `new` function constructs a new [`EllCalc`] object with a given value for `n_f` and sets the
+    /// The `new` function constructs a new [`EllCalc`] object with a given value for `n` and sets the
     /// `use_parallel_cut` flag to `true`.
     ///
     /// Arguments:
     ///
-    /// * `n_f`: The parameter `n_f` is a floating-point number that is used to initialize the `EllCalc`
+    /// * `n`: The parameter `n` is a usize that is converted to f64 to initialize the `EllCalc`
     ///   struct.
     ///
     /// Returns:
@@ -539,7 +539,7 @@ impl EllCalc {
     /// let ell_calc = EllCalc::new(4);
     /// assert!(ell_calc.use_parallel_cut);
     /// ```
-    pub fn new(n: usize) -> EllCalc {
+    pub const fn new(n: usize) -> EllCalc {
         let n_f = n as f64;
         let helper = EllCalcCore::new(n_f);
 

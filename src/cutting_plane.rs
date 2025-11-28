@@ -13,12 +13,18 @@ pub struct Options {
     pub tolerance: f64,   // error tolerrance
 }
 
+impl Options {
+    pub const fn new(max_iters: usize, tolerance: f64) -> Self {
+        Options {
+            max_iters,
+            tolerance,
+        }
+    }
+}
+
 impl Default for Options {
     fn default() -> Options {
-        Options {
-            max_iters: 2000,
-            tolerance: 1e-20,
-        }
+        Options::new(2000, 1e-20)
     }
 }
 
