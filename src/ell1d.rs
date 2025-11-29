@@ -28,6 +28,13 @@ impl Ell1D {
     /// Returns:
     ///
     /// The `new` function is returning an instance of the [`Ell1D`] struct.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::ell1d::Ell1D;
+    /// let ell1d = Ell1D::new(0.0, 10.0);
+    /// ```
     pub fn new(l: f64, u: f64) -> Self {
         let r = (u - l) / 2.0;
         let xc = l + r;
@@ -84,6 +91,15 @@ impl SearchSpace for Ell1D {
     type ArrayType = f64;
 
     /// The function `xc` returns a copy of the `xc` array.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::ell1d::Ell1D;
+    /// let ell1d = Ell1D::new(0.0, 10.0);
+    /// let center = ell1d.xc();
+    /// assert_eq!(center, 5.0);
+    /// ```
     fn xc(&self) -> f64 {
         self.xc
     }

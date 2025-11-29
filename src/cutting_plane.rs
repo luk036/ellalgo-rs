@@ -14,6 +14,21 @@ pub struct Options {
 }
 
 impl Options {
+    /// Creates a new `Options` struct with the specified maximum iterations and tolerance.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_iters` - The maximum number of iterations allowed
+    /// * `tolerance` - The error tolerance
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::cutting_plane::Options;
+    /// let options = Options::new(1000, 1e-6);
+    /// assert_eq!(options.max_iters, 1000);
+    /// assert_eq!(options.tolerance, 1e-6);
+    /// ```
     pub const fn new(max_iters: usize, tolerance: f64) -> Self {
         Options {
             max_iters,
@@ -23,6 +38,20 @@ impl Options {
 }
 
 impl Default for Options {
+    /// Provides default values for the Options struct.
+    ///
+    /// The default values are:
+    /// - max_iters: 2000
+    /// - tolerance: 1e-20
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ellalgo_rs::cutting_plane::Options;
+    /// let options = Options::default();
+    /// assert_eq!(options.max_iters, 2000);
+    /// assert_eq!(options.tolerance, 1e-20);
+    /// ```
     fn default() -> Options {
         Options::new(2000, 1e-20)
     }

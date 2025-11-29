@@ -70,6 +70,18 @@ impl ProfitOracle {
     /// Returns:
     ///
     /// The `new` function is returning an instance of the `ProfitOracle` struct.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use ellalgo_rs::oracles::profit_oracle::ProfitOracle;
+    ///
+    /// let params = (20.0, 40.0, 30.5);
+    /// let elasticities = array![0.1, 0.4];
+    /// let price_out = array![10.0, 35.0];
+    /// let oracle = ProfitOracle::new(params, elasticities, price_out);
+    /// ```
     pub fn new(params: (f64, f64, f64), elasticities: Arr, price_out: Arr) -> Self {
         let (unit_price, scale, limit) = params;
         let log_p_scale = (unit_price * scale).ln();
@@ -186,6 +198,19 @@ impl ProfitRbOracle {
     /// Returns:
     ///
     /// The `new` function is returning an instance of the `ProfitRbOracle` struct.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use ellalgo_rs::oracles::profit_oracle::ProfitRbOracle;
+    ///
+    /// let params = (20.0, 40.0, 30.5);
+    /// let aa = array![0.1, 0.4];
+    /// let price_out = array![10.0, 35.0];
+    /// let vparams = (0.003, 0.007, 1.0, 1.0, 1.0);
+    /// let oracle = ProfitRbOracle::new(params, aa, price_out, vparams);
+    /// ```
     pub fn new(
         params: (f64, f64, f64),
         aa: Arr,
@@ -266,6 +291,18 @@ impl ProfitOracleQ {
     /// Returns:
     ///
     /// The `new` function is returning an instance of the `ProfitOracleQ` struct.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use ndarray::array;
+    /// use ellalgo_rs::oracles::profit_oracle::ProfitOracleQ;
+    ///
+    /// let params = (20.0, 40.0, 30.5);
+    /// let elasticities = array![0.1, 0.4];
+    /// let price_out = array![10.0, 35.0];
+    /// let oracle = ProfitOracleQ::new(params, elasticities, price_out);
+    /// ```
     pub fn new(params: (f64, f64, f64), elasticities: Arr, price_out: Arr) -> Self {
         ProfitOracleQ {
             yd: array![0.0, 0.0],

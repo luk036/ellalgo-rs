@@ -5,6 +5,18 @@ use ndarray::{Array1, ArrayView2};
 ///
 /// The `max_iters` field specifies the maximum number of iterations to perform.
 /// The `tolerance` field specifies the tolerance for convergence of the algorithm.
+///
+/// # Examples
+///
+/// ```
+/// use ellalgo_rs::power_iteration::Options;
+/// let options = Options {
+///     max_iters: 100,
+///     tolerance: 1e-6,
+/// };
+/// assert_eq!(options.max_iters, 100);
+/// assert_eq!(options.tolerance, 1e-6);
+/// ```
 pub struct Options {
     pub max_iters: usize,
     pub tolerance: f64,
@@ -27,6 +39,22 @@ fn norm_l1(x: &Array1<f64>) -> f64 {
 /// controlling the algorithm's behavior.
 ///
 /// The function returns the dominant eigenvalue and the number of iterations performed.
+///
+/// # Examples
+///
+/// ```
+/// use ellalgo_rs::power_iteration::Options;
+/// use ndarray::{arr1, arr2, Array1, ArrayView2};
+///
+/// let a = arr2(&[[3.0, 1.0], [1.0, 3.0]]);
+/// let mut x = arr1(&[1.0, 1.0]);
+/// let options = Options {
+///     max_iters: 100,
+///     tolerance: 1e-6,
+/// };
+/// let (eigenvalue, iterations) = ellalgo_rs::power_iteration::power_iteration(a.view(), &mut x, &options);
+/// println!("Eigenvalue: {}, Iterations: {}", eigenvalue, iterations);
+/// ```
 pub fn power_iteration(a: ArrayView2<f64>, x: &mut Array1<f64>, options: &Options) -> (f64, usize) {
     *x /= x.dot(x).sqrt();
     for niter in 0..options.max_iters {
