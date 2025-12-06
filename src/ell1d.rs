@@ -105,13 +105,13 @@ impl SearchSpace for Ell1D {
     }
 
     /// The `update` function updates the decision variable based on the given cut.
-    /// 
+    ///
     /// Arguments:
-    /// 
+    ///
     /// * `cut`: A tuple containing two elements:
-    /// 
+    ///
     /// Returns:
-    /// 
+    ///
     /// The `update` function returns a value of type `CutStatus`.
     fn update<T>(&mut self, cut: &(Self::ArrayType, T)) -> (CutStatus, f64)
     where
