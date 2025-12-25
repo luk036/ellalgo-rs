@@ -28,9 +28,9 @@ impl OracleOptim<Arr> for MyOracle {
     /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable. It is used to store the
     ///   current best solution for the optimization problem.
     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
-        let x = xc[0];
-        let y = xc[1];
-        let f0 = x + y;
+        let x_val = xc[0];
+        let y_val = xc[1];
+        let f0 = x_val + y_val;
 
         let num_constraints = 3;
         for _ in 0..num_constraints {
@@ -40,7 +40,7 @@ impl OracleOptim<Arr> for MyOracle {
             }
             let fj = match self.idx {
                 0 => f0 - 3.0,
-                1 => -x + y + 1.0,
+                1 => -x_val + y_val + 1.0,
                 2 => *gamma - f0,
                 _ => unreachable!(),
             };

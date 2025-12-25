@@ -177,28 +177,28 @@ impl EllStable {
         // Gill, Murray, and Wright, "Practical Optimization", p43. Author: Brian Borchers (borchers@nmt.edu)
         //
         // let r = self.sigma / omega;
-        let mu = sigma / (1.0 - sigma);
-        let mut oldt = omega / mu; // initially
-        let m = ndim - 1;
-        for j in 0..m {
+        let mu_val = sigma / (1.0 - sigma);
+        let mut oldt = omega / mu_val; // initially
+        let last_idx = ndim - 1;
+        for j in 0..last_idx {
             // p=sqrt(k)*vv[j];
             // let p = inv_ml_g[j];
-            // let mup = mu * p;
-            let t = oldt + gg_t[j];
-            // self.mq[[j, j]] /= t; // update invD
-            let beta2 = inv_md_inv_ml_g[j] / t;
-            self.mq[[j, j]] *= oldt / t; // update invD
+            // let mup = mu_val * p;
+            let temp = oldt + gg_t[j];
+            // self.mq[[j, j]] /= temp; // update invD
+            let beta2 = inv_md_inv_ml_g[j] / temp;
+            self.mq[[j, j]] *= oldt / temp; // update invD
             for l in (j + 1)..ndim {
                 // v(l) -= p * self.mq(j, l);
                 self.mq[[j, l]] += beta2 * self.mq[[l, j]];
             }
-            oldt = t;
+            oldt = temp;
         }
 
         // let p = inv_ml_g(n1);
         // let mup = mu * p;
-        let t = oldt + gg_t[m];
-        self.mq[[m, m]] *= oldt / t; // update invD
+        let temp = oldt + gg_t[last_idx];
+        self.mq[[last_idx, last_idx]] *= oldt / temp; // update invD
         self.kappa *= delta;
 
         // if self.no_defer_trick

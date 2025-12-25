@@ -72,13 +72,13 @@ impl OracleFeas<Arr> for LMIOracle {
         if self.ldlt_mgr.factor(get_elem) {
             None
         } else {
-            let ep = self.ldlt_mgr.witness();
-            let g = self
+            let epsilon = self.ldlt_mgr.witness();
+            let grad = self
                 .mat_f
                 .iter()
                 .map(|mat_fk| self.ldlt_mgr.sym_quad(mat_fk))
                 .collect();
-            Some((g, ep))
+            Some((grad, epsilon))
         }
     }
 }
@@ -110,9 +110,9 @@ mod tests {
             }
 
             let f0 = self.c.dot(xc);
-            let fj = f0 - *gamma;
-            if fj > 0.0 {
-                return ((self.c.clone(), fj), false);
+            let func_val = f0 - *gamma;
+            if func_val > 0.0 {
+                return ((self.c.clone(), func_val), false);
             }
 
             *gamma = f0;
@@ -178,11 +178,11 @@ mod tests {
         ];
         let b1 = Array2::from_shape_vec((2, 2), vec![33.0, -9.0, -9.0, 26.0]).unwrap();
         let mut oracle = LMIOracle::new(f1, b1);
-        let x = Array1::from(vec![1.0, 1.0, 1.0]);
-        let res = oracle.assess_feas(&x);
+        let x_vec = Array1::from(vec![1.0, 1.0, 1.0]);
+        let res = oracle.assess_feas(&x_vec);
         assert!(res.is_some());
-        let x2 = Array1::from(vec![0.0, 0.0, 0.0]);
-        let res2 = oracle.assess_feas(&x2);
+        let x_vec2 = Array1::from(vec![0.0, 0.0, 0.0]);
+        let res2 = oracle.assess_feas(&x_vec2);
         assert!(res2.is_none());
     }
 }

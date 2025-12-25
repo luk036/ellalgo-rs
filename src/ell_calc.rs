@@ -154,10 +154,10 @@ impl EllCalcCore {
     ) -> (f64, f64, f64) {
         let bavg = (beta0 + beta1) * 0.5;
         let bavgsq = bavg * bavg;
-        let h = (tsq + b0b1) * 0.5 + self.n_f * bavgsq;
-        let k = h + (h * h - eta * self.n_plus_1 * bavgsq).sqrt();
-        let inv_mu_plus_1 = eta / k;
-        let inv_mu = eta / (k - eta);
+        let half_sum = (tsq + b0b1) * 0.5 + self.n_f * bavgsq;
+        let kappa = half_sum + (half_sum * half_sum - eta * self.n_plus_1 * bavgsq).sqrt();
+        let inv_mu_plus_1 = eta / kappa;
+        let inv_mu = eta / (kappa - eta);
         let rho = bavg * inv_mu_plus_1;
         let sigma = inv_mu_plus_1;
         let delta = (tsq + inv_mu * (bavgsq * inv_mu_plus_1 - b0b1)) / tsq;
@@ -305,12 +305,12 @@ impl EllCalcCore {
     pub fn calc_parallel_central_cut(&self, beta1: f64, tsq: f64) -> (f64, f64, f64) {
         let b1sq = beta1 * beta1;
         let a1sq = b1sq / tsq;
-        let h = self.half_n * a1sq;
-        let r = h + (1.0 - a1sq + h * h).sqrt();
-        let r_plus_1 = r + 1.0;
+        let half_val = self.half_n * a1sq;
+        let root = half_val + (1.0 - a1sq + half_val * half_val).sqrt();
+        let r_plus_1 = root + 1.0;
         let rho = beta1 / r_plus_1;
         let sigma = 2.0 / r_plus_1;
-        let delta = r / (r - self.inv_n);
+        let delta = root / (root - self.inv_n);
 
         (rho, sigma, delta)
     }

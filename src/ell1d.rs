@@ -36,9 +36,9 @@ impl Ell1D {
     /// let ell1d = Ell1D::new(0.0, 10.0);
     /// ```
     pub fn new(l: f64, u: f64) -> Self {
-        let r = (u - l) / 2.0;
-        let xc = l + r;
-        Ell1D { r, xc }
+        let radius = (u - l) / 2.0;
+        let xc = l + radius;
+        Ell1D { r: radius, xc }
     }
 
     /// The function `set_xc` sets the value of the `xc` variable in a Rust struct.
@@ -59,15 +59,15 @@ impl Ell1D {
     /// * `beta0`: The parameter `beta0` represents the value of the constant term in the inequality constraint
     ///           equation. In the code, it is referred to as `beta`.
     fn update_single(&mut self, grad: f64, beta0: f64) -> (CutStatus, f64) {
-        let g = *grad;
+        let grad_val = *grad;
         let beta = *beta0;
-        let temp = self.r * g;
-        let tau = if g < 0.0 { -temp } else { temp };
+        let temp = self.r * grad_val;
+        let tau = if grad_val < 0.0 { -temp } else { temp };
         let tsq = tau * tau;
 
         if beta == 0.0 {
             self.r /= 2.0;
-            self.xc += if g > 0.0 { -self.r } else { self.r };
+            self.xc += if grad_val > 0.0 { -self.r } else { self.r };
             return (CutStatus::Success, tsq);
         }
         if beta > tau {
@@ -77,12 +77,12 @@ impl Ell1D {
             return (CutStatus::NoEffect, tsq); // no effect
         }
 
-        let bound = self.xc - beta / g;
-        let u = if g > 0.0 { bound } else { self.xc + self.r };
-        let l = if g > 0.0 { self.xc - self.r } else { bound };
+        let bound = self.xc - beta / grad_val;
+        let upper = if grad_val > 0.0 { bound } else { self.xc + self.r };
+        let lower = if grad_val > 0.0 { self.xc - self.r } else { bound };
 
-        self.r = (u - l) / 2.0;
-        self.xc = l + self.r;
+        self.r = (upper - lower) / 2.0;
+        self.xc = lower + self.r;
         return (CutStatus::Success, tsq);
     }
 }

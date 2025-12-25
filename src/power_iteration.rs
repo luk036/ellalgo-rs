@@ -112,22 +112,22 @@ pub fn power_iteration2(
     x: &mut Array1<f64>,
     options: &Options,
 ) -> (f64, usize) {
-    // let (mut new, mut ld) = calc_core2(a, &mut x);
+    // let (mut new_vec, mut eigenval) = calc_core2(a, &mut x);
     *x /= x.dot(x).sqrt();
-    let mut new = a.dot(x);
-    let mut ld = x.dot(&new);
+    let mut new_vec = a.dot(x);
+    let mut eigenval = x.dot(&new_vec);
     for niter in 0..options.max_iters {
-        let ld1 = ld;
-        x.clone_from(&new);
+        let eigenval_prev = eigenval;
+        x.clone_from(&new_vec);
         // let (new_temp, ld_temp) = calc_core2(a, &mut x);
         *x /= x.dot(x).sqrt();
-        new = a.dot(x);
-        ld = x.dot(&new);
-        if (ld1 - ld).abs() <= options.tolerance {
-            return (ld, niter);
+        new_vec = a.dot(x);
+        eigenval = x.dot(&new_vec);
+        if (eigenval_prev - eigenval).abs() <= options.tolerance {
+            return (eigenval, niter);
         }
     }
-    (ld, options.max_iters)
+    (eigenval, options.max_iters)
 }
 
 /// Computes the dominant eigenvector of the given matrix `a` using a modified power iteration algorithm.
@@ -144,30 +144,30 @@ pub fn power_iteration3(
     x: &mut Array1<f64>,
     options: &Options,
 ) -> (f64, usize) {
-    let mut new = a.dot(x);
+    let mut new_vec = a.dot(x);
     let mut dot = x.dot(x);
-    let mut ld = x.dot(&new) / dot;
+    let mut eigenval = x.dot(&new_vec) / dot;
     for niter in 0..options.max_iters {
-        let ld1 = ld;
-        x.clone_from(&new);
+        let eigenval_prev = eigenval;
+        x.clone_from(&new_vec);
         dot = x.dot(x);
         if dot >= 1e150 {
             *x /= x.dot(x).sqrt();
-            new = a.dot(x);
-            ld = x.dot(&new);
-            if (ld1 - ld).abs() <= options.tolerance {
-                return (ld, niter);
+            new_vec = a.dot(x);
+            eigenval = x.dot(&new_vec);
+            if (eigenval_prev - eigenval).abs() <= options.tolerance {
+                return (eigenval, niter);
             }
         } else {
-            new = a.dot(x);
-            ld = x.dot(&new) / dot;
-            if (ld1 - ld).abs() <= options.tolerance {
+            new_vec = a.dot(x);
+            eigenval = x.dot(&new_vec) / dot;
+            if (eigenval_prev - eigenval).abs() <= options.tolerance {
                 *x /= x.dot(x).sqrt();
-                return (ld, niter);
+                return (eigenval, niter);
             }
         }
     }
-    (ld, options.max_iters)
+    (eigenval, options.max_iters)
 }
 
 #[cfg(test)]
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn test_construct() {
-        let a = Array2::from_shape_vec(
+        let matrix = Array2::from_shape_vec(
             (3, 3),
             vec![3.7, -3.6, 0.7, -3.6, 4.3, -2.8, 0.7, -2.8, 5.4],
         )
@@ -189,14 +189,14 @@ mod tests {
 
         println!("1-----------------------------");
         let mut x1 = Array1::from_vec(vec![0.3, 0.5, 0.4]);
-        let (ld, niter) = power_iteration(a.view(), &mut x1, &options);
+        let (ld, niter) = power_iteration(matrix.view(), &mut x1, &options);
         println!("{:?}", x1);
         println!("{}", ld);
         assert_eq!(niter, 22);
 
         println!("4-----------------------------");
         let mut x4 = Array1::from_vec(vec![0.3, 0.5, 0.4]);
-        let (ld, niter) = power_iteration4(a.view(), &mut x4, &options);
+        let (ld, niter) = power_iteration4(matrix.view(), &mut x4, &options);
         println!("{:?}", x4);
         println!("{}", ld);
         assert_eq!(niter, 21);
@@ -208,14 +208,14 @@ mod tests {
 
         println!("2-----------------------------");
         let mut x2 = Array1::from_vec(vec![0.3, 0.5, 0.4]);
-        let (ld, niter) = power_iteration2(a.view(), &mut x2, &options);
+        let (ld, niter) = power_iteration2(matrix.view(), &mut x2, &options);
         println!("{:?}", x2);
         println!("{}", ld);
         assert_eq!(niter, 23);
 
         println!("3-----------------------------");
         let mut x3 = Array1::from_vec(vec![0.3, 0.5, 0.4]);
-        let (ld, niter) = power_iteration3(a.view(), &mut x3, &options);
+        let (ld, niter) = power_iteration3(matrix.view(), &mut x3, &options);
         println!("{:?}", x3);
         println!("{}", ld);
         assert_eq!(niter, 23);

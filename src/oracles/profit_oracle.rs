@@ -153,9 +153,9 @@ impl OracleOptim<Arr> for ProfitOracle {
             return (cut, false);
         }
 
-        let te = self.log_cobb.exp();
-        *gamma = te - self.vx;
-        let grad = (&self.q / te) - &self.elasticities;
+        let exp_val = self.log_cobb.exp();
+        *gamma = exp_val - self.vx;
+        let grad = (&self.q / exp_val) - &self.elasticities;
         ((grad, 0.0), true)
     }
 }
@@ -206,14 +206,14 @@ impl ProfitRbOracle {
     /// use ellalgo_rs::oracles::profit_oracle::ProfitRbOracle;
     ///
     /// let params = (20.0, 40.0, 30.5);
-    /// let aa = array![0.1, 0.4];
+    /// let elasticities = array![0.1, 0.4];
     /// let price_out = array![10.0, 35.0];
     /// let vparams = (0.003, 0.007, 1.0, 1.0, 1.0);
-    /// let oracle = ProfitRbOracle::new(params, aa, price_out, vparams);
+    /// let oracle = ProfitRbOracle::new(params, elasticities, price_out, vparams);
     /// ```
     pub fn new(
         params: (f64, f64, f64),
-        aa: Arr,
+        elasticities: Arr,
         price_out: Arr,
         vparams: (f64, f64, f64, f64, f64),
     ) -> Self {
@@ -222,13 +222,13 @@ impl ProfitRbOracle {
         let params_rb = (params.0 - e3, params.1, params.2 - e4);
         let omega = ProfitOracle::new(
             params_rb,
-            aa.clone(),
+            elasticities.clone(),
             price_out + Arr::from_vec(vec![e5, e5]),
         );
         ProfitRbOracle {
             uie,
             omega,
-            elasticities: aa,
+            elasticities,
         }
     }
 }
@@ -330,15 +330,15 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
                 return (cut, false, y.clone(), true);
             }
 
-            // let mut xd = y.mapv(f64::exp).mapv(f64::round);
-            let mut xd = y.map(|x| x.exp().round());
-            if xd[0] == 0.0 {
-                xd[0] = 1.0; // nearest integer than 0
+            // let mut x_disc = y.mapv(f64::exp).mapv(f64::round);
+            let mut x_disc = y.map(|x| x.exp().round());
+            if x_disc[0] == 0.0 {
+                x_disc[0] = 1.0; // nearest integer than 0
             }
-            if xd[1] == 0.0 {
-                xd[1] = 1.0;
+            if x_disc[1] == 0.0 {
+                x_disc[1] = 1.0;
             }
-            self.yd = xd.mapv(f64::ln);
+            self.yd = x_disc.mapv(f64::ln);
         }
         let ((grad, beta), shrunk) = self.omega.assess_optim(&self.yd, gamma);
         let beta = beta + grad.dot(&(&self.yd - y));
@@ -433,8 +433,8 @@ mod tests {
         let mut omega = ProfitOracle::new(params, elasticities, price_out);
         let mut gamma = 0.0;
         // Infeasible case
-        let y = array![3.5, 2.0];
-        let (cut, feasible) = omega.assess_optim(&y, &mut gamma);
+        let y_vec = array![3.5, 2.0];
+        let (cut, feasible) = omega.assess_optim(&y_vec, &mut gamma);
         assert!(!feasible);
         assert_eq!(cut.1, 3.5 - limit.ln());
         // Feasible but not optimal case

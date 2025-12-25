@@ -183,10 +183,10 @@ impl Ell {
         self.xc -= &((rho / omega) * &grad_t); // n
 
         // n*(n+1)/2 + n
-        let r = sigma / omega;
+        let ratio = sigma / omega;
         let grad_t_view = grad_t.view();
         self.mq.scaled_add(
-            -r,
+            -ratio,
             &(&grad_t_view.insert_axis(Axis(1)) * &grad_t_view.insert_axis(Axis(0))),
         );
 

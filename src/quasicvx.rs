@@ -38,12 +38,12 @@ impl OracleOptim<Arr> for MyOracle {
             if self.idx == num_constraints {
                 self.idx = 0; // round robin
             }
-            let fj = match self.idx {
+            let func_val = match self.idx {
                 0 => sqrtx * sqrtx - logy,
                 1 => -sqrtx + *gamma * logy.exp(),
                 _ => unreachable!(),
             };
-            if fj > 0.0 {
+            if func_val > 0.0 {
                 return (
                     (
                         match self.idx {
@@ -51,7 +51,7 @@ impl OracleOptim<Arr> for MyOracle {
                             1 => array![-1.0, *gamma * logy.exp()],
                             _ => unreachable!(),
                         },
-                        fj,
+                        func_val,
                     ),
                     false,
                 );

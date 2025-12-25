@@ -56,8 +56,8 @@ impl OracleFeas<Arr> for MyOracle3 {
     ///
     /// The function `assess_feas` returns an `Option` containing a tuple `(Arr, f64)`.
     fn assess_feas(&mut self, xc: &Arr) -> Option<(Arr, f64)> {
-        let x = xc[0];
-        let y = xc[1];
+        let x_val = xc[0];
+        let y_val = xc[1];
 
         let num_constraints = 4;
         for _ in 0..num_constraints {
@@ -66,10 +66,10 @@ impl OracleFeas<Arr> for MyOracle3 {
                 self.idx = 0; // round robin
             }
             let fj = match self.idx {
-                0 => -x - 1.0,
-                1 => -y - 2.0,
-                2 => x + y - 1.0,
-                3 => 2.0 * x - 3.0 * y - self.target,
+                0 => -x_val - 1.0,
+                1 => -y_val - 2.0,
+                2 => x_val + y_val - 1.0,
+                3 => 2.0 * x_val - 3.0 * y_val - self.target,
                 _ => unreachable!(),
             };
             if fj > 0.0 {

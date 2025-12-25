@@ -259,15 +259,15 @@ impl LDLTMgr {
             panic!("Matrix is symmetric positive definite");
         }
         let (start, ndim) = self.pos;
-        let m = ndim - 1;
-        self.wit[m] = 1.0;
-        for i in (start..m).rev() {
+        let last_idx = ndim - 1;
+        self.wit[last_idx] = 1.0;
+        for i in (start..last_idx).rev() {
             self.wit[i] = 0.0;
             for k in i..ndim {
                 self.wit[i] -= self.storage[[k, i]] * self.wit[k];
             }
         }
-        -self.storage[[m, m]]
+        -self.storage[[last_idx, last_idx]]
     }
 
     /// The `sym_quad` function calculates the quadratic form of a symmetric matrix and a vector.
@@ -303,11 +303,11 @@ impl LDLTMgr {
         let mut res = 0.0;
         let (start, stop) = self.pos;
         for i in start..stop {
-            let mut s = 0.0;
+            let mut sum_val = 0.0;
             for j in (i + 1)..stop {
-                s += mat_a[[i, j]] * self.wit[j];
+                sum_val += mat_a[[i, j]] * self.wit[j];
             }
-            res += self.wit[i] * (mat_a[[i, i]] * self.wit[i] + 2.0 * s);
+            res += self.wit[i] * (mat_a[[i, i]] * self.wit[i] + 2.0 * sum_val);
         }
         res
     }
@@ -380,10 +380,10 @@ mod tests {
         )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
         assert!(!ldlt_mgr.factorize(&l3));
-        let ep = ldlt_mgr.witness();
+        let epsilon = ldlt_mgr.witness();
         assert_eq!(ldlt_mgr.pos, (0, 1));
         assert_eq!(ldlt_mgr.wit[0], 1.0);
-        assert_eq!(ep, 0.0);
+        assert_eq!(epsilon, 0.0);
         Ok(())
     }
 
@@ -433,8 +433,8 @@ mod tests {
         )?;
         let mut ldlt_mgr = LDLTMgr::new(3);
         assert!(!ldlt_mgr.factor_with_allow_semidefinite(|i, j| l3[[i, j]]));
-        let ep = ldlt_mgr.witness();
-        assert_eq!(ep, 20.0);
+        let epsilon = ldlt_mgr.witness();
+        assert_eq!(epsilon, 20.0);
         Ok(())
     }
 
@@ -467,9 +467,9 @@ mod tests {
         let mut ldlt_mgr = LDLTMgr::new(3);
         ldlt_mgr.factorize(&a);
         assert!(ldlt_mgr.is_spd());
-        let r = ldlt_mgr.sqrt();
+        let sqrt_result = ldlt_mgr.sqrt();
         assert_eq!(
-            r,
+            sqrt_result,
             Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.5, 0.0, 1.0, 0.5, 0.0, 0.0, 1.0])?
         );
         Ok(())

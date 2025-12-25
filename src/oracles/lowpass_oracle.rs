@@ -76,15 +76,15 @@ impl LowpassOracle {
     /// the
     pub fn new(ndim: usize, wpass: f64, wstop: f64, lp_sq: f64, up_sq: f64, sp_sq: f64) -> Self {
         let mdim = 15 * ndim;
-        let w: Array1<f64> = Array::linspace(0.0, std::f64::consts::PI, mdim);
-        // let tmp: Array2<f64> = Array::from_shape_fn((mdim, ndim - 1), |(i, j)| 2.0 * (w[i] * (j + 1) as f64).cos());
+        let omega: Array1<f64> = Array::linspace(0.0, std::f64::consts::PI, mdim);
+        // let tmp: Array2<f64> = Array::from_shape_fn((mdim, ndim - 1), |(i, j)| 2.0 * (omega[i] * (j + 1) as f64).cos());
         // let spectrum: Array2<f64> = stack![Axis(1), Array::ones(mdim).insert_axis(Axis(1)), tmp];
 
         let mut spectrum = vec![Arr::zeros(ndim); mdim];
         for i in 0..mdim {
             spectrum[i][0] = 1.0;
             for j in 1..ndim {
-                spectrum[i][j] = 2.0 * (w[i] * j as f64).cos();
+                spectrum[i][j] = 2.0 * (omega[i] * j as f64).cos();
             }
         }
         // spectrum.iter_mut().for_each(|row| row.insert(0, 1.0));
@@ -139,15 +139,15 @@ impl OracleFeas<Arr> for LowpassOracle {
                 self.idx1 = 0;
             }
             let col_k = &self.spectrum[self.idx1 as usize];
-            // let v = col_k.iter().zip(x.iter()).map(|(&a, &b)| a * b).sum();
-            let v = col_k.dot(x);
-            if v > self.up_sq {
-                let f = (v - self.up_sq, Some(v - self.lp_sq));
-                return Some((col_k.clone(), f));
+            // let val = col_k.iter().zip(x.iter()).map(|(&a, &b)| a * b).sum();
+            let val = col_k.dot(x);
+            if val > self.up_sq {
+                let func_val = (val - self.up_sq, Some(val - self.lp_sq));
+                return Some((col_k.clone(), func_val));
             }
-            if v < self.lp_sq {
-                let f = (-v + self.lp_sq, Some(-v + self.up_sq));
-                return Some((col_k.iter().map(|&a| -a).collect(), f));
+            if val < self.lp_sq {
+                let func_val = (-val + self.lp_sq, Some(-val + self.up_sq));
+                return Some((col_k.iter().map(|&a| -a).collect(), func_val));
             }
         }
 
@@ -159,19 +159,19 @@ impl OracleFeas<Arr> for LowpassOracle {
                 self.idx3 = self.nwstop;
             }
             let col_k = &self.spectrum[self.idx3 as usize];
-            // let v = col_k.iter().zip(x.iter()).map(|(&a, &b)| a * b).sum();
-            let v = col_k.dot(x);
-            if v > self.sp_sq {
-                return Some((col_k.clone(), (v - self.sp_sq, Some(v))));
+            // let val = col_k.iter().zip(x.iter()).map(|(&a, &b)| a * b).sum();
+            let val = col_k.dot(x);
+            if val > self.sp_sq {
+                return Some((col_k.clone(), (val - self.sp_sq, Some(val))));
             }
-            if v < 0.0 {
+            if val < 0.0 {
                 return Some((
                     col_k.iter().map(|&a| -a).collect(),
-                    (-v, Some(-v + self.sp_sq)),
+                    (-val, Some(-val + self.sp_sq)),
                 ));
             }
-            if v > self.fmax {
-                self.fmax = v;
+            if val > self.fmax {
+                self.fmax = val;
                 self.kmax = self.idx3;
             }
         }
@@ -182,11 +182,11 @@ impl OracleFeas<Arr> for LowpassOracle {
                 self.idx2 = self.nwpass;
             }
             let col_k = &self.spectrum[self.idx2 as usize];
-            // let v = col_k.iter().zip(x.iter()).map(|(&a, &b)| a * b).sum();
-            let v = col_k.dot(x);
-            if v < 0.0 {
+            // let val = col_k.iter().zip(x.iter()).map(|(&a, &b)| a * b).sum();
+            let val = col_k.dot(x);
+            if val < 0.0 {
                 // single cut
-                return Some((col_k.iter().map(|&a| -a).collect(), (-v, None)));
+                return Some((col_k.iter().map(|&a| -a).collect(), (-val, None)));
             }
         }
 
@@ -293,8 +293,8 @@ mod tests {
     #[test]
     fn test_lowpass_oracle() {
         let mut oracle = create_lowpass_case(32);
-        let x = Arr::zeros(32);
-        let res = oracle.assess_feas(&x);
+        let x_vec = Arr::zeros(32);
+        let res = oracle.assess_feas(&x_vec);
         assert!(res.is_some());
     }
 }
