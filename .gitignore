@@ -1,3 +1,8 @@
 /target
 .cargo-ok
 .DS_Store
+
+# Log files
+*.log
+err.log
+log.txt

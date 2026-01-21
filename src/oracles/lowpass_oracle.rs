@@ -4,6 +4,7 @@ use crate::cutting_plane::{OracleFeas, OracleOptim};
 use ndarray::{Array, Array1};
 
 type Arr = Array1<f64>;
+
 pub type Cut = (Arr, (f64, Option<f64>));
 
 /// The `LowpassOracle` struct in Rust represents a lowpass filter with various configuration
@@ -83,8 +84,8 @@ impl LowpassOracle {
         let mut spectrum = vec![Arr::zeros(ndim); mdim];
         for i in 0..mdim {
             spectrum[i][0] = 1.0;
-            for j in 1..ndim {
-                spectrum[i][j] = 2.0 * (omega[i] * j as f64).cos();
+            for (j, val) in spectrum[i].iter_mut().enumerate().skip(1) {
+                *val = 2.0 * (omega[i] * j as f64).cos();
             }
         }
         // spectrum.iter_mut().for_each(|row| row.insert(0, 1.0));

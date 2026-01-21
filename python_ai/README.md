@@ -83,6 +83,31 @@ black ellalgo/ tests/
 ruff check --fix ellalgo/ tests/
 ```
 
+## Building from Rust
+
+The Python bindings can be rebuilt from the Rust source:
+
+```bash
+# From python_ai directory
+maturin develop --release
+
+# Build wheel
+maturin build --release
+```
+
+## Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run specific test file
+pytest tests/test_ell.py
+
+# Run with verbose output
+pytest -v
+```
+
 ## License
 
 MIT OR Apache-2.0 (same as the original Rust project)

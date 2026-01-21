@@ -1,0 +1,17 @@
+pre-commit:
+  parallel: false
+  commands:
+    fmt:
+      run: cargo fmt --all -- --check
+      fail_text: "Code is not formatted. Run 'cargo fmt --all' to fix."
+
+    clippy:
+      run: cargo clippy --all-targets --all-features --workspace
+      fail_text: "Clippy found issues. Run 'cargo clippy --all-targets --all-features --workspace --fix' to fix."
+
+pre-push:
+  parallel: false
+  commands:
+    test:
+      run: cargo test --all-features --workspace
+      fail_text: "Tests failed. Fix failing tests before pushing."

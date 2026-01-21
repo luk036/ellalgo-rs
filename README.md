@@ -13,6 +13,47 @@ The Ellipsoid Method as a linear programming algorithm was first introduced by L
 
 The method has a wide range of practical applications in operations research. It can be used to solve linear programming problems, as well as more general convex optimization problems. The method has been applied to a variety of fields, including economics, engineering, and computer science. Some specific applications of the Ellipsoid Method include portfolio optimization, network flow problems, and the design of control systems. The method has also been used to solve problems in combinatorial optimization, such as the traveling salesman problem.
 
+## ⚡ Quick Start
+
+```rust
+use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
+use ellalgo_rs::ell::Ell;
+use ndarray::prelude::*;
+
+type Arr = Array1<f64>;
+
+struct MyOracle;
+
+impl OracleOptim<Arr> for MyOracle {
+    type CutChoice = f64;
+
+    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        // Implement your optimization oracle here
+        // Return (gradient, beta) tuple and a boolean indicating if gamma improved
+        ((array![0.0, 0.0], 0.0), true)
+    }
+}
+
+fn main() {
+    let mut ellip = Ell::new_with_scalar(10.0, array![0.0, 0.0]);
+    let mut oracle = MyOracle;
+    let mut gamma = f64::NEG_INFINITY;
+    let options = Options::default();
+
+    let (xbest, num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+
+    println!("Best solution: {:?}", xbest);
+    println!("Iterations: {}", num_iters);
+}
+```
+
+Add to `Cargo.toml`:
+```toml
+[dependencies]
+ellalgo-rs = "0.1"
+ndarray = "0.16"
+```
+
 ## What is Parallel Cut?
 
 In the context of the Ellipsoid Method, a parallel cut refers to a pair of linear constraints of the form aTx <= b and -aTx <= -b, where a is a vector of coefficients and b is a scalar constant. These constraints are said to be parallel because they have the same normal vector a, but opposite signs. When a parallel cut is encountered during the Ellipsoid Method, both constraints can be used simultaneously to generate a new ellipsoid. This can improve the convergence rate of the method, especially for problems with many parallel constraints.
