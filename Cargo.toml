@@ -15,7 +15,7 @@ no-std = []
 
 [dependencies]
 svgbobdoc = { version = "0.3", features = ["enable"] }
-ndarray = "0.16.1"
+ndarray = "0.17.2"
 # ndarray-linalg = { version = "0.16.0" }
 
 [dev-dependencies]
