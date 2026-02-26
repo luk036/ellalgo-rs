@@ -10,14 +10,16 @@ license = "MIT OR Apache-2.0"
 
 [features]
 default = ["std"]
-std = []
+std = ["dep:log"]
 no-std = []
 
 [dependencies]
 svgbobdoc = { version = "0.3", features = ["enable"] }
 ndarray = "0.16.1"
+log = { version = "0.4", optional = true }
 # ndarray-linalg = { version = "0.16.0" }
 
 [dev-dependencies]
 approx_eq = "0.1.8"
+quickcheck = "1.0"
 criterion = "0.5"
