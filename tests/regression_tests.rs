@@ -41,31 +41,19 @@ fn test_regression_quadratic_iterations() {
 
     // Regression: should converge in less than 1000 iterations for this simple problem
 
-        assert!(num_iters < 1000, "Regression: quadratic problem converged in {} iterations, expected < 1000", num_iters);
+    assert!(
+        num_iters < 1000,
+        "Regression: quadratic problem converged in {} iterations, expected < 1000",
+        num_iters
+    );
 
-    
+    // Regression: final objective should be reasonably small
 
-        // Regression: final objective should be reasonably small
-
-    
-
-            assert!(
-
-    
-
-                gamma < 5.0,
-
-    
-
-                "Regression: final objective {}, expected < 5.0",
-
-    
-
-                gamma
-
-    
-
-            );
+    assert!(
+        gamma < 5.0,
+        "Regression: final objective {}, expected < 5.0",
+        gamma
+    );
 }
 
 /// Track convergence rate for a convex problem
@@ -166,7 +154,11 @@ fn test_regression_solution_quality() {
 
     // Regression: should be within reasonable tolerance of optimal
 
-        assert!(error < 10.0, "Regression: solution error {}, expected < 10.0", error);
+    assert!(
+        error < 10.0,
+        "Regression: solution error {}, expected < 10.0",
+        error
+    );
 }
 
 /// Track performance scaling with problem dimension
@@ -212,16 +204,25 @@ fn test_regression_dimensional_scaling() {
         iteration_counts.push(num_iters);
 
         // Should converge for all dimensions
-        assert!(num_iters < 2000 || gamma < 100.0, "Should converge or get good solution in {} dimensions", ndim);
+        assert!(
+            num_iters < 2000 || gamma < 100.0,
+            "Should converge or get good solution in {} dimensions",
+            ndim
+        );
     }
 
     // Regression: iterations should not grow exponentially with dimension
 
-        // This is a loose check - exponential growth would be very fast
+    // This is a loose check - exponential growth would be very fast
 
-        let ratio = iteration_counts[3] as f64 / iteration_counts[0] as f64;
+    let ratio = iteration_counts[3] as f64 / iteration_counts[0] as f64;
 
-        assert!(ratio < 10.0, "Regression: iteration ratio {}D/2D = {:.2}, expected < 10", dims[3], ratio);
+    assert!(
+        ratio < 10.0,
+        "Regression: iteration ratio {}D/2D = {:.2}, expected < 10",
+        dims[3],
+        ratio
+    );
 }
 
 /// Track ellipsoid volume reduction
@@ -259,9 +260,10 @@ fn test_regression_ellipsoid_shrinkage() {
 
     // Regression: ellipsoid should have shrunk (or at least not grown significantly)
 
-        assert!(ellip.tsq <= initial_tsq * 1.1 || ellip.kappa <= initial_kappa * 1.1,
-
-                "Regression: ellipsoid should shrink during optimization");
+    assert!(
+        ellip.tsq <= initial_tsq * 1.1 || ellip.kappa <= initial_kappa * 1.1,
+        "Regression: ellipsoid should shrink during optimization"
+    );
 }
 
 /// Test fixed iteration count for reproducibility
@@ -311,12 +313,14 @@ fn test_regression_reproducibility() {
     );
 
     if let (Some(x1), Some(x2)) = (xbest1, xbest2) {
+        let diff = (x1[0] - x2[0]).abs() + (x1[1] - x2[1]).abs();
 
-            let diff = (x1[0] - x2[0]).abs() + (x1[1] - x2[1]).abs();
-
-            assert!(diff < 1e-10, "Regression: solutions should be identical, diff = {}", diff);
-
-        }
+        assert!(
+            diff < 1e-10,
+            "Regression: solutions should be identical, diff = {}",
+            diff
+        );
+    }
 
     assert!(
         (gamma1 - gamma2).abs() < 1e-10,

@@ -3,7 +3,6 @@
 //! These tests verify that the ellipsoid method remains numerically stable
 //! even when dealing with ill-conditioned matrices and extreme values.
 
-use approx_eq::assert_approx_eq;
 use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
 use ellalgo_rs::ell::Ell;
 use ndarray::prelude::*;
@@ -45,7 +44,8 @@ fn test_ill_conditioned_quadratic() {
         let mut gamma = f64::INFINITY;
         let options = Options::new(2000, 1e-12);
 
-        let (xbest, _num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+        let (xbest, _num_iters) =
+            cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 
         assert!(
             xbest.is_some(),
@@ -91,21 +91,17 @@ fn test_extreme_scale_values() {
 
     // Test with different scales
 
-        for scale in [1e-10_f64, 1e-5, 1.0, 1e5, 1e10] {
+    for scale in [1e-10_f64, 1e-5, 1.0, 1e5, 1e10] {
+        let mut ellip = Ell::new_with_scalar(10.0 * scale.abs().sqrt(), array![scale, scale]);
 
-            let mut ellip = Ell::new_with_scalar(10.0 * scale.abs().sqrt(), array![scale, scale]);
+        let mut oracle = ExtremeScaleOracle { scale };
 
-            let mut oracle = ExtremeScaleOracle { scale };
+        let mut gamma = f64::INFINITY;
 
-            let mut gamma = f64::INFINITY;
+        let options = Options::new(1000, 1e-15 * scale.abs());
 
-            let options = Options::new(1000, 1e-15 * scale.abs());
-
-    
-
-            let (xbest, _num_iters) =
-
-                cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+        let (xbest, _num_iters) =
+            cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 
         assert!(xbest.is_some(), "Should find solution for scale {}", scale);
         assert!(
@@ -204,7 +200,8 @@ fn test_tolerance_sensitivity() {
         let mut gamma = f64::INFINITY;
         let options = Options::new(2000, tol);
 
-        let (xbest, _num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+        let (xbest, _num_iters) =
+            cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 
         assert!(
             xbest.is_some(),
@@ -221,11 +218,13 @@ fn test_tolerance_sensitivity() {
 
         // For very tight tolerances, gamma should be small
 
-                if tol <= 1e-10 {
-
-                    assert!(gamma < 10.0, "Should converge well for tight tolerance {}", tol);
-
-                }
+        if tol <= 1e-10 {
+            assert!(
+                gamma < 10.0,
+                "Should converge well for tight tolerance {}",
+                tol
+            );
+        }
     }
 }
 
@@ -270,6 +269,16 @@ fn test_numerical_precision() {
 
     let x = xbest.unwrap();
     // Should preserve numerical precision (within reasonable tolerance)
-    assert!((x[0] - exact[0]).abs() < 5.0, "x[0] precision: got {}, expected {}", x[0], exact[0]);
-    assert!((x[1] - exact[1]).abs() < 5.0, "x[1] precision: got {}, expected {}", x[1], exact[1]);
+    assert!(
+        (x[0] - exact[0]).abs() < 5.0,
+        "x[0] precision: got {}, expected {}",
+        x[0],
+        exact[0]
+    );
+    assert!(
+        (x[1] - exact[1]).abs() < 5.0,
+        "x[1] precision: got {}, expected {}",
+        x[1],
+        exact[1]
+    );
 }

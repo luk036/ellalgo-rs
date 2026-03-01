@@ -90,7 +90,11 @@ fn test_known_optimal_solution() {
     let error = ((x[0] - target[0]).powi(2) + (x[1] - target[1]).powi(2)).sqrt();
 
     // Should be within reasonable tolerance
-    assert!(error < 15.0, "Solution error {} should be less than 15.0", error);
+    assert!(
+        error < 15.0,
+        "Solution error {} should be less than 15.0",
+        error
+    );
 }
 
 /// Test with higher dimensional problem
@@ -140,7 +144,11 @@ fn test_higher_dimensional_optimization() {
     }
     let rms_error = (total_error / ndim as f64).sqrt();
 
-    assert!(rms_error < 3.0, "RMS error {} should be less than 3.0", rms_error);
+    assert!(
+        rms_error < 3.0,
+        "RMS error {} should be less than 3.0",
+        rms_error
+    );
 }
 
 /// Test convergence metrics
@@ -179,7 +187,11 @@ fn test_convergence_metrics() {
     assert!(gamma >= 0.0, "Final gamma should be non-negative");
 
     // Should find a reasonable solution
-    assert!(gamma < 10.0, "Final gamma {} should be improved from initial", gamma);
+    assert!(
+        gamma < 10.0,
+        "Final gamma {} should be improved from initial",
+        gamma
+    );
 }
 
 /// Test that algorithm handles different initial conditions
@@ -218,14 +230,24 @@ fn test_different_initial_conditions() {
         let mut gamma = f64::INFINITY;
         let options = Options::new(1000, 1e-10);
 
-        let (xbest, _num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+        let (xbest, _num_iters) =
+            cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 
-        assert!(xbest.is_some(), "Should find solution from initial point {:?}", initial);
+        assert!(
+            xbest.is_some(),
+            "Should find solution from initial point {:?}",
+            initial
+        );
         results.push(gamma);
     }
 
     // All should converge to similar objective values (near zero)
     for (i, &gamma) in results.iter().enumerate() {
-        assert!(gamma < 100.0, "Result {} should converge: gamma = {}", i, gamma);
+        assert!(
+            gamma < 100.0,
+            "Result {} should converge: gamma = {}",
+            i,
+            gamma
+        );
     }
 }
