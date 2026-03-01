@@ -10,7 +10,17 @@ license = "MIT OR Apache-2.0"
 
 [features]
 default = ["std"]
+
+# Enable std library support
+# - Adds logging capabilities via the `log` crate
+# - Provides integration with standard logging frameworks
+# - Default feature for most use cases
 std = ["dep:log"]
+
+# No-std support for embedded systems
+# - Minimal footprint without std library
+# - Suitable for bare-metal and embedded applications
+# - Disables logging functionality
 no-std = []
 
 [dependencies]

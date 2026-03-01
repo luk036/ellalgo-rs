@@ -198,6 +198,49 @@ where
 /// * `options`: The `options` parameter is a struct that contains various settings for the cutting plane
 ///   optimization algorithm. It likely includes parameters such as the maximum number of iterations
 ///   (`max_iters`) and the tolerance (``) for convergence.
+///
+/// Returns:
+///
+/// Returns a tuple `(Option<Space::ArrayType>, usize)` where the first element is the optimal
+/// solution found (if any), and the second element is the number of iterations performed.
+///
+/// # Examples
+///
+/// ```
+/// use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
+/// use ellalgo_rs::ell::Ell;
+/// use ndarray::prelude::*;
+///
+/// type Arr = Array1<f64>;
+///
+/// struct MyOracle;
+///
+/// impl OracleOptim<Arr> for MyOracle {
+///     type CutChoice = f64;
+///
+///     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+///         // Minimize f(x) = x[0]^2 + x[1]^2
+///         let g = array![2.0 * xc[0], 2.0 * xc[1]];
+///         let f = xc[0].powi(2) + xc[1].powi(2);
+///         if f < *gamma {
+///             *gamma = f;
+///             ((g, f), true)  // Better solution found
+///         } else {
+///             ((g, f), false)
+///         }
+///     }
+/// }
+///
+/// let mut ellip = Ell::new_with_scalar(10.0, array![5.0, 5.0]);
+/// let mut oracle = MyOracle;
+/// let mut gamma = f64::INFINITY;
+/// let options = Options::new(1000, 1e-10);
+///
+/// let (xbest, num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+///
+/// assert!(xbest.is_some());
+/// assert!(num_iters < 1000);
+/// ```
 pub fn cutting_plane_optim<T, Oracle, Space>(
     omega: &mut Oracle,
     space: &mut Space,
