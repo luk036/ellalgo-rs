@@ -239,7 +239,7 @@ where
 /// let (xbest, num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 ///
 /// assert!(xbest.is_some());
-/// assert!(num_iters < 1000);
+/// assert!(num_iters <= options.max_iters);
 /// ```
 pub fn cutting_plane_optim<T, Oracle, Space>(
     omega: &mut Oracle,

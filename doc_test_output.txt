@@ -1,0 +1,48 @@
+﻿cargo :     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.98s
+At line:1 char:1
++ cargo test --doc 2>&1 | Out-File -FilePath doc_test_output.txt -Encod ...
++ ~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.98s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   Doc-tests ellalgo_rs
+
+running 35 tests
+test src\cutting_plane.rs - cutting_plane::Options::new (line 26) ... ok
+test src\ell_calc.rs - ell_calc::EllCalc::calc_bias_cut_q (line 780) ... ok
+test src\logging.rs - logging (line 12) ... ignored
+test src\logging.rs - logging (line 32) ... ignored
+test src\ell_calc.rs - ell_calc::EllCalc::new (line 537) ... ok
+test src\ell_calc.rs - ell_calc::EllCalc::calc_parallel_bias_cut (line 619) ... ok
+test src\ell_calc.rs - ell_calc::EllCalc::calc_parallel_q (line 672) ... ok
+test src\ell.rs - ell::Ell::new (line 104) ... ok
+test src\ell_calc.rs - ell_calc::EllCalc::calc_bias_cut (line 750) ... ok
+test src\ell_calc.rs - ell_calc::EllCalcCore::calc_bias_cut (line 426) ... ok
+test src\ell_calc.rs - ell_calc::EllCalcCore::calc_parallel_bias_cut_fast (line 135) ... ok
+test src\cutting_plane.rs - cutting_plane::Options::default (line 49) ... ok
+test src\ell_calc.rs - ell_calc::EllCalcCore::calc_parallel_bias_cut (line 226) ... ok
+test src\ell_calc.rs - ell_calc::EllCalc::calc_parallel_central_cut (line 715) ... ok
+test src\ell_calc.rs - ell_calc::EllCalcCore::calc_central_cut (line 483) ... ok
+test src\ell_calc.rs - ell_calc::EllCalcCore::calc_bias_cut_fast (line 361) ... ok
+test src\ell_calc.rs - ell_calc::EllCalc::calc_central_cut (line 811) ... ok
+test src\ell.rs - ell::Ell::new_with_scalar (line 132) ... ok
+test src\ell_calc.rs - ell_calc::EllCalcCore::calc_parallel_central_cut (line 293) ... ok
+test src\ell.rs - ell::Ell::new_with_matrix (line 62) ... ok
+test src\cutting_plane.rs - cutting_plane::cutting_plane_optim (line 209) ... ok
+test src\ell.rs - ell::Ell::update_bias_cut (line 235) ... ok
+test src\ell_calc.rs - ell_calc::EllCalcCore::new (line 51) ... ok
+test src\oracles\ldlt_mgr.rs - oracles::ldlt_mgr::LDLTMgr::factor (line 109) ... ok
+test src\oracles\ldlt_mgr.rs - oracles::ldlt_mgr::LDLTMgr::factor_with_allow_semidefinite (line 164) ... ok
+test src\oracles\ldlt_mgr.rs - oracles::ldlt_mgr::LDLTMgr::factorize (line 80) ... ok
+test src\oracles\ldlt_mgr.rs - oracles::ldlt_mgr::LDLTMgr::is_spd (line 218) ... ok
+test src\oracles\ldlt_mgr.rs - oracles::ldlt_mgr::LDLTMgr::new (line 50) ... ok
+test src\oracles\ldlt_mgr.rs - oracles::ldlt_mgr::LDLTMgr::sym_quad (line 285) ... ok
+test src\oracles\ldlt_mgr.rs - oracles::ldlt_mgr::LDLTMgr::witness (line 242) ... ok
+test src\oracles\profit_oracle.rs - oracles::profit_oracle::ProfitOracle::new (line 76) ... ok
+test src\oracles\profit_oracle.rs - oracles::profit_oracle::ProfitOracleQ::new (line 297) ... ok
+test src\oracles\profit_oracle.rs - oracles::profit_oracle::ProfitRbOracle::new (line 204) ... ok
+test src\power_iteration.rs - power_iteration::Options (line 11) ... ok
+test src\power_iteration.rs - power_iteration::power_iteration (line 45) ... ok
+
+test result: ok. 33 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 22.49s
+
