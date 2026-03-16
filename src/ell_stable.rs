@@ -111,7 +111,7 @@ impl EllStable {
     ///
     ///  Arguments:
     ///
-    ///  * `grad`: A reference to an Array1<f64> representing the gradient vector.
+    ///  * `grad`: A reference to an `Array1<f64>` representing the gradient vector.
     ///  * `beta`: The `beta` parameter is a value that is used in the inequality constraint of the ellipsoid
     ///    core function. It represents the threshold for the constraint, and the function checks if the dot
     ///    product of the gradient and the difference between `x` and `xc` plus `beta` is less than or

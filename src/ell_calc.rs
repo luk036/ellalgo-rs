@@ -138,13 +138,13 @@ impl EllCalcCore {
     /// use ellalgo_rs::ell_calc::EllCalcCore;
     ///
     /// let ell_calc_core = EllCalcCore::new(4.0);
-    /// let (rho, sigma, delta) = ell_calc_core.calc_parallel_bias_cut_fast(1.0, 2.0, 4.0, 2.0, 12.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_parallel_bias_cut_fast_old(1.0, 2.0, 4.0, 2.0, 12.0);
     /// assert_approx_eq!(rho, 1.2);
     /// assert_approx_eq!(sigma, 0.8);
     /// assert_approx_eq!(delta, 0.8);
     /// ```
     )]
-    pub fn calc_parallel_bias_cut_fast(
+    pub fn calc_parallel_bias_cut_fast_old(
         &self,
         beta0: f64,
         beta1: f64,
@@ -161,6 +161,72 @@ impl EllCalcCore {
         let rho = bavg * inv_mu_plus_1;
         let sigma = inv_mu_plus_1;
         let delta = (tsq + inv_mu * (bavgsq * inv_mu_plus_1 - b0b1)) / tsq;
+
+        (rho, sigma, delta)
+    }
+
+    #[doc = svgbobdoc::transform!(
+    /// The function calculates the core values for updating an ellipsoid with either a parallel-cut or
+    /// a deep-cut.
+    ///
+    /// Arguments:
+    ///
+    /// * `beta0`: The parameter `beta0` represents the semi-minor axis of the ellipsoid before the cut. It is
+    ///            a floating-point number.
+    /// * `beta1`: The parameter `beta1` represents the length of the semi-minor axis of the ellipsoid.
+    /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
+    ///            of the ellipsoid.
+    ///
+    /// ```svgbob
+    ///      _.-'''''''-._
+    ///    ,'     |       `.
+    ///   /  |    |         \
+    ///  .   |    |          .
+    ///  |   |    |          |
+    ///  |   |    |.         |
+    ///  |   |    |          |
+    ///  :\  |    |         /:
+    ///  | `._    |      _.' |
+    ///  |   |'-.......-'    |
+    ///  |   |    |          |
+    /// "-τ" "-β" "-β"      +τ
+    ///        1    0
+    ///
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalcCore;
+    ///
+    /// let ell_calc_core = EllCalcCore::new(4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_parallel_bias_cut_fast(1.0, 2.0, 4.0, 2.0, 12.0);
+    /// assert_approx_eq!(rho, 1.2);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(delta, 0.8);
+    /// ```
+    )]
+    pub fn calc_parallel_bias_cut_fast(
+        &self,
+        beta0: f64,
+        beta1: f64,
+        tsq: f64,
+        b0b1: f64,
+        eta: f64,
+    ) -> (f64, f64, f64) {
+        let b0sq = beta0 * beta0;
+        let b1sq = beta1 * beta1;
+        let zeta0 = tsq - b0sq;
+        let zeta1 = tsq - b1sq;
+        let temp = self.half_n * (b1sq - b0sq);
+        let xi = (zeta0 * zeta1 + temp * temp).sqrt();
+        let bsum = beta0 + beta1;
+        let bsumsq = bsum * bsum;
+        // let sigma = self._cst3 + self._cst2 * (tsq + b0b1 - xi) / bsumsq;
+        let sigma = 2.0 * eta / (tsq + b0b1 + self.half_n * bsumsq + xi);
+        let rho = sigma * (beta0 + beta1) / 2.0;
+        let delta = self.cst1 * ((zeta0 + zeta1) / 2.0 + xi / self.n_f) / tsq;
 
         (rho, sigma, delta)
     }
