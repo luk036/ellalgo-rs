@@ -2,10 +2,10 @@ use ndarray::{s, Array1, Array2};
 // use ndarray_linalg::Lapack;
 // use std::cmp::min;
 
-/// The `LDLTMgr` struct is a manager for LDLTMgr factorization in Rust.
+/// The `LDLTMgr` struct is a manager for `LDLTMgr` factorization in Rust.
 ///
-/// `LDLTMgr` is a class that performs the LDLTMgr factorization for a given
-/// symmetric matrix. The LDLTMgr factorization decomposes a symmetric matrix A into
+/// `LDLTMgr` is a class that performs the `LDLTMgr` factorization for a given
+/// symmetric matrix. The `LDLTMgr` factorization decomposes a symmetric matrix A into
 /// the product of a lower triangular matrix L, a diagonal matrix D, and the
 /// transpose of L. This factorization is useful for solving linear systems and
 /// eigenvalue problems. The class provides methods to perform the factorization,
@@ -20,11 +20,11 @@ use ndarray::{s, Array1, Array2};
 ///
 /// Properties:
 ///
-/// * `pos`: A tuple containing two usize values. It represents the dimensions of the LDLTMgr factorization.
+/// * `pos`: A tuple containing two usize values. It represents the dimensions of the `LDLTMgr` factorization.
 /// * `wit`: The `wit` property is an Array1 of f64 values.
-/// * `ndim`: The `ndim` property represents the size of the matrix that will be factorized using LDLTMgr
+/// * `ndim`: The `ndim` property represents the size of the matrix that will be factorized using `LDLTMgr`
 ///   factorization.
-/// * `storage`: The `storage` property is a 2-dimensional array of type `f64`. It is used to store the LDLTMgr
+/// * `storage`: The `storage` property is a 2-dimensional array of type `f64`. It is used to store the `LDLTMgr`
 ///   factorization of a matrix.
 pub struct LDLTMgr {
     pub pos: (usize, usize),
@@ -92,7 +92,7 @@ impl LDLTMgr {
         self.factor(|i, j| mat_a[[i, j]])
     }
 
-    /// The `factor` function performs LDLTMgr factorization on a matrix and checks if it is symmetric
+    /// The `factor` function performs `LDLTMgr` factorization on a matrix and checks if it is symmetric
     /// positive definite.
     ///
     /// Arguments:

@@ -10,7 +10,7 @@ use ndarray::Array2;
 ///  The code defines a struct called [`EllStable`] that represents the stable version of an ellipsoid
 ///  search space in the Ellipsoid method.
 ///
-///    EllStable = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
+///    `EllStable` = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
 ///
 ///  Properties:
 ///

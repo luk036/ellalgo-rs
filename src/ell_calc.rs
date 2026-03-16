@@ -29,12 +29,12 @@ pub struct EllCalcCore {
 }
 
 impl EllCalcCore {
-    /// Constructs a new EllCalcCore instance, initializing its fields based on the provided dimension n_f.
+    /// Constructs a new `EllCalcCore` instance, initializing its fields based on the provided dimension `n_f`.
     ///
-    /// This is a constructor function for the EllCalcCore struct. It takes in the dimension n_f and uses
-    /// it to calculate and initialize the other fields of EllCalcCore that depend on n_f.
+    /// This is a constructor function for the `EllCalcCore` struct. It takes in the dimension `n_f` and uses
+    /// it to calculate and initialize the other fields of `EllCalcCore` that depend on `n_f`.
     ///
-    /// Being a constructor function, it is part of the public API of the EllCalcCore struct. The
+    /// Being a constructor function, it is part of the public API of the `EllCalcCore` struct. The
     /// documentation follows the conventions and style of the other documentation in this crate.
     ///
     /// Arguments:
@@ -88,6 +88,8 @@ impl EllCalcCore {
     /// * `beta1`: The parameter `beta1` represents the length of the semi-minor axis of the ellipsoid.
     /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
     ///            of the ellipsoid.
+    /// * `b0b1`: The product of beta0 and beta1, used in calculations.
+    /// * `eta`: A calculated value representing tsq + n_f * b0b1, used in the ellipsoid update.
     ///
     /// ```svgbob
     ///      _.-'''''''-._
@@ -176,6 +178,8 @@ impl EllCalcCore {
     /// * `beta1`: The parameter `beta1` represents the length of the semi-minor axis of the ellipsoid.
     /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
     ///            of the ellipsoid.
+    /// * `b0b1`: The product of beta0 and beta1, used in calculations.
+    /// * `eta`: A calculated value representing tsq + n_f * b0b1, used in the ellipsoid update.
     ///
     /// ```svgbob
     ///      _.-'''''''-._
@@ -568,7 +572,7 @@ impl EllCalcCore {
 
 /// The `EllCalc` struct represents an ellipsoid search space in Rust.
 ///
-///  EllCalc = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
+///  `EllCalc` = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
 ///
 /// Properties:
 ///

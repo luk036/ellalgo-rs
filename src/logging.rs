@@ -6,7 +6,7 @@
 //! ## Usage
 //!
 //! This module re-exports the `log` crate for use with ellalgo-rs.
-//! Users can then use any logger implementation (env_logger, tracing, etc.)
+//! Users can then use any logger implementation (`env_logger`, tracing, etc.)
 //! in their application code.
 //!
 //! ```ignore
@@ -20,9 +20,9 @@
 //! }
 //! ```
 //!
-//! ## Example with env_logger
+//! ## Example with `env_logger`
 //!
-//! Add env_logger to your Cargo.toml:
+//! Add `env_logger` to your Cargo.toml:
 //! ```toml
 //! [dependencies]
 //! env_logger = "0.11"

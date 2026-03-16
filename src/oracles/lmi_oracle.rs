@@ -16,7 +16,7 @@ pub struct LMIOracle {
 }
 
 impl LMIOracle {
-    /// This function initializes a new LMIOracle struct with given matrices and an LDLTMgr instance.
+    /// This function initializes a new `LMIOracle` struct with given matrices and an `LDLTMgr` instance.
     ///
     /// Arguments:
     ///
@@ -45,12 +45,10 @@ impl OracleFeas<Arr> for LMIOracle {
     ///
     /// Arguments:
     ///
-    /// * `mat_f0`: `mat_f0` is a reference to a 2D array of `f64` values.
-    /// * `mat_f`: The `mat_f` parameter in the `get_elem` function is a slice of `Array2<f64>` types.
-    ///   It represents an array of 2D matrices. Each element in the slice is a 2D matrix of f64 values.
-    /// * `xc`: The `xc` parameter in the `assess_feas` function is a reference to an `Array1<f64>`, which
-    ///   represents a one-dimensional array of floating-point numbers. This array is used as input to the
-    ///   function for some calculations related to feasibility assessment.
+    /// * `xc`: The `xc` parameter is a reference to an `Array1<f64>`, which represents a one-dimensional
+    ///   array of floating-point numbers. This array is used as input to the function for some calculations
+    ///   related to feasibility assessment. The function uses the struct fields `mat_f0` and `mat_f` to
+    ///   perform the feasibility check.
     fn assess_feas(&mut self, xc: &Array1<f64>) -> Option<Cut> {
         fn get_elem(
             mat_f0: &Array2<f64>,

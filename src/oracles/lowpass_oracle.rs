@@ -206,7 +206,7 @@ impl OracleFeas<Arr> for LowpassOracle {
 impl OracleOptim<Arr> for LowpassOracle {
     type CutChoice = (f64, Option<f64>); // parallel cut
 
-    /// The function assess_optim takes in parameters x and sp_sq, updates the value of sp_sq, assesses
+    /// The function `assess_optim` takes in parameters x and `sp_sq`, updates the value of `sp_sq`, assesses
     /// feasibility of x, and returns a tuple containing a cut and a boolean value.
     ///
     /// Arguments:

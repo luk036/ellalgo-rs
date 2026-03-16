@@ -4,7 +4,7 @@ use ndarray::prelude::*;
 type Arr = Array1<f64>;
 type Cut = (Arr, f64);
 
-/// The ProfitOracle struct represents an oracle for a profit maximization problem with specific
+/// The `ProfitOracle` struct represents an oracle for a profit maximization problem with specific
 /// parameters.
 ///
 ///  This example is taken from [Aliabadi and Salahi, 2013]:
@@ -50,7 +50,7 @@ pub struct ProfitOracle {
 }
 
 impl ProfitOracle {
-    /// The function `new` constructs a new ProfitOracle object with given parameters.
+    /// The function `new` constructs a new `ProfitOracle` object with given parameters.
     ///
     /// Arguments:
     ///
@@ -98,7 +98,7 @@ impl ProfitOracle {
         }
     }
 
-    /// The function assess_feas calculates the gradient and objective function value for an optimization
+    /// The function `assess_feas` calculates the gradient and objective function value for an optimization
     /// problem in Rust.
     ///
     /// Arguments:
@@ -141,7 +141,7 @@ impl ProfitOracle {
 impl OracleOptim<Arr> for ProfitOracle {
     type CutChoice = f64; // single cut
 
-    /// The function assess_optim calculates the gradient and objective function value for an optimization
+    /// The function `assess_optim` calculates the gradient and objective function value for an optimization
     /// problem in Rust.
     ///
     /// Arguments:
@@ -179,7 +179,7 @@ pub struct ProfitRbOracle {
 }
 
 impl ProfitRbOracle {
-    /// The function `new` constructs a new ProfitRbOracle object with given parameters.
+    /// The function `new` constructs a new `ProfitRbOracle` object with given parameters.
     ///
     /// Arguments:
     ///
@@ -258,7 +258,7 @@ impl OracleOptim<Arr> for ProfitRbOracle {
     }
 }
 
-/// The ProfitOracleQ struct is an oracle for the profit maximization problem in a discrete version.
+/// The `ProfitOracleQ` struct is an oracle for the profit maximization problem in a discrete version.
 ///
 /// Properties:
 ///

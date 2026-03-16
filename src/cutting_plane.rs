@@ -41,7 +41,7 @@ impl Default for Options {
     /// Provides default values for the Options struct.
     ///
     /// The default values are:
-    /// - max_iters: 2000
+    /// - `max_iters`: 2000
     /// - tolerance: 1e-20
     ///
     /// # Examples
@@ -274,7 +274,7 @@ where
 ///
 /// Arguments:
 ///
-/// * `omega`: The parameter "omega" is an instance of the OracleOptimQ trait, which represents an
+/// * `omega`: The parameter "omega" is an instance of the `OracleOptimQ` trait, which represents an
 ///   oracle that provides assessments for the cutting-plane method. It is used to query the oracle for
 ///   assessments on the current solution.
 /// * `space_q`: The parameter `space_q` is a mutable reference to a `Space` object, which represents
