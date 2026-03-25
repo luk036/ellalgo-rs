@@ -1,8 +1,27 @@
+//! Quasiconvex optimization examples and oracles.
+//!
+//! This module provides example oracles for quasiconvex optimization problems,
+//! specifically for demonstrating the ellipsoid method on problems where the
+//! objective function is quasiconvex.
+
 use super::cutting_plane::OracleOptim;
 use ndarray::prelude::*;
 
 type Arr = Array1<f64>;
 
+/// Oracle for a quasiconvex optimization problem.
+///
+/// This oracle solves a quasiconvex optimization problem where the constraints
+/// are checked in a round-robin fashion. The problem is to find values that
+/// satisfy:
+///
+/// - $x_0^2 \leq \log(x_1)$  
+/// - $x_0 \leq \gamma e^{x_1}$
+///
+/// where $\gamma$ is the best-so-far optimal value.
+///
+/// The oracle checks constraints sequentially and returns a cut if any
+/// constraint is violated, otherwise updates $\gamma$ with the optimal value.
 #[derive(Debug)]
 pub struct MyOracle {
     idx: i32,
