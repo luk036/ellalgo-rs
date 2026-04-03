@@ -48,6 +48,7 @@ fn main() {
 ```
 
 Add to `Cargo.toml`:
+
 ```toml
 [dependencies]
 ellalgo-rs = "0.1"
@@ -84,3 +85,14 @@ for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## 🔗 Related Projects
+
+### Polyglot Implementations
+
+- [**ellalgo-cpp**](https://github.com/luk036/ellalgo-cpp) - C++ version
+- [**ellpy**](https://github.com/luk036/ellpy) - Python version (archived, superseded by ellalgo-rs)
+
+### Algorithm Polyglot
+
+- [**algorithm-polyglot**](https://github.com/luk036/algorithm-polyglot) - Meta-repo documenting the polyglot strategy
