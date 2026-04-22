@@ -47,7 +47,7 @@ jobs:
       - name: Clippy check
         run: cargo clippy --all-targets
 
-miri:
+  miri:
     name: Miri
     runs-on: ubuntu-latest
     steps:
