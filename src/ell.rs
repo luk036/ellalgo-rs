@@ -125,7 +125,7 @@ impl Ell {
     ///
     /// Returns:
     ///
-    /// an instance of the [`Ell`] struct.
+    /// an instance of the [`Ell`] object.
     ///
     /// # Examples
     ///
@@ -144,6 +144,23 @@ impl Ell {
     /// ```
     pub fn new_with_scalar(val: f64, xc: Array1<f64>) -> Ell {
         Ell::new_with_matrix(val, Array2::eye(xc.len()), xc)
+    }
+
+    /// Constructs a new [`Ell`] from a covariance matrix.
+    ///
+    /// This is useful when you have a covariance matrix (e.g., from statistical estimation)
+    /// and want to use it as the initial ellipsoid shape.
+    ///
+    /// # Arguments:
+    ///
+    /// * `cov`: A positive definite covariance matrix of shape (n, n)
+    /// * `xc`: The center of the ellipsoid
+    ///
+    /// # Returns:
+    ///
+    /// An instance of [`Ell`] with kappa=1.0 and mq=cov
+    pub fn from_covariance(cov: Array2<f64>, xc: Array1<f64>) -> Ell {
+        Ell::new_with_matrix(1.0, cov, xc)
     }
 
     /// Update ellipsoid core function using the cut
@@ -378,8 +395,8 @@ mod tests {
         let ellip = Ell::new_with_scalar(0.01, Array1::zeros(4));
         assert!(!ellip.no_defer_trick);
         assert_approx_eq!(ellip.kappa, 0.01);
-        assert_eq!(ellip.mq, Array2::eye(4));
-        assert_eq!(ellip.xc, Array1::zeros(4));
+        assert_eq!(ellip.mq, Array2::<f64>::eye(4));
+        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
         assert_approx_eq!(ellip.tsq, 0.0);
     }
 
@@ -389,8 +406,11 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), 0.0);
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, -0.01 * Array1::ones(4));
-        assert_eq!(ellip.mq, Array2::eye(4) - 0.1 * Array2::ones((4, 4)));
+        assert_eq!(ellip.xc, -0.01 * Array1::<f64>::ones(4));
+        assert_eq!(
+            ellip.mq,
+            Array2::<f64>::eye(4) - 0.1 * Array2::<f64>::ones((4, 4))
+        );
         assert_approx_eq!(ellip.kappa, 0.16 / 15.0);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
@@ -413,8 +433,11 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), (0.0, Some(0.05)));
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, -0.01 * Array1::ones(4));
-        assert_eq!(ellip.mq, Array2::eye(4) - 0.2 * Array2::ones((4, 4)));
+        assert_eq!(ellip.xc, -0.01 * Array1::<f64>::ones(4));
+        assert_eq!(
+            ellip.mq,
+            Array2::<f64>::eye(4) - 0.2 * Array2::<f64>::ones((4, 4))
+        );
         assert_approx_eq!(ellip.kappa, 0.012);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
@@ -437,8 +460,8 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), (-0.04, Some(0.0625)));
         let status = ellip.update_bias_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, Array1::zeros(4));
-        assert_eq!(ellip.mq, Array2::eye(4));
+        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
+        assert_eq!(ellip.mq, Array2::<f64>::eye(4));
         assert_approx_eq!(ellip.kappa, 0.01);
     }
 
@@ -448,8 +471,8 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), (-0.04, Some(0.0625)));
         let status = ellip.update_q(&cut);
         assert_eq!(status, CutStatus::NoEffect);
-        assert_eq!(ellip.xc, Array1::zeros(4));
-        assert_eq!(ellip.mq, Array2::eye(4));
+        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
+        assert_eq!(ellip.mq, Array2::<f64>::eye(4));
         assert_approx_eq!(ellip.kappa, 0.01);
     }
 

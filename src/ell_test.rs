@@ -14,8 +14,8 @@ mod tests {
         let ellip = create_test_ell();
         assert!(!ellip.no_defer_trick);
         assert_approx_eq!(ellip.kappa, 0.01);
-        assert_eq!(ellip.mq, Array2::eye(4));
-        assert_eq!(ellip.xc, Array1::zeros(4));
+        assert_eq!(ellip.mq, Array2::<f64>::eye(4));
+        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
         assert_approx_eq!(ellip.tsq, 0.0);
     }
 
@@ -25,8 +25,11 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), 0.0);
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, -0.01 * Array1::ones(4));
-        assert_eq!(ellip.mq, Array2::eye(4) - 0.1 * Array2::ones((4, 4)));
+        assert_eq!(ellip.xc, -0.01 * Array1::<f64>::ones(4));
+        assert_eq!(
+            ellip.mq,
+            Array2::<f64>::eye(4) - 0.1 * Array2::<f64>::ones((4, 4))
+        );
         assert_approx_eq!(ellip.kappa, 0.16 / 15.0);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
@@ -49,8 +52,11 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), (0.0, Some(0.05)));
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, -0.01 * Array1::ones(4));
-        assert_eq!(ellip.mq, Array2::eye(4) - 0.2 * Array2::ones((4, 4)));
+        assert_eq!(ellip.xc, -0.01 * Array1::<f64>::ones(4));
+        assert_eq!(
+            ellip.mq,
+            Array2::<f64>::eye(4) - 0.2 * Array2::<f64>::ones((4, 4))
+        );
         assert_approx_eq!(ellip.kappa, 0.012);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
@@ -73,8 +79,8 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), (-0.04, Some(0.0625)));
         let status = ellip.update_bias_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, Array1::zeros(4));
-        assert_eq!(ellip.mq, Array2::eye(4));
+        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
+        assert_eq!(ellip.mq, Array2::<f64>::eye(4));
         assert_approx_eq!(ellip.kappa, 0.01);
     }
 
@@ -84,8 +90,8 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), (-0.04, Some(0.0625)));
         let status = ellip.update_q(&cut);
         assert_eq!(status, CutStatus::NoEffect);
-        assert_eq!(ellip.xc, Array1::zeros(4));
-        assert_eq!(ellip.mq, Array2::eye(4));
+        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
+        assert_eq!(ellip.mq, Array2::<f64>::eye(4));
         assert_approx_eq!(ellip.kappa, 0.01);
     }
 

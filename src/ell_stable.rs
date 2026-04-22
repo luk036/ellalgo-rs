@@ -361,7 +361,7 @@ mod tests {
     fn test_construct() {
         let ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
         assert_approx_eq!(ellip.kappa, 0.01);
-        assert_eq!(ellip.xc, Array1::zeros(4));
+        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
         assert_approx_eq!(ellip.tsq, 0.0);
     }
 
@@ -371,7 +371,7 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), 0.0);
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, -0.01 * Array1::ones(4));
+        assert_eq!(ellip.xc, -0.01 * Array1::<f64>::ones(4));
         assert_approx_eq!(ellip.kappa, 0.16 / 15.0);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
@@ -393,7 +393,7 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), (0.0, Some(0.05)));
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, -0.01 * Array1::ones(4));
+        assert_eq!(ellip.xc, -0.01 * Array1::<f64>::ones(4));
         assert_approx_eq!(ellip.kappa, 0.012);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
@@ -415,7 +415,7 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), (-0.04, Some(0.0625)));
         let status = ellip.update_bias_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, Array1::zeros(4));
+        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
         assert_approx_eq!(ellip.kappa, 0.01);
     }
 
@@ -425,7 +425,7 @@ mod tests {
         let cut = (0.5 * Array1::ones(4), (-0.04, Some(0.0625)));
         let status = ellip.update_q(&cut);
         assert_eq!(status, CutStatus::NoEffect);
-        assert_eq!(ellip.xc, Array1::zeros(4));
+        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
         assert_approx_eq!(ellip.kappa, 0.01);
     }
 
