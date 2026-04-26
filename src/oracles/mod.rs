@@ -14,8 +14,8 @@
 //!
 //! ## Usage
 //!
-//! Each oracle implements either [`OracleFeas`] for feasibility problems or
-//! [`OracleOptim`] for optimization problems from the [`crate::cutting_plane`] module.
+//! Each oracle implements either [`crate::cutting_plane::OracleFeas`] for feasibility problems or
+//! [`crate::cutting_plane::OracleOptim`] for optimization problems.
 //!
 //! ```rust
 //! use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};

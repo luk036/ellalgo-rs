@@ -48,7 +48,6 @@
 //! - [`ell`] - Main ellipsoid search space implementation
 //! - [`ell_calc`] - Core calculations for ellipsoid updates
 //! - [`ell_stable`] - Numerically stable ellipsoid implementation
-//! - [`ell1d`] - One-dimensional ellipsoid (for testing)
 //! - [`oracles`] - Problem-specific oracle implementations
 //! - [`error`] - Error types for the library
 //! - [`quasicvx`] - Quasiconvex optimization examples
@@ -61,7 +60,9 @@
 
 // pub mod conceptual;
 pub mod cutting_plane;
-pub use crate::cutting_plane::{CutStatus, SearchSpace, UpdateByCutChoice};
+pub use crate::cutting_plane::{
+    CutStatus, OracleFeas, OracleOptim, SearchSpace, UpdateByCutChoice,
+};
 
 pub mod ell;
 pub mod ell_calc;

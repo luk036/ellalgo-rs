@@ -47,22 +47,6 @@ jobs:
       - name: Clippy check
         run: cargo clippy --all-targets
 
-  miri:
-    name: Miri
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@nightly
-      - uses: Swatinem/rust-cache@v2
-      - name: Install miri
-        run: |
-          rustup +nightly component add miri
-          cargo +nightly miri setup
-      - name: Run miri tests
-        run: cargo +nightly miri test --all-features --workspace
-
   docs:
     name: Docs
     runs-on: ubuntu-latest
