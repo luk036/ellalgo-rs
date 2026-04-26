@@ -516,4 +516,15 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_from_covariance() {
+        use ndarray::array;
+        let cov = Array2::from_diag(&array![2.0, 3.0, 4.0, 5.0]);
+        let xc = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
+        let ellip = Ell::from_covariance(cov.clone(), xc.clone());
+        assert_eq!(ellip.kappa, 1.0);
+        assert_eq!(ellip.mq, cov);
+        assert_eq!(ellip.xc, xc);
+    }
 }

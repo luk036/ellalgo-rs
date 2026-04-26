@@ -439,4 +439,14 @@ mod tests {
         assert_approx_eq!(ellip.kappa, 0.01232);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
+
+    #[test]
+    fn test_new() {
+        use ndarray::arr1;
+        let val = arr1(&[1.0, 1.0]);
+        let xc = arr1(&[0.0, 0.0]);
+        let ellip = EllStable::new(val, xc);
+        assert_eq!(ellip.kappa, 1.0);
+        assert_eq!(ellip.mq, Array2::<f64>::eye(2));
+    }
 }

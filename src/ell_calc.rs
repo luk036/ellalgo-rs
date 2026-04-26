@@ -1022,6 +1022,7 @@ mod tests {
     #[test]
     fn test_calc_central_cut2() {
         let ell_calc = EllCalc::new(4);
+        // test with Some(beta1)
         let (status, result) =
             ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), 0.01);
         assert_eq!(status, CutStatus::Success);
@@ -1029,6 +1030,11 @@ mod tests {
         assert_approx_eq!(sigma, 0.8);
         assert_approx_eq!(rho, 0.02);
         assert_approx_eq!(delta, 1.2);
+        // test with None (fallback to single central cut)
+        let (status2, result2) = ell_calc.calc_single_or_parallel_central_cut(&(0.05, None), 0.01);
+        assert_eq!(status2, CutStatus::Success);
+        let (_rho2, sigma2, _delta2) = result2;
+        assert_approx_eq!(sigma2, 0.4);
     }
 
     #[test]
@@ -1057,6 +1063,20 @@ mod tests {
         assert_approx_eq!(rho, 0.02);
         assert_approx_eq!(sigma, 0.8);
         assert_approx_eq!(delta, 1.2);
+        // test with None
+        let (status2, _result2) = ell_calc.calc_single_or_parallel_bias_cut(&(0.05, None), 0.01);
+        assert_eq!(status2, CutStatus::Success);
+    }
+
+    #[test]
+    fn test_calc_parallel_bias_cut_fallback() {
+        let ell_calc = EllCalc::new(4);
+        // test with None (fallback to single bias cut)
+        let (status2, _result2) = ell_calc.calc_single_or_parallel_bias_cut(&(0.05, None), 0.01);
+        assert_eq!(status2, CutStatus::Success);
+        // test with None (fallback to single q cut)
+        let (status3, _result3) = ell_calc.calc_single_or_parallel_q(&(0.05, None), 0.01);
+        assert_eq!(status3, CutStatus::Success);
     }
 
     #[test]

@@ -78,4 +78,22 @@ mod tests {
 
         assert!(improved);
     }
+
+    #[test]
+    fn test_svm_oracle_optimal() {
+        // Data that can be perfectly separated: [1,0] with label +1 and [-1,0] with label -1
+        let data = array![[1.0, 0.0], [-1.0, 0.0]];
+        let labels = array![1, -1];
+        let mut oracle = SvmOracle::new(data, labels);
+
+        let mut gamma = f64::NEG_INFINITY;
+        let xc = array![1.0, 0.0, 0.0]; // w=[1,0], b=0
+                                        // Point 1: y=1, margin = 1*(1*1 + 0) = 1
+                                        // Point 2: y=-1, margin = -1*(-1*1 + 0) = 1
+                                        // min_val = 1.0 >= 1.0, so should be optimal
+        let ((_grad, _beta), improved) = oracle.assess_optim(&xc, &mut gamma);
+        assert!(improved);
+        // When min_val >= 1.0, returns gamma = 0.0 as optimal
+        assert_eq!(gamma, 0.0);
+    }
 }

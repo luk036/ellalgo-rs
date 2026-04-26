@@ -68,4 +68,23 @@ mod tests {
 
         assert!(improved);
     }
+
+    #[test]
+    fn test_maxcut_oracle_not_optimal() {
+        let w = array![[0.0, 1.0], [1.0, 0.0]];
+        let mut oracle = MaxcutOracle::new(w);
+
+        // First call sets gamma to some value
+        let mut gamma = f64::NEG_INFINITY;
+        let xc = array![1.0, 1.0];
+        let ((_grad, _beta), improved) = oracle.assess_optim(&xc, &mut gamma);
+        assert!(improved);
+        assert!(gamma > f64::NEG_INFINITY);
+
+        // Second call with same x - should not improve since same cut value
+        let xc2 = array![1.0, 1.0];
+        let ((_grad2, _beta2), improved2) = oracle.assess_optim(&xc2, &mut gamma);
+        // Same value should not improve
+        assert!(!improved2);
+    }
 }

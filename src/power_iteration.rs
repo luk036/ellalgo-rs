@@ -219,5 +219,14 @@ mod tests {
         println!("{:?}", x3);
         println!("{}", ld);
         assert_eq!(niter, 23);
+
+        // Test max_iters convergence - very tight tolerance requires max iterations
+        let options_tight = Options {
+            max_iters: 5,
+            tolerance: 1e-14,
+        };
+        let mut x5 = Array1::from_vec(vec![0.3, 0.5, 0.4]);
+        let (_ld, niter) = power_iteration4(matrix.view(), &mut x5, &options_tight);
+        assert_eq!(niter, 5); // hit max_iters
     }
 }
