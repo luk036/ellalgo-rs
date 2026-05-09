@@ -133,7 +133,7 @@ fn my_property(graph: MyGraph) -> TestResult {
 mod tests {
     use super::*;
     use quickcheck::QuickCheck;
-    
+
     #[test]
     fn test_my_property() {
         QuickCheck::new()

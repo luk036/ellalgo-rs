@@ -4,7 +4,7 @@ At line:1 char:1
 + ~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (    Finished `t...get(s) in 0.98s:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
- 
+
    Doc-tests ellalgo_rs
 
 running 35 tests

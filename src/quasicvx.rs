@@ -15,7 +15,7 @@ type Arr = Array1<f64>;
 /// are checked in a round-robin fashion. The problem is to find values that
 /// satisfy:
 ///
-/// - $x_0^2 \leq \log(x_1)$  
+/// - $x_0^2 \leq \log(x_1)$
 /// - $x_0 \leq \gamma e^{x_1}$
 ///
 /// where $\gamma$ is the best-so-far optimal value.

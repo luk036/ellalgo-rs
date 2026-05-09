@@ -167,7 +167,7 @@ use rat_trig_rs::logging::init_logger;
 fn main() {
     init_logger();
     log::info!("Application started");
-    
+
     // Use rat-trig-rs functions
     let q = quadrance((0, 0), (3, 4));
     log::debug!("Quadrance calculated: {}", q);
