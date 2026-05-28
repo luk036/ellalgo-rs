@@ -1,9 +1,6 @@
 use std::f64::consts::PI;
-// use ndarray::{stack, Axis, Array, Array1, Array2};
+use crate::arr::{Arr, linspace};
 use crate::cutting_plane::{OracleFeas, OracleOptim};
-use ndarray::{Array, Array1};
-
-type Arr = Array1<f64>;
 
 pub type Cut = (Arr, (f64, Option<f64>));
 
@@ -77,11 +74,11 @@ impl LowpassOracle {
     /// the
     pub fn new(ndim: usize, wpass: f64, wstop: f64, lp_sq: f64, up_sq: f64, sp_sq: f64) -> Self {
         let mdim = 15 * ndim;
-        let omega: Array1<f64> = Array::linspace(0.0, std::f64::consts::PI, mdim);
+        let omega = linspace(0.0, std::f64::consts::PI, mdim);
         // let tmp: Array2<f64> = Array::from_shape_fn((mdim, ndim - 1), |(i, j)| 2.0 * (omega[i] * (j + 1) as f64).cos());
         // let spectrum: Array2<f64> = stack![Axis(1), Array::ones(mdim).insert_axis(Axis(1)), tmp];
 
-        let mut spectrum = vec![Arr::zeros(ndim); mdim];
+        let mut spectrum = vec![Arr::new(ndim); mdim];
         for i in 0..mdim {
             spectrum[i][0] = 1.0;
             for (j, val) in spectrum[i].iter_mut().enumerate().skip(1) {
@@ -148,7 +145,7 @@ impl OracleFeas<Arr> for LowpassOracle {
             }
             if val < self.lp_sq {
                 let func_val = (-val + self.lp_sq, Some(-val + self.up_sq));
-                return Some((col_k.iter().map(|&a| -a).collect(), func_val));
+                return Some((Arr::from(col_k.iter().map(|&a| -a).collect::<Vec<_>>()), func_val));
             }
         }
 
@@ -167,7 +164,7 @@ impl OracleFeas<Arr> for LowpassOracle {
             }
             if val < 0.0 {
                 return Some((
-                    col_k.iter().map(|&a| -a).collect(),
+                    Arr::from(col_k.iter().map(|&a| -a).collect::<Vec<_>>()),
                     (-val, Some(-val + self.sp_sq)),
                 ));
             }
@@ -187,14 +184,14 @@ impl OracleFeas<Arr> for LowpassOracle {
             let val = col_k.dot(x);
             if val < 0.0 {
                 // single cut
-                return Some((col_k.iter().map(|&a| -a).collect(), (-val, None)));
+                return Some((Arr::from(col_k.iter().map(|&a| -a).collect::<Vec<_>>()), (-val, None)));
             }
         }
 
         self.more_alt = false;
 
         if x[0] < 0.0 {
-            let mut grad = Arr::zeros(ndim);
+            let mut grad = Arr::new(ndim);
             grad[0] = -1.0;
             return Some((grad, (-x[0], None)));
         }
@@ -270,7 +267,7 @@ mod tests {
 
     fn run_lowpass() -> (bool, usize) {
         let ndim = 32;
-        let r0 = Arr::zeros(ndim);
+        let r0 = Arr::new(ndim);
         let mut ellip = Ell::new_with_scalar(40.0, r0);
         // ellip.helper.use_parallel_cut = use_parallel_cut;
         let mut omega = create_lowpass_case(ndim);
@@ -294,7 +291,7 @@ mod tests {
     #[test]
     fn test_lowpass_oracle() {
         let mut oracle = create_lowpass_case(32);
-        let x_vec = Arr::zeros(32);
+        let x_vec = Arr::new(32);
         let res = oracle.assess_feas(&x_vec);
         assert!(res.is_some());
     }

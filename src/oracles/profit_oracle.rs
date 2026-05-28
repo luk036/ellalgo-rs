@@ -1,7 +1,6 @@
+use crate::arr::Arr;
 use crate::cutting_plane::{OracleOptim, OracleOptimQ};
-use ndarray::prelude::*;
 
-type Arr = Array1<f64>;
 type Cut = (Arr, f64);
 
 /// The `ProfitOracle` struct represents an oracle for a profit maximization problem with specific
@@ -74,12 +73,12 @@ impl ProfitOracle {
     /// # Example
     ///
     /// ```
-    /// use ndarray::array;
+    /// use ellalgo_rs::arr::Arr;
     /// use ellalgo_rs::oracles::profit_oracle::ProfitOracle;
     ///
     /// let params = (20.0, 40.0, 30.5);
-    /// let elasticities = array![0.1, 0.4];
-    /// let price_out = array![10.0, 35.0];
+    /// let elasticities = Arr::from(vec![0.1, 0.4]);
+    /// let price_out = Arr::from(vec![10.0, 35.0]);
     /// let oracle = ProfitOracle::new(params, elasticities, price_out);
     /// ```
     pub fn new(params: (f64, f64, f64), elasticities: Arr, price_out: Arr) -> Self {
@@ -94,7 +93,7 @@ impl ProfitOracle {
             elasticities,
             log_cobb: 0.0,
             vx: 0.0,
-            q: Arr::zeros(2),
+            q: Arr::new(2),
         }
     }
 
@@ -116,7 +115,7 @@ impl ProfitOracle {
                 0 => y[0] - self.log_k, // y0 <= log k
                 1 => {
                     self.log_cobb = self.log_p_scale + self.elasticities.dot(y);
-                    self.q = &self.price_out * y.mapv(f64::exp);
+                    self.q = &self.price_out * &y.map(f64::exp);
                     self.vx = self.q[0] + self.q[1];
                     (*gamma + self.vx).ln() - self.log_cobb
                 }
@@ -125,7 +124,7 @@ impl ProfitOracle {
             if fj > 0.0 {
                 return Some((
                     match self.idx {
-                        0 => array![1.0, 0.0],
+                        0 => Arr::from(vec![1.0, 0.0]),
                         1 => &self.q / (*gamma + self.vx) - &self.elasticities,
                         _ => unreachable!(),
                     },
@@ -202,12 +201,12 @@ impl ProfitRbOracle {
     /// # Example
     ///
     /// ```
-    /// use ndarray::array;
+    /// use ellalgo_rs::arr::Arr;
     /// use ellalgo_rs::oracles::profit_oracle::ProfitRbOracle;
     ///
     /// let params = (20.0, 40.0, 30.5);
-    /// let elasticities = array![0.1, 0.4];
-    /// let price_out = array![10.0, 35.0];
+    /// let elasticities = Arr::from(vec![0.1, 0.4]);
+    /// let price_out = Arr::from(vec![10.0, 35.0]);
     /// let vparams = (0.003, 0.007, 1.0, 1.0, 1.0);
     /// let oracle = ProfitRbOracle::new(params, elasticities, price_out, vparams);
     /// ```
@@ -223,7 +222,7 @@ impl ProfitRbOracle {
         let omega = ProfitOracle::new(
             params_rb,
             elasticities.clone(),
-            price_out + Arr::from_vec(vec![e5, e5]),
+            &price_out + &Arr::from(vec![e5, e5]),
         );
         ProfitRbOracle {
             uie,
@@ -295,17 +294,17 @@ impl ProfitOracleQ {
     /// # Example
     ///
     /// ```
-    /// use ndarray::array;
+    /// use ellalgo_rs::arr::Arr;
     /// use ellalgo_rs::oracles::profit_oracle::ProfitOracleQ;
     ///
     /// let params = (20.0, 40.0, 30.5);
-    /// let elasticities = array![0.1, 0.4];
-    /// let price_out = array![10.0, 35.0];
+    /// let elasticities = Arr::from(vec![0.1, 0.4]);
+    /// let price_out = Arr::from(vec![10.0, 35.0]);
     /// let oracle = ProfitOracleQ::new(params, elasticities, price_out);
     /// ```
     pub fn new(params: (f64, f64, f64), elasticities: Arr, price_out: Arr) -> Self {
         ProfitOracleQ {
-            yd: array![0.0, 0.0],
+            yd: Arr::from(vec![0.0, 0.0]),
             omega: ProfitOracle::new(params, elasticities, price_out),
         }
     }
@@ -338,7 +337,7 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
             if x_disc[1] == 0.0 {
                 x_disc[1] = 1.0;
             }
-            self.yd = x_disc.mapv(f64::ln);
+            self.yd = x_disc.map(f64::ln);
         }
         let ((grad, beta), shrunk) = self.omega.assess_optim(&self.yd, gamma);
         let beta = beta + grad.dot(&(&self.yd - y));
@@ -349,96 +348,77 @@ impl OracleOptimQ<Arr> for ProfitOracleQ {
 #[cfg(test)]
 mod tests {
     use super::{ProfitOracle, ProfitOracleQ, ProfitRbOracle};
+    use crate::arr::Arr;
     use crate::cutting_plane::{cutting_plane_optim, cutting_plane_optim_q, Options, OracleOptim};
     use crate::ell::Ell;
-    use ndarray::array;
 
     #[test]
     pub fn test_profit_oracle() {
-        let unit_price = 20.0;
-        let scale = 40.0;
-        let limit = 30.5;
-        let params = (unit_price, scale, limit);
-        let elasticities = array![0.1, 0.4];
-        let price_out = array![10.0, 35.0];
+        let params = (20.0, 40.0, 30.5);
+        let elasticities = Arr::from(vec![0.1, 0.4]);
+        let price_out = Arr::from(vec![10.0, 35.0]);
 
-        let mut ellip = Ell::new(array![100.0, 100.0], array![0.0, 0.0]);
+        let mut ellip = Ell::new(Arr::from(vec![100.0, 100.0]), Arr::from(vec![0.0, 0.0]));
         let mut omega = ProfitOracle::new(params, elasticities, price_out);
         let mut gamma = 0.0;
         let options = Options::default();
         let (y_opt, niter) = cutting_plane_optim(&mut omega, &mut ellip, &mut gamma, &options);
         assert!(y_opt.is_some());
         if let Some(y) = y_opt {
-            assert!(y[0] <= limit.ln());
+            assert!(y[0] <= 30.5f64.ln());
         }
         assert_eq!(niter, 83, "regression test");
     }
 
     #[test]
     pub fn test_profit_oracle_rb() {
-        let unit_price = 20.0;
-        let scale = 40.0;
-        let limit = 30.5;
-        let params = (unit_price, scale, limit);
-        let elasticities = array![0.1, 0.4];
-        let price_out = array![10.0, 35.0];
-        let e1 = 0.003;
-        let e2 = 0.007;
-        let e3 = 1.0;
-        let e4 = 1.0;
-        let e5 = 1.0;
-        let vparams = (e1, e2, e3, e4, e5);
+        let params = (20.0, 40.0, 30.5);
+        let elasticities = Arr::from(vec![0.1, 0.4]);
+        let price_out = Arr::from(vec![10.0, 35.0]);
+        let vparams = (0.003, 0.007, 1.0, 1.0, 1.0);
 
-        let mut ellip = Ell::new(array![100.0, 100.0], array![0.0, 0.0]);
+        let mut ellip = Ell::new(Arr::from(vec![100.0, 100.0]), Arr::from(vec![0.0, 0.0]));
         let mut omega = ProfitRbOracle::new(params, elasticities, price_out, vparams);
         let mut gamma = 0.0;
         let options = Options::default();
         let (y_opt, niter) = cutting_plane_optim(&mut omega, &mut ellip, &mut gamma, &options);
         assert!(y_opt.is_some());
         if let Some(y) = y_opt {
-            assert!(y[0] <= limit.ln());
+            assert!(y[0] <= 30.5f64.ln());
         }
         assert_eq!(niter, 90, "regression test");
     }
 
     #[test]
     pub fn test_profit_oracle_q() {
-        let unit_price = 20.0;
-        let scale = 40.0;
-        let limit = 30.5;
-        let params = (unit_price, scale, limit);
-        let elasticities = array![0.1, 0.4];
-        let price_out = array![10.0, 35.0];
+        let params = (20.0, 40.0, 30.5);
+        let elasticities = Arr::from(vec![0.1, 0.4]);
+        let price_out = Arr::from(vec![10.0, 35.0]);
 
-        let mut ellip = Ell::new(array![100.0, 100.0], array![0.0, 0.0]);
+        let mut ellip = Ell::new(Arr::from(vec![100.0, 100.0]), Arr::from(vec![0.0, 0.0]));
         let mut omega = ProfitOracleQ::new(params, elasticities, price_out);
         let mut gamma = 0.0;
         let options = Options::default();
         let (y_opt, niter) = cutting_plane_optim_q(&mut omega, &mut ellip, &mut gamma, &options);
         assert!(y_opt.is_some());
         if let Some(y) = y_opt {
-            assert!(y[0] <= limit.ln());
+            assert!(y[0] <= 30.5f64.ln());
         }
         assert_eq!(niter, 29, "regression test");
     }
 
     #[test]
     fn test_profit_oracle_direct() {
-        let unit_price = 20.0;
-        let scale = 40.0;
-        let limit = 30.5;
-        let params = (unit_price, scale, limit);
-        let elasticities = array![0.1, 0.4];
-        let price_out = array![10.0, 35.0];
+        let params = (20.0, 40.0, 30.5);
+        let elasticities = Arr::from(vec![0.1, 0.4]);
+        let price_out = Arr::from(vec![10.0, 35.0]);
         let mut omega = ProfitOracle::new(params, elasticities, price_out);
         let mut gamma = 0.0;
-        // Infeasible case
-        let y_vec = array![3.5, 2.0];
+        let y_vec = Arr::from(vec![3.5, 2.0]);
         let (cut, feasible) = omega.assess_optim(&y_vec, &mut gamma);
         assert!(!feasible);
-        assert_eq!(cut.1, 3.5 - limit.ln());
-        // Feasible but not optimal case
-        let y2 = array![3.0, 2.0];
+        assert_eq!(cut.1, 3.5 - 30.5f64.ln());
+        let y2 = Arr::from(vec![3.0, 2.0]);
         let (cut2, feasible2) = omega.assess_optim(&y2, &mut gamma);
         assert!(feasible2);
         assert_eq!(cut2.1, 0.0);

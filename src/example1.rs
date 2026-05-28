@@ -1,7 +1,5 @@
 use super::cutting_plane::OracleOptim;
-use ndarray::prelude::*;
-
-type Arr = Array1<f64>;
+use crate::arr::Arr;
 
 #[derive(Debug, Default)]
 pub struct MyOracle;
@@ -24,18 +22,18 @@ impl OracleOptim<Arr> for MyOracle {
         let f0 = x_val + y_val;
         let f1 = f0 - 3.0;
         if f1 > 0.0 {
-            return ((array![1.0, 1.0], f1), false);
+            return ((Arr::from(vec![1.0, 1.0]), f1), false);
         }
         let f2 = -x_val + y_val + 1.0;
         if f2 > 0.0 {
-            return ((array![-1.0, 1.0], f2), false);
+            return ((Arr::from(vec![-1.0, 1.0]), f2), false);
         }
         let f3 = *gamma - f0;
         if f3 > 0.0 {
-            return ((array![-1.0, -1.0], f3), false);
+            return ((Arr::from(vec![-1.0, -1.0]), f3), false);
         }
         *gamma = f0;
-        ((array![-1.0, -1.0], 0.0), true)
+        ((Arr::from(vec![-1.0, -1.0]), 0.0), true)
     }
 }
 
@@ -57,7 +55,7 @@ mod tests {
     /// The test asserts that the best solution `xbest` is not `None`, and that the number of iterations is 25.
     #[test]
     pub fn test_feasible() {
-        let mut ellip = Ell::new_with_scalar(10.0, array![0.0, 0.0]);
+        let mut ellip = Ell::new_with_scalar(10.0, Arr::from(vec![0.0, 0.0]));
         let mut oracle = MyOracle;
         let mut gamma = f64::NEG_INFINITY;
         let options = Options {
@@ -71,7 +69,7 @@ mod tests {
 
     #[test]
     pub fn test_infeasible1() {
-        let mut ellip = Ell::new(array![10.0, 10.0], array![100.0, 100.0]); // wrong initial guess
+        let mut ellip = Ell::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![100.0, 100.0])); // wrong initial guess
                                                                             // or ellipsoid is too small
         let mut oracle = MyOracle;
         let mut gamma = f64::NEG_INFINITY;
@@ -83,7 +81,7 @@ mod tests {
 
     #[test]
     pub fn test_infeasible2() {
-        let mut ellip = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut ellip = Ell::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![0.0, 0.0]));
         let mut oracle = MyOracle;
         // wrong initial guess
         let options = Options::default();

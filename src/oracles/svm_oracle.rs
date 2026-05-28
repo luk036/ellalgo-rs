@@ -1,7 +1,6 @@
+use crate::arr::Arr;
 use crate::cutting_plane::OracleOptim;
-use ndarray::prelude::*;
-
-type Arr = Array1<f64>;
+use ndarray::{Array1, Array2};
 
 /// Hard-margin SVM oracle
 pub struct SvmOracle {
@@ -26,7 +25,7 @@ impl OracleOptim<Arr> for SvmOracle {
 
     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
         let n = self.nfeat;
-        let w = xc.slice(s![0..n]);
+        let w = Arr::from_fn(n, |i| xc[i]);
         let b = xc[n];
 
         let mut min_val = f64::INFINITY;
@@ -35,7 +34,8 @@ impl OracleOptim<Arr> for SvmOracle {
         for i in 0..self.data.nrows() {
             let y_i = self.labels[i] as f64;
             let x_i = self.data.row(i);
-            let margin = y_i * (w.dot(&x_i) + b);
+            let xi_arr = Arr::from(x_i.to_vec());
+            let margin = y_i * (w.dot(&xi_arr) + b);
             if margin < min_val {
                 min_val = margin;
                 min_idx = i;
@@ -44,7 +44,7 @@ impl OracleOptim<Arr> for SvmOracle {
 
         if min_val >= 1.0 {
             *gamma = 0.0;
-            return ((Arr::zeros(n + 1), 0.0), true);
+            return ((Arr::new(n + 1), 0.0), true);
         }
 
         // SVM subgradient: -y_i * x_i for w, -y_i for b
@@ -55,7 +55,7 @@ impl OracleOptim<Arr> for SvmOracle {
             .map(|&x| -y_i * x)
             .chain(std::iter::once(-y_i))
             .collect();
-        let grad_with_b = Array1::from_vec(grad_vec);
+        let grad_with_b = Arr::from(grad_vec);
 
         *gamma = min_val;
         ((grad_with_b, min_val), true)
@@ -65,6 +65,8 @@ impl OracleOptim<Arr> for SvmOracle {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::arr::Arr;
+    use ndarray::array;
 
     #[test]
     fn test_svm_oracle() {
@@ -73,7 +75,7 @@ mod tests {
         let mut oracle = SvmOracle::new(data, labels);
 
         let mut gamma = f64::NEG_INFINITY;
-        let xc = array![0.0, 0.0, 0.0];
+        let xc = Arr::from(vec![0.0, 0.0, 0.0]);
         let ((_grad, _beta), improved) = oracle.assess_optim(&xc, &mut gamma);
 
         assert!(improved);
@@ -81,19 +83,14 @@ mod tests {
 
     #[test]
     fn test_svm_oracle_optimal() {
-        // Data that can be perfectly separated: [1,0] with label +1 and [-1,0] with label -1
         let data = array![[1.0, 0.0], [-1.0, 0.0]];
         let labels = array![1, -1];
         let mut oracle = SvmOracle::new(data, labels);
 
         let mut gamma = f64::NEG_INFINITY;
-        let xc = array![1.0, 0.0, 0.0]; // w=[1,0], b=0
-                                        // Point 1: y=1, margin = 1*(1*1 + 0) = 1
-                                        // Point 2: y=-1, margin = -1*(-1*1 + 0) = 1
-                                        // min_val = 1.0 >= 1.0, so should be optimal
+        let xc = Arr::from(vec![1.0, 0.0, 0.0]);
         let ((_grad, _beta), improved) = oracle.assess_optim(&xc, &mut gamma);
         assert!(improved);
-        // When min_val >= 1.0, returns gamma = 0.0 as optimal
         assert_eq!(gamma, 0.0);
     }
 }

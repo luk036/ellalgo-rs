@@ -1,7 +1,6 @@
+use crate::arr::Arr;
 use crate::cutting_plane::OracleOptim;
-use ndarray::prelude::*;
-
-type Arr = Array1<f64>;
+use ndarray::Array2;
 
 /// Max-cut oracle
 pub struct MaxcutOracle {
@@ -21,7 +20,7 @@ impl OracleOptim<Arr> for MaxcutOracle {
     type CutChoice = f64;
 
     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
-        let x = xc.mapv(|v| if v >= 0.0 { 1.0 } else { -1.0 });
+        let x = xc.map(|v| if v >= 0.0 { 1.0 } else { -1.0 });
 
         // cut weight = sum w_ij where x_i != x_j
         let mut cut_value = 0.0;
@@ -34,7 +33,7 @@ impl OracleOptim<Arr> for MaxcutOracle {
         }
 
         // grad_i = sum w_ij where x_i != x_j
-        let mut grad = Arr::zeros(self.n);
+        let mut grad = Arr::new(self.n);
         for i in 0..self.n {
             for j in 0..self.n {
                 if x[i] != x[j] {
@@ -56,6 +55,8 @@ impl OracleOptim<Arr> for MaxcutOracle {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::arr::Arr;
+    use ndarray::array;
 
     #[test]
     fn test_maxcut_oracle() {
@@ -63,7 +64,7 @@ mod tests {
         let mut oracle = MaxcutOracle::new(w);
 
         let mut gamma = f64::NEG_INFINITY;
-        let xc = array![1.0, 1.0];
+        let xc = Arr::from(vec![1.0, 1.0]);
         let ((_grad, _beta), improved) = oracle.assess_optim(&xc, &mut gamma);
 
         assert!(improved);
@@ -74,17 +75,14 @@ mod tests {
         let w = array![[0.0, 1.0], [1.0, 0.0]];
         let mut oracle = MaxcutOracle::new(w);
 
-        // First call sets gamma to some value
         let mut gamma = f64::NEG_INFINITY;
-        let xc = array![1.0, 1.0];
+        let xc = Arr::from(vec![1.0, 1.0]);
         let ((_grad, _beta), improved) = oracle.assess_optim(&xc, &mut gamma);
         assert!(improved);
         assert!(gamma > f64::NEG_INFINITY);
 
-        // Second call with same x - should not improve since same cut value
-        let xc2 = array![1.0, 1.0];
+        let xc2 = Arr::from(vec![1.0, 1.0]);
         let ((_grad2, _beta2), improved2) = oracle.assess_optim(&xc2, &mut gamma);
-        // Same value should not improve
         assert!(!improved2);
     }
 }

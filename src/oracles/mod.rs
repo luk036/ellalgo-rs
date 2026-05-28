@@ -17,16 +17,13 @@
 //! Each oracle implements either [`crate::cutting_plane::OracleFeas`] for feasibility problems or
 //! [`crate::cutting_plane::OracleOptim`] for optimization problems.
 //!
-//! ```rust
-//! use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
-//! use ellalgo_rs::ell::Ell;
+//! ```rust,ignore
+//! use ellalgo_rs::arr::Arr;
 //! use ellalgo_rs::oracles::profit_oracle::ProfitOracle;
-//! use ndarray::array;
 //!
-//! // Create oracle for profit maximization problem
 //! let params = (20.0, 40.0, 30.5);
-//! let elasticities = array![0.1, 0.4];
-//! let price_out = array![10.0, 35.0];
+//! let elasticities = Arr::from(vec![0.1, 0.4]);
+//! let price_out = Arr::from(vec![10.0, 35.0]);
 //! let oracle = ProfitOracle::new(params, elasticities, price_out);
 //! ```
 

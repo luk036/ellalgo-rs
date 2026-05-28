@@ -5,9 +5,9 @@
 //! objective function is quasiconvex.
 
 use super::cutting_plane::OracleOptim;
-use ndarray::prelude::*;
+use crate::arr::Arr;
 
-type Arr = Array1<f64>;
+
 
 /// Oracle for a quasiconvex optimization problem.
 ///
@@ -66,8 +66,8 @@ impl OracleOptim<Arr> for MyOracle {
                 return (
                     (
                         match self.idx {
-                            0 => array![2.0 * sqrtx, -1.0],
-                            1 => array![-1.0, *gamma * logy.exp()],
+                            0 => Arr::from(vec![2.0 * sqrtx, -1.0]),
+                            1 => Arr::from(vec![-1.0, *gamma * logy.exp()]),
                             _ => unreachable!(),
                         },
                         func_val,
@@ -77,7 +77,7 @@ impl OracleOptim<Arr> for MyOracle {
             }
         }
         *gamma = sqrtx / logy.exp();
-        ((array![-1.0, sqrtx], 0.0), true)
+        ((Arr::from(vec![-1.0, sqrtx]), 0.0), true)
     }
 }
 
@@ -87,11 +87,11 @@ mod tests {
     use crate::cutting_plane::{cutting_plane_optim, Options};
     use crate::ell::Ell;
     // use crate::ell_stable::EllStable;
-    use ndarray::array;
+    use crate::arr::Arr;
 
     #[test]
     pub fn test_feasible() {
-        let mut ell = Ell::new(array![10.0, 10.0], array![0.0, 0.0]);
+        let mut ell = Ell::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![0.0, 0.0]));
         let mut oracle = MyOracle::default();
         let mut gamma = 0.0;
         let options = Options {
@@ -109,7 +109,7 @@ mod tests {
 
     // #[test]
     // pub fn test_feasible_stable() {
-    //     let mut ell = EllStable::new(array![10.0, 10.0], array![0.0, 0.0]);
+    //     let mut ell = EllStable::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![0.0, 0.0]));
     //     let mut oracle = MyOracle::default();
     //     let mut gamma = 0.0;
     //     let options = Options {
@@ -125,3 +125,4 @@ mod tests {
     //     assert_eq!(num_iters, 35);
     // }
 }
+

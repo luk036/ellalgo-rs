@@ -16,11 +16,9 @@
 //! ## Usage
 //!
 //! ```rust,ignore
+//! use ellalgo_rs::arr::Arr;
 //! use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
 //! use ellalgo_rs::ell::Ell;
-//! use ndarray::prelude::*;
-//!
-//! type Arr = Array1<f64>;
 //!
 //! struct MyOracle;
 //!
@@ -28,11 +26,11 @@
 //!     type CutChoice = f64;
 //!
 //!     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
-//!         ((array![0.0, 0.0], 0.0), true)
+//!         ((Arr::from(vec![0.0, 0.0]), 0.0), true)
 //!     }
 //! }
 //!
-//! let mut ellip = Ell::new_with_scalar(10.0, array![0.0, 0.0]);
+//! let mut ellip = Ell::new_with_scalar(10.0, Arr::from(vec![0.0, 0.0]));
 //! let mut oracle = MyOracle;
 //! let mut gamma = f64::NEG_INFINITY;
 //! let options = Options::default();
@@ -44,6 +42,7 @@
 //!
 //! ## Modules
 //!
+//! - [`arr`] - Minimal flat-vector array type replacing `ndarray`
 //! - [`cutting_plane`] - Core cutting plane algorithms and traits
 //! - [`ell`] - Main ellipsoid search space implementation
 //! - [`ell_calc`] - Core calculations for ellipsoid updates
@@ -57,6 +56,8 @@
 //!
 //! - `std`: Enables standard library features (enabled by default)
 //! - `logging`: Enables logging support
+
+pub mod arr;
 
 // pub mod conceptual;
 pub mod cutting_plane;

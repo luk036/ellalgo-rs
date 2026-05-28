@@ -1,7 +1,5 @@
 use super::cutting_plane::OracleOptim;
-use ndarray::prelude::*;
-
-type Arr = Array1<f64>;
+use crate::arr::Arr;
 
 #[derive(Debug)]
 pub struct MyOracle {
@@ -49,10 +47,10 @@ impl OracleOptim<Arr> for MyOracle {
                 return (
                     (
                         match self.idx {
-                            0 => array![-1.0, 0.0],
-                            1 => array![0.0, -1.0],
-                            2 => array![1.0, 1.0],
-                            3 => array![-2.0, 3.0],
+                            0 => Arr::from(vec![-1.0, 0.0]),
+                            1 => Arr::from(vec![0.0, -1.0]),
+                            2 => Arr::from(vec![1.0, 1.0]),
+                            3 => Arr::from(vec![-2.0, 3.0]),
                             _ => unreachable!(),
                         },
                         fj,
@@ -62,7 +60,7 @@ impl OracleOptim<Arr> for MyOracle {
             }
         }
         *gamma = f0;
-        ((array![-2.0, 3.0], 0.0), true)
+        ((Arr::from(vec![-2.0, 3.0]), 0.0), true)
     }
 }
 
@@ -84,7 +82,7 @@ mod tests {
     /// The test asserts that the best solution `xbest` is not `None`, and that the number of iterations is 25.
     #[test]
     pub fn test_feasible() {
-        let mut ellip = Ell::new_with_scalar(10.0, array![0.0, 0.0]);
+        let mut ellip = Ell::new_with_scalar(10.0, Arr::from(vec![0.0, 0.0]));
         let mut oracle = MyOracle::default();
         let mut gamma = f64::NEG_INFINITY;
         let options = Options {

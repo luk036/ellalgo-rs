@@ -1,8 +1,8 @@
 use super::ldlt_mgr::LDLTMgr;
+use crate::arr::Arr;
 use crate::cutting_plane::OracleFeas;
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
 
-pub type Arr = Array1<f64>;
 pub type Cut = (Arr, f64);
 
 /// The `LMIOracle` struct represents an oracle for a Linear Matrix Inequality (LMI) constraint.
@@ -49,11 +49,11 @@ impl OracleFeas<Arr> for LMIOracle {
     ///   array of floating-point numbers. This array is used as input to the function for some calculations
     ///   related to feasibility assessment. The function uses the struct fields `mat_f0` and `mat_f` to
     ///   perform the feasibility check.
-    fn assess_feas(&mut self, xc: &Array1<f64>) -> Option<Cut> {
+    fn assess_feas(&mut self, xc: &Arr) -> Option<Cut> {
         fn get_elem(
             mat_f0: &Array2<f64>,
             mat_f: &[Array2<f64>],
-            xc: &Array1<f64>,
+            xc: &[f64],
             i: usize,
             j: usize,
         ) -> f64 {
@@ -65,18 +65,19 @@ impl OracleFeas<Arr> for LMIOracle {
                     .sum::<f64>()
         }
 
-        let get_elem = |i: usize, j: usize| get_elem(&self.mat_f0, &self.mat_f, xc, i, j);
+        let xc_slice = xc.data();
+        let get_elem = |i: usize, j: usize| get_elem(&self.mat_f0, &self.mat_f, xc_slice, i, j);
 
         if self.ldlt_mgr.factor(get_elem) {
             None
         } else {
             let epsilon = self.ldlt_mgr.witness();
-            let grad = self
+            let grad_vec: Vec<f64> = self
                 .mat_f
                 .iter()
                 .map(|mat_fk| self.ldlt_mgr.sym_quad(mat_fk))
                 .collect();
-            Some((grad, epsilon))
+            Some((Arr::from(grad_vec), epsilon))
         }
     }
 }
@@ -87,10 +88,11 @@ mod tests {
     // use super::{ProfitOracle, ProfitOracleQ, ProfitRbOracle};
     use crate::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
     use crate::ell::Ell;
-    use ndarray::{array, Array2, ShapeError};
+    use crate::arr::Arr;
+use ndarray::{Array2, ShapeError};
 
     struct MyOracle {
-        c: Array1<f64>,
+        c: Arr,
         lmi1: LMIOracle,
         lmi2: LMIOracle,
     }
@@ -119,10 +121,10 @@ mod tests {
     }
 
     fn run_lmi(oracle1: LMIOracle, oracle2: LMIOracle) -> usize {
-        let xinit = Arr::zeros(3);
+        let xinit = Arr::new(3);
         let mut ellip = Ell::new_with_scalar(10.0, xinit);
         let mut omega = MyOracle {
-            c: array![1.0, -1.0, 1.0],
+            c: Arr::from(vec![1.0, -1.0, 1.0]),
             lmi1: oracle1,
             lmi2: oracle2,
         };
@@ -176,10 +178,10 @@ mod tests {
         ];
         let b1 = Array2::from_shape_vec((2, 2), vec![33.0, -9.0, -9.0, 26.0]).unwrap();
         let mut oracle = LMIOracle::new(f1, b1);
-        let x_vec = Array1::from(vec![1.0, 1.0, 1.0]);
+        let x_vec = Arr::from(vec![1.0, 1.0, 1.0]);
         let res = oracle.assess_feas(&x_vec);
         assert!(res.is_some());
-        let x_vec2 = Array1::from(vec![0.0, 0.0, 0.0]);
+        let x_vec2 = Arr::from(vec![0.0, 0.0, 0.0]);
         let res2 = oracle.assess_feas(&x_vec2);
         assert!(res2.is_none());
     }

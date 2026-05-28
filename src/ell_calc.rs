@@ -723,9 +723,7 @@ impl EllCalc {
             return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
         }
 
-        let b1sqn = beta1 * (beta1 / tsq);
-        let t1n = 1.0 - b1sqn;
-        if t1n < 0.0 || !self.use_parallel_cut {
+        if (beta1 > 0.0 && tsq <= beta1 * beta1) || !self.use_parallel_cut {
             return self.calc_bias_cut(beta0, tsq);
         }
 

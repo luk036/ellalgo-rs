@@ -1,62 +1,22 @@
-// mod lib;
+use crate::arr::Arr;
 use crate::cutting_plane::{CutStatus, SearchSpace, SearchSpaceQ, UpdateByCutChoice};
 use crate::ell_calc::EllCalc;
-// #[macro_use]
-// extern crate ndarray;
-// use ndarray::prelude::*;
-use ndarray::Array1;
-use ndarray::Array2;
 
-///  The code defines a struct called [`EllStable`] that represents the stable version of an ellipsoid
-///  search space in the Ellipsoid method.
+/// Numerically stable ellipsoid search space using LDL^T factorization.
 ///
-///    `EllStable` = {x | (x - xc)^T mq^-1 (x - xc) \le \kappa}
-///
-///  Properties:
-///
-///  * `no_defer_trick`: A boolean flag indicating whether the defer trick should be used. The defer
-///    trick is a technique used in the Ellipsoid method to improve efficiency by deferring the update of
-///    the ellipsoid until a certain condition is met.
-///  * `mq`: A matrix representing the shape of the ellipsoid. It is a 2-dimensional array of f64 values.
-///  * `xc`: The `xc` property represents the center of the ellipsoid search space. It is a 1-dimensional
-///    array of floating-point numbers.
-///  * `kappa`: A scalar value that determines the size of the ellipsoid. A larger value of kappa results
-///    in a larger ellipsoid.
-///  * `ndim`: The `ndim` property represents the number of dimensions of the ellipsoid search space.
-///  * `helper`: The `helper` property is an instance of the `EllCalc` struct, which is used to perform
-///    calculations related to the ellipsoid search space. It provides methods for calculating the distance
-///    constant (`dc`), the center constant (`cc`), and the quadratic constant (`q`) used in the ellip
-///  * `tsq`: The `tsq` property represents the squared Mahalanobis distance threshold of the ellipsoid.
-///    It is used to determine whether a point is inside or outside the ellipsoid.
+/// `EllStable` = {x | (x - xc)^T mq^-1 (x - xc) ≤ κ}
 #[derive(Debug, Clone)]
 pub struct EllStable {
-    mq: Array2<f64>,
-    xc: Array1<f64>,
+    mq: Arr,
+    xc: Arr,
     kappa: f64,
     helper: EllCalc,
     tsq: f64,
 }
 
 impl EllStable {
-    ///  The function `new_with_matrix` constructs a new [`EllStable`] object with the given parameters.
-    ///
-    ///  Arguments:
-    ///
-    ///  * `kappa`: The `kappa` parameter is a floating-point number that represents the curvature of the
-    ///    ellipse. It determines the shape of the ellipse, with higher values resulting in a more elongated
-    ///    shape and lower values resulting in a more circular shape.
-    ///  * `mq`: The `mq` parameter is of type `Array2<f64>`, which represents a 2-dimensional array of `f64`
-    ///    (floating-point) values. It is used to store the matrix `mq` in the `EllStable` object.
-    ///  * `xc`: The parameter `xc` represents the center of the ellipsoid in n-dimensional space. It is an
-    ///    array of length `ndim`, where each element represents the coordinate of the center along a specific
-    ///    dimension.
-    ///
-    ///  Returns:
-    ///
-    ///  an instance of the [`EllStable`] struct.
-    pub fn new_with_matrix(kappa: f64, mq: Array2<f64>, xc: Array1<f64>) -> EllStable {
+    pub fn new_with_matrix(kappa: f64, mq: Arr, xc: Arr) -> EllStable {
         let helper = EllCalc::new(xc.len());
-
         EllStable {
             kappa,
             mq,
@@ -66,87 +26,42 @@ impl EllStable {
         }
     }
 
-    ///  Creates a new [`EllStable`].
-    ///
-    ///  The function `new` creates a new `EllStable` object with the given values.
-    ///
-    ///  Arguments:
-    ///
-    ///  * `val`: An array of f64 values representing the diagonal elements of a matrix.
-    ///  * `xc`: `xc` is an `Array1<f64>` which represents the center of the ellipse. It contains the x and y
-    ///    coordinates of the center point.
-    ///
-    ///  Returns:
-    ///
-    ///  The function `new` returns an instance of the [`EllStable`] struct.
-    pub fn new(val: Array1<f64>, xc: Array1<f64>) -> EllStable {
-        EllStable::new_with_matrix(1.0, Array2::from_diag(&val), xc)
+    pub fn new(val: Arr, xc: Arr) -> EllStable {
+        EllStable::new_with_matrix(1.0, Arr::from_diag(&val), xc)
     }
 
-    ///  The function `new_with_scalar` constructs a new [`EllStable`] object with a scalar value and a vector.
-    ///
-    ///  Arguments:
-    ///
-    ///  * `val`: The `val` parameter is a scalar value of type `f64`. It represents the value of the scalar
-    ///    component of the `EllStable` object.
-    ///  * `xc`: The parameter `xc` is an array of type `Array1<f64>`. It represents the center coordinates
-    ///    of the ellipse.
-    ///
-    ///  Returns:
-    ///
-    ///  an instance of the [`EllStable`] struct.
-    pub fn new_with_scalar(val: f64, xc: Array1<f64>) -> EllStable {
-        EllStable::new_with_matrix(val, Array2::eye(xc.len()), xc)
+    pub fn new_with_scalar(val: f64, xc: Arr) -> EllStable {
+        EllStable::new_with_matrix(val, Arr::eye(xc.len()), xc)
     }
 
-    ///  Update ellipsoid core function using the cut
-    ///
-    ///   $grad^T * (x - xc) + beta <= 0$
-    ///
-    ///  The `update_core` function in Rust updates the ellipsoid core based on a given gradient and beta
-    ///  value using a cut strategy.
-    ///
-    ///  Reference:
-    ///  Gill, Murray, and Wright, "Practical Optimization", p43. Author: Brian Borchers (borchers@nmt.edu)
-    ///
-    ///  Arguments:
-    ///
-    ///  * `grad`: A reference to an `Array1<f64>` representing the gradient vector.
-    ///  * `beta`: The `beta` parameter is a value that is used in the inequality constraint of the ellipsoid
-    ///    core function. It represents the threshold for the constraint, and the function checks if the dot
-    ///    product of the gradient and the difference between `x` and `xc` plus `beta` is less than or
-    ///  * `f_core`: The `f_core` parameter is a closure that takes two arguments: `beta` and `tsq`. It
-    ///    returns a tuple containing a `CutStatus` and a tuple `(rho, sigma, delta)`. The `f_core` function is
-    ///    used to determine the values of `rho`, `
-    ///
-    ///  Returns:
-    ///
-    ///  The `update_core` function returns a value of type `CutStatus`.
-    fn update_core<T, F>(&mut self, grad: &Array1<f64>, beta: &T, f_core: F) -> CutStatus
+    fn update_core<T, F>(&mut self, grad: &Arr, beta: &T, f_core: F) -> CutStatus
     where
-        T: UpdateByCutChoice<Self, ArrayType = Array1<f64>>,
+        T: UpdateByCutChoice<Self, ArrayType = Arr>,
         F: FnOnce(&T, f64) -> (CutStatus, (f64, f64, f64)),
     {
-        // calculate inv(L)*grad: (n-1)*n/2 multiplications
-        let mut inv_ml_g = grad.clone(); // initial x0
         let ndim = self.xc.len();
+        let n = ndim;
+
+        // calculate inv(L)*grad
+        let mut inv_ml_g = grad.clone();
         for i in 1..ndim {
+            let row_start_i = i * n;
             for j in 0..i {
-                self.mq[[i, j]] = self.mq[[j, i]] * inv_ml_g[j];
-                // keep for rank-one update
-                inv_ml_g[i] -= self.mq[[i, j]];
+                let val = self.mq.at(j, i) * inv_ml_g[j];
+                self.mq.data_mut()[row_start_i + j] = val;
+                inv_ml_g[i] -= val;
             }
         }
 
-        // calculate inv(D)*inv(L)*grad: n
-        let mut inv_md_inv_ml_g = inv_ml_g.clone(); // initially
+        // calculate inv(D)*inv(L)*grad
+        let mut inv_md_inv_ml_g = inv_ml_g.clone();
         for i in 0..ndim {
-            inv_md_inv_ml_g[i] *= self.mq[[i, i]];
+            inv_md_inv_ml_g[i] *= self.mq.at(i, i);
         }
 
-        // calculate omega: n
-        let mut gg_t = inv_md_inv_ml_g.clone(); // initially
-        let mut omega = 0.0; // initially
+        // calculate omega
+        let mut gg_t = inv_md_inv_ml_g.clone();
+        let mut omega = 0.0;
         for i in 0..ndim {
             gg_t[i] *= inv_ml_g[i];
             omega += gg_t[i];
@@ -159,83 +74,53 @@ impl EllStable {
             return status;
         }
 
-        // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad : (n-1)*n/2
-        let mut g_t = inv_md_inv_ml_g.clone(); // initially
+        // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad
+        let mut g_t = inv_md_inv_ml_g.clone();
         for i in (1..ndim).rev() {
-            // backward subsituition
             for j in i..ndim {
-                g_t[i - 1] -= self.mq[[i - 1, j]] * g_t[j]; // ???
+                g_t[i - 1] -= self.mq.at(j, i - 1) * g_t[j];
             }
         }
 
-        // calculate xc: n
-        self.xc -= &((rho / omega) * &g_t); // n
+        // calculate xc
+        let rho_over_omega = rho / omega;
+        for i in 0..ndim {
+            self.xc[i] -= rho_over_omega * g_t[i];
+        }
 
-        // Rank-one update: 3*n + (n-1)*n/2
-        //
-        // Reference:
-        // Gill, Murray, and Wright, "Practical Optimization", p43. Author: Brian Borchers (borchers@nmt.edu)
-        //
-        // let r = self.sigma / omega;
+        // Rank-one update
         let mu_val = sigma / (1.0 - sigma);
-        let mut oldt = omega / mu_val; // initially
+        let mut oldt = omega / mu_val;
         let last_idx = ndim - 1;
         for j in 0..last_idx {
-            // p=sqrt(k)*vv[j];
-            // let p = inv_ml_g[j];
-            // let mup = mu_val * p;
             let temp = oldt + gg_t[j];
-            // self.mq[[j, j]] /= temp; // update invD
             let beta2 = inv_md_inv_ml_g[j] / temp;
-            self.mq[[j, j]] *= oldt / temp; // update invD
+            self.mq.data_mut()[j * n + j] *= oldt / temp;
+            let row_start_j = j * n;
             for l in (j + 1)..ndim {
-                // v(l) -= p * self.mq(j, l);
-                self.mq[[j, l]] += beta2 * self.mq[[l, j]];
+                self.mq.data_mut()[row_start_j + l] += beta2 * self.mq.at(l, j);
             }
             oldt = temp;
         }
-
-        // let p = inv_ml_g(n1);
-        // let mup = mu * p;
         let temp = oldt + gg_t[last_idx];
-        self.mq[[last_idx, last_idx]] *= oldt / temp; // update invD
+        self.mq.data_mut()[last_idx * n + last_idx] *= oldt / temp;
         self.kappa *= delta;
 
-        // if self.no_defer_trick
-        // {
-        //     self.mq *= self.kappa;
-        //     self.kappa = 1.;
-        // }
         status
     }
 }
 
 impl SearchSpace for EllStable {
-    type ArrayType = Array1<f64>;
+    type ArrayType = Arr;
 
-    ///  The function `xc` returns a copy of the `xc` array.
     fn xc(&self) -> Self::ArrayType {
         self.xc.clone()
     }
 
-    ///  The `tsq` function returns the value of the `tsq` field of the struct.
-    ///
-    ///  Returns:
-    ///
-    ///  The method `tsq` is returning a value of type `f64`.
     fn tsq(&self) -> f64 {
         self.tsq
     }
 
-    ///  The `update_bias_cut` function updates the decision variable based on the given cut.
-    ///
-    ///  Arguments:
-    ///
-    ///  * `cut`: A tuple containing two elements:
-    ///
-    ///  Returns:
-    ///
-    ///  The `update_bias_cut` function returns a value of type `CutStatus`.
     fn update_bias_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
@@ -244,16 +129,6 @@ impl SearchSpace for EllStable {
         beta.update_bias_cut_by(self, grad)
     }
 
-    ///  The `update_central_cut` function updates the cut choices using the gradient and beta values.
-    ///
-    ///  Arguments:
-    ///
-    ///  * `cut`: The `cut` parameter is a tuple containing two elements. The first element is of type
-    ///    `Self::ArrayType`, and the second element is of type `T`.
-    ///
-    ///  Returns:
-    ///
-    ///  The function `update_central_cut` returns a value of type `CutStatus`.
     fn update_central_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
@@ -268,31 +143,16 @@ impl SearchSpace for EllStable {
 }
 
 impl SearchSpaceQ for EllStable {
-    type ArrayType = Array1<f64>;
+    type ArrayType = Arr;
 
-    ///  The function `xc` returns a copy of the `xc` array.
     fn xc(&self) -> Self::ArrayType {
         self.xc.clone()
     }
 
-    ///  The `tsq` function returns the value of the `tsq` field of the struct.
-    ///
-    ///  Returns:
-    ///
-    ///  The method `tsq` is returning a value of type `f64`.
     fn tsq(&self) -> f64 {
         self.tsq
     }
 
-    ///  The `update_q` function updates the decision variable based on the given cut.
-    ///
-    ///  Arguments:
-    ///
-    ///  * `cut`: A tuple containing two elements:
-    ///
-    ///  Returns:
-    ///
-    ///  The `update_bias_cut` function returns a value of type `CutStatus`.
     fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
@@ -303,50 +163,44 @@ impl SearchSpaceQ for EllStable {
 }
 
 impl UpdateByCutChoice<EllStable> for f64 {
-    type ArrayType = Array1<f64>;
+    type ArrayType = Arr;
 
     fn update_bias_cut_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut(*beta, tsq))
+        ellip.update_core(grad, self, |beta, tsq| helper.calc_bias_cut(*beta, tsq))
     }
 
     fn update_central_cut_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |_beta, tsq| helper.calc_central_cut(tsq))
+        ellip.update_core(grad, self, |_beta, tsq| helper.calc_central_cut(tsq))
     }
 
     fn update_q_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| helper.calc_bias_cut_q(*beta, tsq))
+        ellip.update_core(grad, self, |beta, tsq| helper.calc_bias_cut_q(*beta, tsq))
     }
 }
 
 impl UpdateByCutChoice<EllStable> for (f64, Option<f64>) {
-    type ArrayType = Array1<f64>;
+    type ArrayType = Arr;
 
     fn update_bias_cut_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| {
+        ellip.update_core(grad, self, |beta, tsq| {
             helper.calc_single_or_parallel_bias_cut(beta, tsq)
         })
     }
 
     fn update_central_cut_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| {
+        ellip.update_core(grad, self, |beta, tsq| {
             helper.calc_single_or_parallel_central_cut(beta, tsq)
         })
     }
 
     fn update_q_by(&self, ellip: &mut EllStable, grad: &Self::ArrayType) -> CutStatus {
-        let beta = self;
         let helper = ellip.helper.clone();
-        ellip.update_core(grad, beta, |beta, tsq| {
+        ellip.update_core(grad, self, |beta, tsq| {
             helper.calc_single_or_parallel_q(beta, tsq)
         })
     }
@@ -359,27 +213,27 @@ mod tests {
 
     #[test]
     fn test_construct() {
-        let ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
+        let ellip = EllStable::new_with_scalar(0.01, Arr::new(4));
         assert_approx_eq!(ellip.kappa, 0.01);
-        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
+        assert_eq!(ellip.xc, Arr::new(4));
         assert_approx_eq!(ellip.tsq, 0.0);
     }
 
     #[test]
     fn test_update_central_cut() {
-        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
-        let cut = (0.5 * Array1::ones(4), 0.0);
+        let mut ellip = EllStable::new_with_scalar(0.01, Arr::new(4));
+        let cut = (0.5 * Arr::ones(4), 0.0);
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, -0.01 * Array1::<f64>::ones(4));
+        assert_eq!(ellip.xc, -0.01 * Arr::ones(4));
         assert_approx_eq!(ellip.kappa, 0.16 / 15.0);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
 
     #[test]
     fn test_update_bias_cut() {
-        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
-        let cut = (0.5 * Array1::ones(4), 0.05);
+        let mut ellip = EllStable::new_with_scalar(0.01, Arr::new(4));
+        let cut = (0.5 * Arr::ones(4), 0.05);
         let status = ellip.update_bias_cut(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_approx_eq!(ellip.xc[0], -0.03);
@@ -389,19 +243,19 @@ mod tests {
 
     #[test]
     fn test_update_parallel_central_cut() {
-        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
-        let cut = (0.5 * Array1::ones(4), (0.0, Some(0.05)));
+        let mut ellip = EllStable::new_with_scalar(0.01, Arr::new(4));
+        let cut = (0.5 * Arr::ones(4), (0.0, Some(0.05)));
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, -0.01 * Array1::<f64>::ones(4));
+        assert_eq!(ellip.xc, -0.01 * Arr::ones(4));
         assert_approx_eq!(ellip.kappa, 0.012);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
 
     #[test]
     fn test_update_parallel() {
-        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
-        let cut = (0.5 * Array1::ones(4), (0.01, Some(0.04)));
+        let mut ellip = EllStable::new_with_scalar(0.01, Arr::new(4));
+        let cut = (0.5 * Arr::ones(4), (0.01, Some(0.04)));
         let status = ellip.update_bias_cut(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_approx_eq!(ellip.xc[0], -0.0116);
@@ -411,28 +265,28 @@ mod tests {
 
     #[test]
     fn test_update_parallel_no_effect() {
-        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
-        let cut = (0.5 * Array1::ones(4), (-0.04, Some(0.0625)));
+        let mut ellip = EllStable::new_with_scalar(0.01, Arr::new(4));
+        let cut = (0.5 * Arr::ones(4), (-0.04, Some(0.0625)));
         let status = ellip.update_bias_cut(&cut);
         assert_eq!(status, CutStatus::Success);
-        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
+        assert_eq!(ellip.xc, Arr::new(4));
         assert_approx_eq!(ellip.kappa, 0.01);
     }
 
     #[test]
     fn test_update_q_no_effect() {
-        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
-        let cut = (0.5 * Array1::ones(4), (-0.04, Some(0.0625)));
+        let mut ellip = EllStable::new_with_scalar(0.01, Arr::new(4));
+        let cut = (0.5 * Arr::ones(4), (-0.04, Some(0.0625)));
         let status = ellip.update_q(&cut);
         assert_eq!(status, CutStatus::NoEffect);
-        assert_eq!(ellip.xc, Array1::<f64>::zeros(4));
+        assert_eq!(ellip.xc, Arr::new(4));
         assert_approx_eq!(ellip.kappa, 0.01);
     }
 
     #[test]
     fn test_update_q() {
-        let mut ellip = EllStable::new_with_scalar(0.01, Array1::zeros(4));
-        let cut = (0.5 * Array1::ones(4), (0.01, Some(0.04)));
+        let mut ellip = EllStable::new_with_scalar(0.01, Arr::new(4));
+        let cut = (0.5 * Arr::ones(4), (0.01, Some(0.04)));
         let status = ellip.update_q(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_approx_eq!(ellip.xc[0], -0.0116);
@@ -442,11 +296,10 @@ mod tests {
 
     #[test]
     fn test_new() {
-        use ndarray::arr1;
-        let val = arr1(&[1.0, 1.0]);
-        let xc = arr1(&[0.0, 0.0]);
+        let val = Arr::from(vec![1.0, 1.0]);
+        let xc = Arr::from(vec![0.0, 0.0]);
         let ellip = EllStable::new(val, xc);
         assert_eq!(ellip.kappa, 1.0);
-        assert_eq!(ellip.mq, Array2::<f64>::eye(2));
+        assert_eq!(ellip.mq, Arr::eye(2));
     }
 }

@@ -1,7 +1,5 @@
 use super::cutting_plane::{OracleFeas, OracleFeas2};
-use ndarray::prelude::*;
-
-type Arr = Array1<f64>;
+use crate::arr::Arr;
 
 /// A struct representing a custom oracle for some optimization problem.
 ///
@@ -75,10 +73,10 @@ impl OracleFeas<Arr> for MyOracle3 {
             if fj > 0.0 {
                 return Some((
                     match self.idx {
-                        0 => array![-1.0, 0.0],
-                        1 => array![0.0, -1.0],
-                        2 => array![1.0, 1.0],
-                        3 => array![2.0, -3.0],
+                        0 => Arr::from(vec![-1.0, 0.0]),
+                        1 => Arr::from(vec![0.0, -1.0]),
+                        2 => Arr::from(vec![1.0, 1.0]),
+                        3 => Arr::from(vec![2.0, -3.0]),
                         _ => unreachable!(),
                     },
                     fj,
@@ -105,7 +103,7 @@ mod tests {
 
     #[test]
     pub fn test_feasible() {
-        let ellip = Ell::new_with_scalar(100.0, array![0.0, 0.0]);
+        let ellip = Ell::new_with_scalar(100.0, Arr::from(vec![0.0, 0.0]));
         let omega = MyOracle3::default();
         let options = Options {
             tolerance: 1e-8,
