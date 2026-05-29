@@ -5,8 +5,6 @@
 //!
 //! ## Available Oracles
 //!
-//! - [`ldlt_mgr::LDLTMgr`] - LDL^T factorization manager for positive definiteness checking
-//! - [`lmi_oracle::LMIOracle`] - Linear Matrix Inequality (LMI) feasibility oracle
 //! - [`lowpass_oracle::LowpassOracle`] - Lowpass filter design oracle
 //! - [`profit_oracle::ProfitOracle`] - Profit maximization oracle (Cobb-Douglas production)
 //! - [`profit_oracle::ProfitRbOracle`] - Robust profit maximization oracle with interval uncertainty
@@ -27,8 +25,6 @@
 //! let oracle = ProfitOracle::new(params, elasticities, price_out);
 //! ```
 
-pub mod ldlt_mgr;
-pub mod lmi_oracle;
 pub mod lowpass_oracle;
 pub mod maxcut_oracle;
 pub mod profit_oracle;

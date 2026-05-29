@@ -1,6 +1,6 @@
-use std::f64::consts::PI;
-use crate::arr::{Arr, linspace};
+use crate::arr::{linspace, Arr};
 use crate::cutting_plane::{OracleFeas, OracleOptim};
+use std::f64::consts::PI;
 
 pub type Cut = (Arr, (f64, Option<f64>));
 
@@ -145,7 +145,10 @@ impl OracleFeas<Arr> for LowpassOracle {
             }
             if val < self.lp_sq {
                 let func_val = (-val + self.lp_sq, Some(-val + self.up_sq));
-                return Some((Arr::from(col_k.iter().map(|&a| -a).collect::<Vec<_>>()), func_val));
+                return Some((
+                    Arr::from(col_k.iter().map(|&a| -a).collect::<Vec<_>>()),
+                    func_val,
+                ));
             }
         }
 
@@ -184,7 +187,10 @@ impl OracleFeas<Arr> for LowpassOracle {
             let val = col_k.dot(x);
             if val < 0.0 {
                 // single cut
-                return Some((Arr::from(col_k.iter().map(|&a| -a).collect::<Vec<_>>()), (-val, None)));
+                return Some((
+                    Arr::from(col_k.iter().map(|&a| -a).collect::<Vec<_>>()),
+                    (-val, None),
+                ));
             }
         }
 

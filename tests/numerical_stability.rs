@@ -13,10 +13,7 @@ fn test_ill_conditioned_quadratic() {
 
         fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
             let eps = 1.0 / self.condition_number;
-            let gradient = Arr::from(vec![
-                2.0 * (1.0 + eps) * xc[0],
-                2.0 * (1.0 / eps) * xc[1],
-            ]);
+            let gradient = Arr::from(vec![2.0 * (1.0 + eps) * xc[0], 2.0 * (1.0 / eps) * xc[1]]);
             let f = (1.0 + eps) * xc[0].powi(2) + (1.0 / eps) * xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
@@ -75,11 +72,17 @@ fn test_near_singular_initial_ellipsoid() {
     let mut gamma = f64::INFINITY;
     let options = Options::new(1000, 1e-10);
 
-    let (xbest, _num_iters) =
-        cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+    let (xbest, _num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 
-    assert!(xbest.is_some(), "Should handle near-singular initial ellipsoid");
-    assert!(gamma < 10.0, "Should converge to reasonable value: {}", gamma);
+    assert!(
+        xbest.is_some(),
+        "Should handle near-singular initial ellipsoid"
+    );
+    assert!(
+        gamma < 10.0,
+        "Should converge to reasonable value: {}",
+        gamma
+    );
 }
 
 #[test]
@@ -105,10 +108,8 @@ fn test_extreme_scale_values() {
     }
 
     for scale in [1e-6f64, 1e6f64] {
-        let mut ellip = Ell::new_with_scalar(
-            10.0 * scale.abs().sqrt(),
-            Arr::from(vec![scale, scale]),
-        );
+        let mut ellip =
+            Ell::new_with_scalar(10.0 * scale.abs().sqrt(), Arr::from(vec![scale, scale]));
         let mut oracle = ExtremeScaleOracle { scale };
         let mut gamma = f64::INFINITY;
         let options = Options::new(2000, 1e-10);
@@ -116,11 +117,7 @@ fn test_extreme_scale_values() {
         let (xbest, _num_iters) =
             cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 
-        assert!(
-            xbest.is_some(),
-            "Should handle scale = {}",
-            scale
-        );
+        assert!(xbest.is_some(), "Should handle scale = {}", scale);
     }
 }
 
@@ -185,8 +182,7 @@ fn test_numerical_precision() {
     let mut gamma = f64::INFINITY;
     let options = Options::new(3000, 1e-12);
 
-    let (xbest, _num_iters) =
-        cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+    let (xbest, _num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 
     assert!(xbest.is_some(), "Should converge from far starting point");
     let gamma_orig = initial_point[0].powi(2) + initial_point[1].powi(2);

@@ -1,10 +1,8 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 
+use ellalgo_rs::arr::Arr;
 use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
 use ellalgo_rs::ell::Ell;
-use ndarray::prelude::*;
-
-type Arr = Array1<f64>;
 
 #[derive(Debug, Default)]
 pub struct BenchOracle;
@@ -18,18 +16,18 @@ impl OracleOptim<Arr> for BenchOracle {
         let f0 = x_val + y_val;
         let f1 = f0 - 3.0;
         if f1 > 0.0 {
-            return ((array![1.0, 1.0], f1), false);
+            return ((Arr::from(vec![1.0, 1.0]), f1), false);
         }
         let f2 = -x_val + y_val + 1.0;
         if f2 > 0.0 {
-            return ((array![-1.0, 1.0], f2), false);
+            return ((Arr::from(vec![-1.0, 1.0]), f2), false);
         }
         let f3 = *gamma - f0;
         if f3 > 0.0 {
-            return ((array![-1.0, -1.0], f3), false);
+            return ((Arr::from(vec![-1.0, -1.0]), f3), false);
         }
         *gamma = f0;
-        ((array![-1.0, -1.0], 0.0), true)
+        ((Arr::from(vec![-1.0, -1.0]), 0.0), true)
     }
 }
 
@@ -42,7 +40,7 @@ fn bench_ellipsoid_update(c: &mut Criterion) {
             dimension,
             |b, &dim| {
                 b.iter(|| {
-                    let mut ellip = Ell::new_with_scalar(10.0, Array1::zeros(dim));
+                    let mut ellip = Ell::new_with_scalar(10.0, Arr::new(dim));
                     let mut oracle = BenchOracle;
                     let mut gamma = f64::NEG_INFINITY;
                     let options = Options::default();

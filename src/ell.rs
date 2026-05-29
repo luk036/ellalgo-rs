@@ -247,10 +247,7 @@ mod tests {
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_eq!(ellip.xc, -0.01 * Arr::ones(4));
-        assert_eq!(
-            ellip.mq,
-            &Arr::eye(4) - &(0.1 * Arr::full(4, 4, 1.0))
-        );
+        assert_eq!(ellip.mq, &Arr::eye(4) - &(0.1 * Arr::full(4, 4, 1.0)));
         assert_approx_eq!(ellip.kappa, 0.16 / 15.0);
         assert_approx_eq!(ellip.tsq, 0.01);
     }
@@ -274,10 +271,7 @@ mod tests {
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_eq!(ellip.xc, -0.01 * Arr::ones(4));
-        assert_eq!(
-            ellip.mq,
-            &Arr::eye(4) - &(0.2 * Arr::full(4, 4, 1.0))
-        );
+        assert_eq!(ellip.mq, &Arr::eye(4) - &(0.2 * Arr::full(4, 4, 1.0)));
         assert_approx_eq!(ellip.kappa, 0.012);
         assert_approx_eq!(ellip.tsq, 0.01);
     }

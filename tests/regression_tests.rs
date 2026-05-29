@@ -29,8 +29,16 @@ fn test_regression_quadratic_iterations() {
 
     let (_xbest, num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 
-    assert!(num_iters < 1000, "Regression: quadratic problem converged in {} iterations, expected < 1000", num_iters);
-    assert!(gamma < 10.0, "Regression: final gamma {} should be reasonably small", gamma);
+    assert!(
+        num_iters < 1000,
+        "Regression: quadratic problem converged in {} iterations, expected < 1000",
+        num_iters
+    );
+    assert!(
+        gamma < 10.0,
+        "Regression: final gamma {} should be reasonably small",
+        gamma
+    );
 }
 
 /// Regression: solution quality for different starting points
@@ -76,7 +84,8 @@ fn test_regression_solution_quality() {
             assert!(
                 x[0].abs() < 10.0 && x[1].abs() < 10.0,
                 "Solution should converge toward origin, got ({}, {})",
-                x[0], x[1]
+                x[0],
+                x[1]
             );
         }
     }
@@ -86,6 +95,7 @@ fn test_regression_solution_quality() {
 #[test]
 fn test_regression_ellipsoid_shrinkage() {
     struct TrackingOracle {
+        #[allow(dead_code)]
         tsq_history: Vec<f64>,
     }
 
@@ -121,7 +131,10 @@ fn test_regression_ellipsoid_shrinkage() {
 
     assert!(num_iters > 0, "Should complete some iterations");
     assert!(gamma.is_finite(), "Final gamma should be finite");
-    assert!(gamma >= 0.0, "Final gamma should be non-negative for quadratic");
+    assert!(
+        gamma >= 0.0,
+        "Final gamma should be non-negative for quadratic"
+    );
 }
 
 /// Regression: monotonic convergence
@@ -152,11 +165,11 @@ fn test_regression_monotonic_convergence() {
     let (xbest, _num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 
     assert!(xbest.is_some(), "Should find a solution");
-    assert!(gamma >= 0.0, "Final gamma for ||x||² should be non-negative");
     assert!(
-        gamma < 100.0,
-        "Final gamma should be less than initial"
+        gamma >= 0.0,
+        "Final gamma for ||x||² should be non-negative"
     );
+    assert!(gamma < 100.0, "Final gamma should be less than initial");
 }
 
 /// Regression: dimensional scaling
@@ -192,8 +205,7 @@ fn test_regression_dimensional_scaling() {
         let mut gamma = f64::INFINITY;
         let options = Options::new(3000, 1e-10);
 
-        let (xbest, num_iters) =
-            cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+        let (xbest, num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
 
         assert!(xbest.is_some(), "Should converge in {} dimensions", ndim);
         assert!(
@@ -231,8 +243,7 @@ fn test_regression_reproducibility() {
         let mut ellip = Ell::new_with_scalar(10.0, Arr::from(vec![3.0, 3.0]));
         let mut oracle = ConstOracle;
         let mut gamma = f64::INFINITY;
-        let (xbest, num_iters) =
-            cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
+        let (xbest, num_iters) = cutting_plane_optim(&mut oracle, &mut ellip, &mut gamma, &options);
         (xbest, num_iters, gamma)
     };
 

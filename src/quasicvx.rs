@@ -7,8 +7,6 @@
 use super::cutting_plane::OracleOptim;
 use crate::arr::Arr;
 
-
-
 /// Oracle for a quasiconvex optimization problem.
 ///
 /// This oracle solves a quasiconvex optimization problem where the constraints
@@ -125,4 +123,3 @@ mod tests {
     //     assert_eq!(num_iters, 35);
     // }
 }
-

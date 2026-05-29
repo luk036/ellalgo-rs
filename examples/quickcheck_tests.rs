@@ -1,5 +1,5 @@
-use quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
 use quickcheck::quickcheck;
+use quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
 
 use ellalgo_rs::arr::Arr;
 use ellalgo_rs::cutting_plane::{CutStatus, SearchSpace};
@@ -252,21 +252,42 @@ fn main() {
     println!("Running quickcheck property-based tests for ellalgo-rs...\n");
 
     let tests: Vec<(&str, TestFn)> = vec![
-        ("ell_construct_positive_kappa", prop_ell_construct_positive_kappa),
-        ("ell_construct_tsq_nonnegative", prop_ell_construct_tsq_nonnegative),
-        ("ell_central_cut_keeps_kappa_positive", prop_ell_central_cut_keeps_kappa_positive),
-        ("ell_bias_cut_keeps_kappa_positive", prop_ell_bias_cut_keeps_kappa_positive),
+        (
+            "ell_construct_positive_kappa",
+            prop_ell_construct_positive_kappa,
+        ),
+        (
+            "ell_construct_tsq_nonnegative",
+            prop_ell_construct_tsq_nonnegative,
+        ),
+        (
+            "ell_central_cut_keeps_kappa_positive",
+            prop_ell_central_cut_keeps_kappa_positive,
+        ),
+        (
+            "ell_bias_cut_keeps_kappa_positive",
+            prop_ell_bias_cut_keeps_kappa_positive,
+        ),
         ("ell_kappa_stays_positive", prop_ell_kappa_stays_positive),
         ("ellcalccore_nf_matches", prop_ellcalccore_nf_matches),
         ("ellcalccore_half_n", prop_ellcalccore_half_n),
         ("ellcalccore_n_plus_1", prop_ellcalccore_n_plus_1),
         ("calc_central_cut_valid", prop_calc_central_cut_valid),
         ("calc_bias_cut_valid", prop_calc_bias_cut_valid),
-        ("calc_parallel_bias_cut_valid", prop_calc_parallel_bias_cut_valid),
+        (
+            "calc_parallel_bias_cut_valid",
+            prop_calc_parallel_bias_cut_valid,
+        ),
         ("ell_dimension_consistency", prop_ell_dimension_consistency),
-        ("parallel_central_cut_keeps_kappa_positive", prop_parallel_central_cut_keeps_kappa_positive),
+        (
+            "parallel_central_cut_keeps_kappa_positive",
+            prop_parallel_central_cut_keeps_kappa_positive,
+        ),
         ("bias_cut_no_effect", prop_bias_cut_no_effect),
-        ("multiple_cuts_keep_kappa_positive", prop_multiple_cuts_keep_kappa_positive),
+        (
+            "multiple_cuts_keep_kappa_positive",
+            prop_multiple_cuts_keep_kappa_positive,
+        ),
         ("ell_various_kappa", prop_ell_various_kappa),
         ("ell_identity_mq", prop_ell_identity_mq),
         ("ellcalc_parallel_flag", prop_ellcalc_parallel_flag),

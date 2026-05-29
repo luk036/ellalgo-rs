@@ -95,7 +95,7 @@ mod tests {
     #[test]
     pub fn test_infeasible1() {
         let mut ellip = Ell::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![100.0, 100.0])); // wrong initial guess
-                                                                            // or ellipsoid is too small
+                                                                                              // or ellipsoid is too small
         let mut oracle = MyOracle::default();
         let mut gamma = f64::NEG_INFINITY;
         let options = Options::default();
