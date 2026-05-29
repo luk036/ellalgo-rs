@@ -42,7 +42,7 @@
 //!
 //! ## Modules
 //!
-//! - [`arr`] - Minimal flat-vector array type replacing `ndarray`
+//! - [`arr`] - Minimal flat-vector array type
 //! - [`cutting_plane`] - Core cutting plane algorithms and traits
 //! - [`ell`] - Main ellipsoid search space implementation
 //! - [`ell_calc`] - Core calculations for ellipsoid updates

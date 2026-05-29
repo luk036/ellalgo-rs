@@ -1,17 +1,16 @@
 use crate::arr::Arr;
 use crate::cutting_plane::OracleOptim;
-use ndarray::{Array1, Array2};
 
 /// Hard-margin SVM oracle
 pub struct SvmOracle {
-    data: Array2<f64>,
-    labels: Array1<i32>,
+    data: Arr,
+    labels: Vec<i32>,
     nfeat: usize,
 }
 
 impl SvmOracle {
-    pub fn new(data: Array2<f64>, labels: Array1<i32>) -> Self {
-        let nfeat = data.ncols();
+    pub fn new(data: Arr, labels: Vec<i32>) -> Self {
+        let nfeat = data.cols();
         Self {
             data,
             labels,
@@ -31,10 +30,9 @@ impl OracleOptim<Arr> for SvmOracle {
         let mut min_val = f64::INFINITY;
         let mut min_idx = 0;
 
-        for i in 0..self.data.nrows() {
+        for i in 0..self.data.rows() {
             let y_i = self.labels[i] as f64;
-            let x_i = self.data.row(i);
-            let xi_arr = Arr::from(x_i.to_vec());
+            let xi_arr = self.data.row(i);
             let margin = y_i * (w.dot(&xi_arr) + b);
             if margin < min_val {
                 min_val = margin;
@@ -66,12 +64,11 @@ impl OracleOptim<Arr> for SvmOracle {
 mod tests {
     use super::*;
     use crate::arr::Arr;
-    use ndarray::array;
 
     #[test]
     fn test_svm_oracle() {
-        let data = array![[0.0, 0.0], [1.0, 1.0], [0.0, 1.0], [1.0, 0.0]];
-        let labels = array![1, 1, -1, -1];
+        let data = Arr::from_shape_vec(4, 2, vec![0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0]);
+        let labels = vec![1, 1, -1, -1];
         let mut oracle = SvmOracle::new(data, labels);
 
         let mut gamma = f64::NEG_INFINITY;
@@ -83,8 +80,8 @@ mod tests {
 
     #[test]
     fn test_svm_oracle_optimal() {
-        let data = array![[1.0, 0.0], [-1.0, 0.0]];
-        let labels = array![1, -1];
+        let data = Arr::from_shape_vec(2, 2, vec![1.0, 0.0, -1.0, 0.0]);
+        let labels = vec![1, -1];
         let mut oracle = SvmOracle::new(data, labels);
 
         let mut gamma = f64::NEG_INFINITY;

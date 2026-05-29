@@ -77,6 +77,32 @@ impl Arr {
         }
     }
 
+    /// Construct a 2D matrix from a flat vector in row-major order.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `data.len() != rows * cols`.
+    pub fn from_shape_vec(rows: usize, cols: usize, data: Vec<f64>) -> Self {
+        assert_eq!(data.len(), rows * cols);
+        Arr { data, rows, cols }
+    }
+
+    /// Extract a row as a 1D array.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `i >= self.rows` or if the array is not 2D.
+    pub fn row(&self, i: usize) -> Self {
+        assert!(self.is_2d());
+        assert!(i < self.rows);
+        let start = i * self.cols;
+        Arr {
+            data: self.data[start..start + self.cols].to_vec(),
+            rows: self.cols,
+            cols: 0,
+        }
+    }
+
     #[inline]
     pub fn size(&self) -> usize {
         self.data.len()

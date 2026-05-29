@@ -1,22 +1,16 @@
 use ellalgo_rs::arr::Arr;
 use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
 use ellalgo_rs::ell::Ell;
-use ndarray::Array2;
 
 struct PortfolioOracle<'a> {
     expected_returns: &'a Arr,
-    risk_matrix: Array2<f64>,
+    risk_matrix: Arr,
     max_risk: f64,
     budget: f64,
 }
 
 impl<'a> PortfolioOracle<'a> {
-    fn new(
-        expected_returns: &'a Arr,
-        risk_matrix: Array2<f64>,
-        max_risk: f64,
-        budget: f64,
-    ) -> Self {
+    fn new(expected_returns: &'a Arr, risk_matrix: Arr, max_risk: f64, budget: f64) -> Self {
         Self {
             expected_returns,
             risk_matrix,
@@ -79,7 +73,7 @@ impl<'a> OracleOptim<Arr> for PortfolioOracle<'a> {
 
 fn main() {
     let expected_returns = Arr::from(vec![0.08, 0.12, 0.10, 0.06]);
-    let risk_matrix = Array2::eye(4);
+    let risk_matrix = Arr::eye(4);
     let max_risk = 0.02;
     let budget = 1.0;
 

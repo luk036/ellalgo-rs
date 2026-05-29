@@ -60,7 +60,7 @@ impl Default for Options {
 type CInfo = (bool, usize);
 
 pub trait UpdateByCutChoice<SearchSpace> {
-    type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
+    type ArrayType; // f64 for 1D; Arr for general
     fn update_bias_cut_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
     fn update_central_cut_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
     fn update_q_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
@@ -104,7 +104,7 @@ pub trait OracleBS {
 }
 
 pub trait SearchSpace {
-    type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
+    type ArrayType; // f64 for 1D; Arr for general
 
     fn xc(&self) -> Self::ArrayType;
 
@@ -124,7 +124,7 @@ pub trait SearchSpace {
 }
 
 pub trait SearchSpaceQ {
-    type ArrayType; // f64 for 1D; ndarray::Array1<f64> for general
+    type ArrayType; // f64 for 1D; Arr for general
 
     fn xc(&self) -> Self::ArrayType;
 

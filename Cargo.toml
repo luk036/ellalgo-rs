@@ -1,6 +1,6 @@
 [package]
 name = "ellalgo-rs"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "Ellipsoid Method in Rust"
 repository = "https://github.com/luk036/ellalgo-rs"
@@ -25,9 +25,7 @@ no-std = []
 
 [dependencies]
 svgbobdoc = { version = "0.3", features = ["enable"] }
-ndarray = "0.16.1"
 log = { version = "0.4", optional = true }
-# ndarray-linalg = { version = "0.16.0" }
 
 [dev-dependencies]
 approx_eq = "0.1.8"

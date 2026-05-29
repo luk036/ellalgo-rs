@@ -1,17 +1,17 @@
 use crate::arr::Arr;
 use crate::cutting_plane::OracleOptim;
-use ndarray::Array2;
 
 /// Max-cut oracle
 pub struct MaxcutOracle {
-    weights: Array2<f64>,
+    weights: Arr,
     n: usize,
 }
 
 impl MaxcutOracle {
-    pub fn new(weights: Array2<f64>) -> Self {
-        let n = weights.nrows();
-        assert_eq!(n, weights.ncols(), "weight matrix must be square");
+    pub fn new(weights: Arr) -> Self {
+        let n = weights.rows();
+        assert_eq!(n, weights.cols(), "weight matrix must be square");
+        assert!(weights.is_2d(), "weights must be a 2D matrix");
         Self { weights, n }
     }
 }
@@ -27,7 +27,7 @@ impl OracleOptim<Arr> for MaxcutOracle {
         for i in 0..self.n {
             for j in (i + 1)..self.n {
                 if x[i] != x[j] {
-                    cut_value += self.weights[[i, j]];
+                    cut_value += self.weights[(i, j)];
                 }
             }
         }
@@ -37,7 +37,7 @@ impl OracleOptim<Arr> for MaxcutOracle {
         for i in 0..self.n {
             for j in 0..self.n {
                 if x[i] != x[j] {
-                    grad[i] += self.weights[[i, j]];
+                    grad[i] += self.weights[(i, j)];
                 }
             }
         }
@@ -56,11 +56,10 @@ impl OracleOptim<Arr> for MaxcutOracle {
 mod tests {
     use super::*;
     use crate::arr::Arr;
-    use ndarray::array;
 
     #[test]
     fn test_maxcut_oracle() {
-        let w = array![[0.0, 1.0], [1.0, 0.0]];
+        let w = Arr::from_shape_vec(2, 2, vec![0.0, 1.0, 1.0, 0.0]);
         let mut oracle = MaxcutOracle::new(w);
 
         let mut gamma = f64::NEG_INFINITY;
@@ -72,7 +71,7 @@ mod tests {
 
     #[test]
     fn test_maxcut_oracle_not_optimal() {
-        let w = array![[0.0, 1.0], [1.0, 0.0]];
+        let w = Arr::from_shape_vec(2, 2, vec![0.0, 1.0, 1.0, 0.0]);
         let mut oracle = MaxcutOracle::new(w);
 
         let mut gamma = f64::NEG_INFINITY;
