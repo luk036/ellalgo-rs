@@ -1,5 +1,5 @@
 use ellalgo_rs::arr::Arr;
-use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
+use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim, SingleCut};
 use ellalgo_rs::ell::Ell;
 
 #[test]
@@ -7,17 +7,17 @@ fn test_simple_quadratic_optimization() {
     struct QuadraticOracle;
 
     impl OracleOptim<Arr> for QuadraticOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
 
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -43,18 +43,18 @@ fn test_known_optimal_solution() {
     }
 
     impl OracleOptim<Arr> for KnownOptimalOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let diff = xc - &self.target;
             let gradient = 2.0 * &diff;
             let f = diff.dot(&diff);
 
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -88,18 +88,18 @@ fn test_higher_dimensional_optimization() {
     }
 
     impl OracleOptim<Arr> for HighDimOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let diff = xc - &self.target;
             let gradient = 2.0 * &diff;
             let f = diff.dot(&diff);
 
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -136,17 +136,17 @@ fn test_convergence_metrics() {
     struct ConvergenceTestOracle;
 
     impl OracleOptim<Arr> for ConvergenceTestOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
 
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -173,17 +173,17 @@ fn test_different_initial_conditions() {
     struct SimpleOracle;
 
     impl OracleOptim<Arr> for SimpleOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
 
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }

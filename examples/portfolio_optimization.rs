@@ -1,5 +1,5 @@
 use ellalgo_rs::arr::Arr;
-use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
+use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim, SingleCut};
 use ellalgo_rs::ell::Ell;
 
 struct PortfolioOracle<'a> {
@@ -21,9 +21,9 @@ impl<'a> PortfolioOracle<'a> {
 }
 
 impl<'a> OracleOptim<Arr> for PortfolioOracle<'a> {
-    type CutChoice = f64;
+    type CutChoice = SingleCut;
 
-    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
         let n = xc.len();
         let mut gradient = Arr::new(n);
 
@@ -36,7 +36,7 @@ impl<'a> OracleOptim<Arr> for PortfolioOracle<'a> {
             for i in 0..n {
                 gradient[i] = 1.0;
             }
-            return ((gradient, budget_violation), false);
+            return ((gradient, SingleCut(budget_violation)), false);
         }
 
         let mut risk = 0.0;
@@ -54,7 +54,7 @@ impl<'a> OracleOptim<Arr> for PortfolioOracle<'a> {
                 }
                 gradient[i] = sum;
             }
-            return ((gradient, risk_violation), false);
+            return ((gradient, SingleCut(risk_violation)), false);
         }
 
         let ret = self.expected_returns.dot(xc);
@@ -64,10 +64,10 @@ impl<'a> OracleOptim<Arr> for PortfolioOracle<'a> {
             for i in 0..n {
                 gradient[i] = -self.expected_returns[i];
             }
-            return ((gradient, 0.0), true);
+            return ((gradient, SingleCut(0.0)), true);
         }
 
-        ((gradient, 0.0), false)
+        ((gradient, SingleCut(0.0)), false)
     }
 }
 

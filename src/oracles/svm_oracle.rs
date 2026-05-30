@@ -1,7 +1,6 @@
 use crate::arr::Arr;
-use crate::cutting_plane::OracleOptim;
+use crate::cutting_plane::{OracleOptim, SingleCut};
 
-/// Hard-margin SVM oracle
 pub struct SvmOracle {
     data: Arr,
     labels: Vec<i32>,
@@ -20,9 +19,9 @@ impl SvmOracle {
 }
 
 impl OracleOptim<Arr> for SvmOracle {
-    type CutChoice = f64;
+    type CutChoice = SingleCut;
 
-    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
         let n = self.nfeat;
         let w = Arr::from_fn(n, |i| xc[i]);
         let b = xc[n];
@@ -42,10 +41,9 @@ impl OracleOptim<Arr> for SvmOracle {
 
         if min_val >= 1.0 {
             *gamma = 0.0;
-            return ((Arr::new(n + 1), 0.0), true);
+            return ((Arr::new(n + 1), SingleCut(0.0)), true);
         }
 
-        // SVM subgradient: -y_i * x_i for w, -y_i for b
         let y_i = self.labels[min_idx] as f64;
         let x_i = self.data.row(min_idx);
         let grad_vec: Vec<f64> = x_i
@@ -56,7 +54,7 @@ impl OracleOptim<Arr> for SvmOracle {
         let grad_with_b = Arr::from(grad_vec);
 
         *gamma = min_val;
-        ((grad_with_b, min_val), true)
+        ((grad_with_b, SingleCut(min_val)), true)
     }
 }
 

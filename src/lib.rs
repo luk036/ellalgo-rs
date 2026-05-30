@@ -62,7 +62,7 @@ pub mod arr;
 // pub mod conceptual;
 pub mod cutting_plane;
 pub use crate::cutting_plane::{
-    CutStatus, OracleFeas, OracleOptim, SearchSpace, UpdateByCutChoice,
+    CutStatus, OracleFeas, OracleOptim, ParallelCut, SearchSpace, SingleCut, UpdateByCutChoice,
 };
 
 pub mod ell;

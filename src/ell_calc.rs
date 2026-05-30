@@ -1,5 +1,5 @@
 // mod lib;
-use crate::cutting_plane::CutStatus;
+use crate::cutting_plane::{CutStatus, ParallelCut};
 
 /// The `EllCalcCore` struct represents the parameters for calculating the new Ellipsoid Search Space.
 ///
@@ -626,15 +626,13 @@ impl EllCalc {
     ///
     /// Arguments:
     ///
-    /// * `beta`: The `beta` parameter is a tuple containing two values: `beta0` and `beta1_opt`. `beta0` is of type
-    ///   `f64` and `beta1_opt` is an optional value of type `Option<f64>`.
-    /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
+    /// * `beta`: The `beta` parameter is a `ParallelCut` containing `beta0` and an optional `beta1`.
     pub fn calc_single_or_parallel_bias_cut(
         &self,
-        beta: &(f64, Option<f64>),
+        beta: &ParallelCut,
         tsq: f64,
     ) -> (CutStatus, (f64, f64, f64)) {
-        let (beta0, beta1_opt) = *beta;
+        let (beta0, beta1_opt) = (beta.0, beta.1);
         if let Some(beta1) = beta1_opt {
             self.calc_parallel_bias_cut(beta0, beta1, tsq)
         } else {
@@ -646,15 +644,13 @@ impl EllCalc {
     ///
     /// Arguments:
     ///
-    /// * `beta`: The `beta` parameter is a tuple containing two values: `f64` and `Option<f64>`.
-    ///   The first value, denoted as `_b0`, is of type `f64`. The second value, `beta1_opt`, is of type `Option<f64>`.
-    /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
+    /// * `beta`: A `ParallelCut` containing `beta0` and optional `beta1`.
     pub fn calc_single_or_parallel_central_cut(
         &self,
-        beta: &(f64, Option<f64>),
+        beta: &ParallelCut,
         tsq: f64,
     ) -> (CutStatus, (f64, f64, f64)) {
-        let (_b0, beta1_opt) = *beta;
+        let (_b0, beta1_opt) = (beta.0, beta.1);
         if let Some(beta1) = beta1_opt {
             self.calc_parallel_central_cut(beta1, tsq)
         } else {
@@ -666,15 +662,13 @@ impl EllCalc {
     ///
     /// Arguments:
     ///
-    /// * `beta`: The `beta` parameter is a tuple containing two values: `beta0` and `beta1_opt`. `beta0` is of type
-    ///   `f64` and `beta1_opt` is an optional value of type `Option<f64>`.
-    /// * `tsq`: The `tsq` parameter is a reference to a `f64` value.
+    /// * `beta`: A `ParallelCut` containing `beta0` and optional `beta1`.
     pub fn calc_single_or_parallel_q(
         &self,
-        beta: &(f64, Option<f64>),
+        beta: &ParallelCut,
         tsq: f64,
     ) -> (CutStatus, (f64, f64, f64)) {
-        let (beta0, beta1_opt) = *beta;
+        let (beta0, beta1_opt) = (beta.0, beta.1);
         if let Some(beta1) = beta1_opt {
             self.calc_parallel_q(beta0, beta1, tsq)
         } else {
@@ -1022,14 +1016,15 @@ mod tests {
         let ell_calc = EllCalc::new(4);
         // test with Some(beta1)
         let (status, result) =
-            ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), 0.01);
+            ell_calc.calc_single_or_parallel_central_cut(&ParallelCut(0.0, Some(0.05)), 0.01);
         assert_eq!(status, CutStatus::Success);
         let (rho, sigma, delta) = result;
         assert_approx_eq!(sigma, 0.8);
         assert_approx_eq!(rho, 0.02);
         assert_approx_eq!(delta, 1.2);
         // test with None (fallback to single central cut)
-        let (status2, result2) = ell_calc.calc_single_or_parallel_central_cut(&(0.05, None), 0.01);
+        let (status2, result2) =
+            ell_calc.calc_single_or_parallel_central_cut(&ParallelCut(0.05, None), 0.01);
         assert_eq!(status2, CutStatus::Success);
         let (_rho2, sigma2, _delta2) = result2;
         assert_approx_eq!(sigma2, 0.4);
@@ -1055,14 +1050,15 @@ mod tests {
     fn test_calc_parallel_central_cut2() {
         let ell_calc = EllCalc::new(4);
         let (status, result) =
-            ell_calc.calc_single_or_parallel_central_cut(&(0.0, Some(0.05)), 0.01);
+            ell_calc.calc_single_or_parallel_central_cut(&ParallelCut(0.0, Some(0.05)), 0.01);
         assert_eq!(status, CutStatus::Success);
         let (rho, sigma, delta) = result;
         assert_approx_eq!(rho, 0.02);
         assert_approx_eq!(sigma, 0.8);
         assert_approx_eq!(delta, 1.2);
         // test with None
-        let (status2, _result2) = ell_calc.calc_single_or_parallel_bias_cut(&(0.05, None), 0.01);
+        let (status2, _result2) =
+            ell_calc.calc_single_or_parallel_bias_cut(&ParallelCut(0.05, None), 0.01);
         assert_eq!(status2, CutStatus::Success);
     }
 
@@ -1070,10 +1066,12 @@ mod tests {
     fn test_calc_parallel_bias_cut_fallback() {
         let ell_calc = EllCalc::new(4);
         // test with None (fallback to single bias cut)
-        let (status2, _result2) = ell_calc.calc_single_or_parallel_bias_cut(&(0.05, None), 0.01);
+        let (status2, _result2) =
+            ell_calc.calc_single_or_parallel_bias_cut(&ParallelCut(0.05, None), 0.01);
         assert_eq!(status2, CutStatus::Success);
         // test with None (fallback to single q cut)
-        let (status3, _result3) = ell_calc.calc_single_or_parallel_q(&(0.05, None), 0.01);
+        let (status3, _result3) =
+            ell_calc.calc_single_or_parallel_q(&ParallelCut(0.05, None), 0.01);
         assert_eq!(status3, CutStatus::Success);
     }
 

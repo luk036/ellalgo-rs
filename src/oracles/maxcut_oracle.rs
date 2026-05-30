@@ -1,7 +1,6 @@
 use crate::arr::Arr;
-use crate::cutting_plane::OracleOptim;
+use crate::cutting_plane::{OracleOptim, SingleCut};
 
-/// Max-cut oracle
 pub struct MaxcutOracle {
     weights: Arr,
     n: usize,
@@ -17,12 +16,11 @@ impl MaxcutOracle {
 }
 
 impl OracleOptim<Arr> for MaxcutOracle {
-    type CutChoice = f64;
+    type CutChoice = SingleCut;
 
-    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
         let x = xc.map(|v| if v >= 0.0 { 1.0 } else { -1.0 });
 
-        // cut weight = sum w_ij where x_i != x_j
         let mut cut_value = 0.0;
         for i in 0..self.n {
             for j in (i + 1)..self.n {
@@ -32,7 +30,6 @@ impl OracleOptim<Arr> for MaxcutOracle {
             }
         }
 
-        // grad_i = sum w_ij where x_i != x_j
         let mut grad = Arr::new(self.n);
         for i in 0..self.n {
             for j in 0..self.n {
@@ -45,9 +42,9 @@ impl OracleOptim<Arr> for MaxcutOracle {
 
         if cut_value > *gamma {
             *gamma = cut_value;
-            ((-grad, -cut_value), true)
+            ((-grad, SingleCut(-cut_value)), true)
         } else {
-            ((-grad, *gamma), false)
+            ((-grad, SingleCut(*gamma)), false)
         }
     }
 }

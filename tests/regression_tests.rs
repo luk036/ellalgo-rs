@@ -1,23 +1,22 @@
 use ellalgo_rs::arr::Arr;
-use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
+use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim, SingleCut};
 use ellalgo_rs::ell::Ell;
 
-/// Regression: should converge in a bounded number of iterations
 #[test]
 fn test_regression_quadratic_iterations() {
     struct QuadraticOracle;
 
     impl OracleOptim<Arr> for QuadraticOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -41,22 +40,21 @@ fn test_regression_quadratic_iterations() {
     );
 }
 
-/// Regression: solution quality for different starting points
 #[test]
 fn test_regression_solution_quality() {
     struct QuadraticOracle;
 
     impl OracleOptim<Arr> for QuadraticOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -91,7 +89,6 @@ fn test_regression_solution_quality() {
     }
 }
 
-/// Regression: ellipsoid shrinkage over iterations
 #[test]
 fn test_regression_ellipsoid_shrinkage() {
     struct TrackingOracle {
@@ -108,16 +105,16 @@ fn test_regression_ellipsoid_shrinkage() {
     }
 
     impl OracleOptim<Arr> for TrackingOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -137,22 +134,21 @@ fn test_regression_ellipsoid_shrinkage() {
     );
 }
 
-/// Regression: monotonic convergence
 #[test]
 fn test_regression_monotonic_convergence() {
     struct MonotonicOracle;
 
     impl OracleOptim<Arr> for MonotonicOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -172,7 +168,6 @@ fn test_regression_monotonic_convergence() {
     assert!(gamma < 100.0, "Final gamma should be less than initial");
 }
 
-/// Regression: dimensional scaling
 #[test]
 fn test_regression_dimensional_scaling() {
     struct ScalingOracle {
@@ -180,9 +175,9 @@ fn test_regression_dimensional_scaling() {
     }
 
     impl OracleOptim<Arr> for ScalingOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let mut gradient = Arr::new(self.ndim);
             let mut f = 0.0;
             for i in 0..self.ndim {
@@ -191,9 +186,9 @@ fn test_regression_dimensional_scaling() {
             }
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -217,22 +212,21 @@ fn test_regression_dimensional_scaling() {
     }
 }
 
-/// Regression: reproducibility
 #[test]
 fn test_regression_reproducibility() {
     struct ConstOracle;
 
     impl OracleOptim<Arr> for ConstOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }

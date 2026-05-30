@@ -1,5 +1,5 @@
 use ellalgo_rs::arr::Arr;
-use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
+use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim, SingleCut};
 use ellalgo_rs::ell::Ell;
 
 #[test]
@@ -9,17 +9,17 @@ fn test_ill_conditioned_quadratic() {
     }
 
     impl OracleOptim<Arr> for IllConditionedOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let eps = 1.0 / self.condition_number;
             let gradient = Arr::from(vec![2.0 * (1.0 + eps) * xc[0], 2.0 * (1.0 / eps) * xc[1]]);
             let f = (1.0 + eps) * xc[0].powi(2) + (1.0 / eps) * xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -53,16 +53,16 @@ fn test_near_singular_initial_ellipsoid() {
     struct NearSingularOracle;
 
     impl OracleOptim<Arr> for NearSingularOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -92,17 +92,17 @@ fn test_extreme_scale_values() {
     }
 
     impl OracleOptim<Arr> for ExtremeScaleOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let s = self.scale;
             let gradient = Arr::from(vec![2.0 * s * xc[0], 2.0 * xc[1]]);
             let f = s * xc[0].powi(2) + xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -126,16 +126,16 @@ fn test_tolerance_sensitivity() {
     struct ToleranceOracle;
 
     impl OracleOptim<Arr> for ToleranceOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }
@@ -162,16 +162,16 @@ fn test_numerical_precision() {
     struct PrecisionOracle;
 
     impl OracleOptim<Arr> for PrecisionOracle {
-        type CutChoice = f64;
+        type CutChoice = SingleCut;
 
-        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+        fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
             let gradient = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
             let f = xc[0].powi(2) + xc[1].powi(2);
             if f < *gamma {
                 *gamma = f;
-                ((gradient, f), true)
+                ((gradient, SingleCut(f)), true)
             } else {
-                ((gradient, f), false)
+                ((gradient, SingleCut(f)), false)
             }
         }
     }

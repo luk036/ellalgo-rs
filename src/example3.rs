@@ -1,34 +1,14 @@
-use super::cutting_plane::{OracleFeas, OracleFeas2};
+use super::cutting_plane::OracleFeas;
 use crate::arr::Arr;
+use crate::cutting_plane::SingleCut;
 
-/// A struct representing a custom oracle for some optimization problem.
-///
-/// This oracle is used to evaluate the feasibility of a given solution.
-/// It keeps track of an index `idx` and a target value `target`.
 #[derive(Debug)]
 pub struct MyOracle3 {
-    /// The index of the current solution being evaluated.
     pub idx: i32,
-    /// The target value for the optimization problem.
     pub target: f64,
 }
 
-// impl MyOracle3 {
-//     /// Creates a new `MyOracle3` instance with the index set to 0 and the target value set to a very small negative number.
-//     #[inline]
-//     pub fn new() -> Self {
-//         MyOracle3 {
-//             idx: 0,
-//             target: -1e100,
-//         }
-//     }
-// }
-
 impl Default for MyOracle3 {
-    /// Creates a new `MyOracle3` instance with the index set to 0 and the target value set to a very small negative number.
-    ///
-    /// This is the default implementation for the `MyOracle3` struct, which is used to represent a custom oracle for some optimization problem.
-    /// The oracle is used to evaluate the feasibility of a given solution, and this default implementation initializes the index to 0 and the target value to a very small negative number.
     #[inline]
     fn default() -> Self {
         MyOracle3 {
@@ -39,21 +19,9 @@ impl Default for MyOracle3 {
 }
 
 impl OracleFeas<Arr> for MyOracle3 {
-    type CutChoice = f64; // single cut
+    type CutChoice = SingleCut;
 
-    /// The function assess_feas takes in an array xc and checks if it satisfies two constraints,
-    /// returning an optional tuple of an array and a float if any constraint is violated.
-    ///
-    /// Arguments:
-    ///
-    /// * `xc`: The parameter `xc` is an array of size 2, representing the coordinates of a point in a
-    ///   2-dimensional space. The first element `xc[0]` represents the x-coordinate, and the second
-    ///   element `xc[1]` represents the y-coordinate.
-    ///
-    /// Returns:
-    ///
-    /// The function `assess_feas` returns an `Option` containing a tuple `(Arr, f64)`.
-    fn assess_feas(&mut self, xc: &Arr) -> Option<(Arr, f64)> {
+    fn assess_feas(&mut self, xc: &Arr) -> Option<(Arr, SingleCut)> {
         let x_val = xc[0];
         let y_val = xc[1];
 
@@ -61,7 +29,7 @@ impl OracleFeas<Arr> for MyOracle3 {
         for _ in 0..num_constraints {
             self.idx += 1;
             if self.idx == num_constraints {
-                self.idx = 0; // round robin
+                self.idx = 0;
             }
             let fj = match self.idx {
                 0 => -x_val - 1.0,
@@ -79,15 +47,13 @@ impl OracleFeas<Arr> for MyOracle3 {
                         3 => Arr::from(vec![2.0, -3.0]),
                         _ => unreachable!(),
                     },
-                    fj,
+                    SingleCut(fj),
                 ));
             }
         }
         None
     }
-}
 
-impl OracleFeas2<Arr> for MyOracle3 {
     fn update(&mut self, gamma: f64) {
         self.target = gamma;
     }
@@ -98,8 +64,6 @@ mod tests {
     use super::*;
     use crate::cutting_plane::{bsearch, BSearchAdaptor, Options};
     use crate::ell::Ell;
-    // use ndarray::array;
-    // use super::ell_stable::EllStable;
 
     #[test]
     pub fn test_feasible() {

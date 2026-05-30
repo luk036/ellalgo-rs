@@ -1,39 +1,31 @@
 use super::cutting_plane::OracleOptim;
 use crate::arr::Arr;
+use crate::cutting_plane::SingleCut;
 
 #[derive(Debug, Default)]
 pub struct MyOracle;
 
 impl OracleOptim<Arr> for MyOracle {
-    type CutChoice = f64; // single cut
+    type CutChoice = SingleCut;
 
-    /// The function assess_optim takes in two parameters, xc and gamma, and returns a tuple containing an
-    /// array and a double, along with a boolean value.
-    ///
-    /// Arguments:
-    ///
-    /// * `xc`: The parameter `xc` is an array of length 2, representing the values of `x` and `y`
-    ///   respectively.
-    /// * `gamma`: The parameter `gamma` is a mutable reference to a `f64` variable. It is used to store the
-    ///   current best solution for the optimization problem.
-    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+    fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
         let x_val = xc[0];
         let y_val = xc[1];
         let f0 = x_val + y_val;
         let f1 = f0 - 3.0;
         if f1 > 0.0 {
-            return ((Arr::from(vec![1.0, 1.0]), f1), false);
+            return ((Arr::from(vec![1.0, 1.0]), SingleCut(f1)), false);
         }
         let f2 = -x_val + y_val + 1.0;
         if f2 > 0.0 {
-            return ((Arr::from(vec![-1.0, 1.0]), f2), false);
+            return ((Arr::from(vec![-1.0, 1.0]), SingleCut(f2)), false);
         }
         let f3 = *gamma - f0;
         if f3 > 0.0 {
-            return ((Arr::from(vec![-1.0, -1.0]), f3), false);
+            return ((Arr::from(vec![-1.0, -1.0]), SingleCut(f3)), false);
         }
         *gamma = f0;
-        ((Arr::from(vec![-1.0, -1.0]), 0.0), true)
+        ((Arr::from(vec![-1.0, -1.0]), SingleCut(0.0)), true)
     }
 }
 
@@ -42,17 +34,7 @@ mod tests {
     use super::*;
     use crate::cutting_plane::{cutting_plane_optim, Options};
     use crate::ell::Ell;
-    // use ndarray::array;
-    // use super::ell_stable::EllStable;
 
-    /// Tests the feasibility of the optimization problem using the cutting plane method.
-    ///
-    /// This test creates a new `Ell` instance with a scalar radius of 10.0 and a center at `[0.0, 0.0]`.
-    /// It then creates a new `MyOracle` instance as the optimization oracle.
-    /// The `gamma` variable is initialized to negative infinity.
-    /// The `Options` struct is configured with a tolerance of 1e-10.
-    /// The `cutting_plane_optim` function is called with the oracle, ellipsoid, gamma, and options.
-    /// The test asserts that the best solution `xbest` is not `None`, and that the number of iterations is 25.
     #[test]
     pub fn test_feasible() {
         let mut ellip = Ell::new_with_scalar(10.0, Arr::from(vec![0.0, 0.0]));
@@ -69,8 +51,7 @@ mod tests {
 
     #[test]
     pub fn test_infeasible1() {
-        let mut ellip = Ell::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![100.0, 100.0])); // wrong initial guess
-                                                                                              // or ellipsoid is too small
+        let mut ellip = Ell::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![100.0, 100.0]));
         let mut oracle = MyOracle;
         let mut gamma = f64::NEG_INFINITY;
         let options = Options::default();
@@ -83,7 +64,6 @@ mod tests {
     pub fn test_infeasible2() {
         let mut ellip = Ell::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![0.0, 0.0]));
         let mut oracle = MyOracle;
-        // wrong initial guess
         let options = Options::default();
         let (xbest, _niter) = cutting_plane_optim(&mut oracle, &mut ellip, &mut 100.0, &options);
         assert!(xbest.is_none());

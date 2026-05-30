@@ -2,7 +2,7 @@ use quickcheck::quickcheck;
 use quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
 
 use ellalgo_rs::arr::Arr;
-use ellalgo_rs::cutting_plane::{CutStatus, SearchSpace};
+use ellalgo_rs::cutting_plane::{CutStatus, ParallelCut, SearchSpace, SingleCut};
 use ellalgo_rs::ell::Ell;
 use ellalgo_rs::ell_calc::{EllCalc, EllCalcCore};
 
@@ -78,7 +78,7 @@ fn prop_ell_central_cut_keeps_kappa_positive() -> TestResult {
     let ell = &mut test_ell.0;
     let n = ell.xc.len();
     let grad = Arr::from(vec![0.01; n]);
-    let cut = (grad, 0.0);
+    let cut = (grad, SingleCut(0.0));
     let status = ell.update_central_cut(&cut);
     if status == CutStatus::Success {
         TestResult::from_bool(ell.kappa > 0.0)
@@ -95,7 +95,7 @@ fn prop_ell_bias_cut_keeps_kappa_positive() -> TestResult {
     let grad_t = ell.mq.dot_mv(&grad);
     let tsq = ell.kappa * grad.dot(&grad_t);
     let beta = (tsq.sqrt() * 0.5).abs();
-    let cut = (grad, beta);
+    let cut = (grad, SingleCut(beta));
     let status = ell.update_bias_cut(&cut);
     if status == CutStatus::Success {
         TestResult::from_bool(ell.kappa > 0.0)
@@ -109,7 +109,7 @@ fn prop_ell_kappa_stays_positive() -> TestResult {
     let ell = &mut test_ell.0;
     let n = ell.xc.len();
     let grad = Arr::from(vec![0.1; n]);
-    let cut = (grad, 0.0);
+    let cut = (grad, SingleCut(0.0));
     let _ = ell.update_central_cut(&cut);
     TestResult::from_bool(ell.kappa > 0.0)
 }
@@ -171,7 +171,7 @@ fn prop_parallel_central_cut_keeps_kappa_positive() -> TestResult {
     let ell = &mut test_ell.0;
     let n = ell.xc.len();
     let grad = Arr::from(vec![0.01; n]);
-    let cut = (grad, (0.0, Some(0.05)));
+    let cut = (grad, ParallelCut(0.0, Some(0.05)));
     let status = ell.update_central_cut(&cut);
     if status == CutStatus::Success {
         TestResult::from_bool(ell.kappa > 0.0)
@@ -188,7 +188,7 @@ fn prop_bias_cut_no_effect() -> TestResult {
     let grad_t = ell.mq.dot_mv(&grad);
     let tsq = ell.kappa * grad.dot(&grad_t);
     let beta = tsq.sqrt() * 1.5;
-    let cut = (grad, beta);
+    let cut = (grad, SingleCut(beta));
     let status = ell.update_bias_cut(&cut);
     TestResult::from_bool(status == CutStatus::NoEffect || status == CutStatus::NoSoln)
 }
@@ -197,7 +197,7 @@ fn prop_multiple_cuts_keep_kappa_positive() -> TestResult {
     let mut ell = Ell::new_with_scalar(1.0, Arr::new(4));
     for _ in 0..5 {
         let grad = Arr::from(vec![0.1; 4]);
-        let cut = (grad, 0.0);
+        let cut = (grad, SingleCut(0.0));
         let status = ell.update_central_cut(&cut);
         if status == CutStatus::Success && ell.kappa <= 0.0 {
             return TestResult::failed();

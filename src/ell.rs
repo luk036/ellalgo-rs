@@ -1,5 +1,5 @@
 use crate::arr::Arr;
-use crate::cutting_plane::{CutStatus, SearchSpace, SearchSpaceQ, UpdateByCutChoice};
+use crate::cutting_plane::{CutStatus, ParallelCut, SearchSpace, SingleCut, UpdateByCutChoice};
 use crate::ell_calc::EllCalc;
 
 /// Ellipsoid Search Space
@@ -149,30 +149,16 @@ impl SearchSpace for Ell {
         beta.update_central_cut_by(self, grad)
     }
 
-    fn set_xc(&mut self, x: Self::ArrayType) {
-        self.xc = x;
-    }
-}
-
-impl SearchSpaceQ for Ell {
-    type ArrayType = Arr;
-
-    #[inline]
-    fn xc(&self) -> Self::ArrayType {
-        self.xc.clone()
-    }
-
-    #[inline]
-    fn tsq(&self) -> f64 {
-        self.tsq
-    }
-
     fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
     {
         let (grad, beta) = cut;
         beta.update_q_by(self, grad)
+    }
+
+    fn set_xc(&mut self, x: Self::ArrayType) {
+        self.xc = x;
     }
 }
 
@@ -182,19 +168,19 @@ trait CutType {
     fn call_q_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64));
 }
 
-impl CutType for f64 {
+impl CutType for SingleCut {
     fn call_bias_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
-        helper.calc_bias_cut(*self, tsq)
+        helper.calc_bias_cut(self.0, tsq)
     }
     fn call_central_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
         helper.calc_central_cut(tsq)
     }
     fn call_q_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
-        helper.calc_bias_cut_q(*self, tsq)
+        helper.calc_bias_cut_q(self.0, tsq)
     }
 }
 
-impl CutType for (f64, Option<f64>) {
+impl CutType for ParallelCut {
     fn call_bias_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
         helper.calc_single_or_parallel_bias_cut(self, tsq)
     }
@@ -243,7 +229,7 @@ mod tests {
     #[test]
     fn test_update_central_cut() {
         let mut ellip = Ell::new_with_scalar(0.01, Arr::new(4));
-        let cut = (0.5 * Arr::ones(4), 0.0);
+        let cut = (0.5 * Arr::ones(4), SingleCut(0.0));
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_eq!(ellip.xc, -0.01 * Arr::ones(4));
@@ -255,7 +241,7 @@ mod tests {
     #[test]
     fn test_update_bias_cut() {
         let mut ellip = Ell::new_with_scalar(0.01, Arr::new(4));
-        let cut = (0.5 * Arr::ones(4), 0.05);
+        let cut = (0.5 * Arr::ones(4), SingleCut(0.05));
         let status = ellip.update_bias_cut(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_approx_eq!(ellip.xc[0], -0.03);
@@ -267,7 +253,7 @@ mod tests {
     #[test]
     fn test_update_parallel_central_cut() {
         let mut ellip = Ell::new_with_scalar(0.01, Arr::new(4));
-        let cut = (0.5 * Arr::ones(4), (0.0, Some(0.05)));
+        let cut = (0.5 * Arr::ones(4), ParallelCut(0.0, Some(0.05)));
         let status = ellip.update_central_cut(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_eq!(ellip.xc, -0.01 * Arr::ones(4));
@@ -279,7 +265,7 @@ mod tests {
     #[test]
     fn test_update_parallel() {
         let mut ellip = Ell::new_with_scalar(0.01, Arr::new(4));
-        let cut = (0.5 * Arr::ones(4), (0.01, Some(0.04)));
+        let cut = (0.5 * Arr::ones(4), ParallelCut(0.01, Some(0.04)));
         let status = ellip.update_bias_cut(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_approx_eq!(ellip.xc[0], -0.0116);
@@ -291,7 +277,7 @@ mod tests {
     #[test]
     fn test_update_parallel_no_effect() {
         let mut ellip = Ell::new_with_scalar(0.01, Arr::new(4));
-        let cut = (0.5 * Arr::ones(4), (-0.04, Some(0.0625)));
+        let cut = (0.5 * Arr::ones(4), ParallelCut(-0.04, Some(0.0625)));
         let status = ellip.update_bias_cut(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_eq!(ellip.xc, Arr::new(4));
@@ -302,7 +288,7 @@ mod tests {
     #[test]
     fn test_update_q_no_effect() {
         let mut ellip = Ell::new_with_scalar(0.01, Arr::new(4));
-        let cut = (0.5 * Arr::ones(4), (-0.04, Some(0.0625)));
+        let cut = (0.5 * Arr::ones(4), ParallelCut(-0.04, Some(0.0625)));
         let status = ellip.update_q(&cut);
         assert_eq!(status, CutStatus::NoEffect);
         assert_eq!(ellip.xc, Arr::new(4));
@@ -313,7 +299,7 @@ mod tests {
     #[test]
     fn test_update_q() {
         let mut ellip = Ell::new_with_scalar(0.01, Arr::new(4));
-        let cut = (0.5 * Arr::ones(4), (0.01, Some(0.04)));
+        let cut = (0.5 * Arr::ones(4), ParallelCut(0.01, Some(0.04)));
         let status = ellip.update_q(&cut);
         assert_eq!(status, CutStatus::Success);
         assert_approx_eq!(ellip.xc[0], -0.0116);
@@ -325,7 +311,7 @@ mod tests {
     #[test]
     fn test_update_central_cut_mq() {
         let mut ellip = Ell::new_with_scalar(0.01, Arr::new(4));
-        let cut = (0.5 * Arr::ones(4), 0.0);
+        let cut = (0.5 * Arr::ones(4), SingleCut(0.0));
         let _ = ellip.update_central_cut(&cut);
         let mq_expected = &Arr::eye(4) - &(0.1 * Arr::full(4, 4, 1.0));
         for i in 0..4 {
@@ -339,7 +325,7 @@ mod tests {
     fn test_no_defer_trick() {
         let mut ellip = Ell::new_with_scalar(0.01, Arr::new(4));
         ellip.no_defer_trick = true;
-        let cut = (0.5 * Arr::ones(4), 0.0);
+        let cut = (0.5 * Arr::ones(4), SingleCut(0.0));
         let _ = ellip.update_central_cut(&cut);
         assert_approx_eq!(ellip.kappa, 1.0);
         let mq_expected = &(&Arr::eye(4) - &(0.1 * Arr::full(4, 4, 1.0))) * (0.16 / 15.0);

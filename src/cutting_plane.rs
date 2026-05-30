@@ -1,5 +1,30 @@
 #![allow(non_snake_case)]
 
+use std::fmt;
+
+/// A single cutting plane: gᵀ(x - xc) + β ≤ 0
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SingleCut(pub f64);
+
+/// A pair of parallel cutting planes:
+/// β₀ ≤ gᵀ(x - xc) ≤ β₁
+///
+/// If `beta1` is `None`, falls back to single-cut behavior
+/// (only β₀ is used).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ParallelCut(pub f64, pub Option<f64>);
+
+impl ParallelCut {
+    /// Extract the lower and upper bound.
+    /// If `beta1` is `None`, behaves as a single cut with `beta0`.
+    pub fn beta0(&self) -> f64 {
+        self.0
+    }
+    pub fn beta1(&self) -> Option<f64> {
+        self.1
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum CutStatus {
     Success,
@@ -8,9 +33,21 @@ pub enum CutStatus {
     Unknown,
 }
 
+impl fmt::Display for CutStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CutStatus::Success => write!(f, "✓ success"),
+            CutStatus::NoSoln => write!(f, "✗ no solution"),
+            CutStatus::NoEffect => write!(f, "⏭ no effect"),
+            CutStatus::Unknown => write!(f, "? unknown"),
+        }
+    }
+}
+
 pub struct Options {
     pub max_iters: usize, // maximum number of iterations
     pub tolerance: f64,   // error tolerrance
+    pub verbose: bool,    // enable iteration logging
 }
 
 impl Options {
@@ -33,6 +70,7 @@ impl Options {
         Options {
             max_iters,
             tolerance,
+            verbose: false,
         }
     }
 }
@@ -43,6 +81,7 @@ impl Default for Options {
     /// The default values are:
     /// - `max_iters`: 2000
     /// - tolerance: 1e-20
+    /// - verbose: false
     ///
     /// # Examples
     ///
@@ -66,20 +105,26 @@ pub trait UpdateByCutChoice<SearchSpace> {
     fn update_q_by(&self, space: &mut SearchSpace, grad: &Self::ArrayType) -> CutStatus;
 }
 
-/// Oracle for feasibility problems
+/// Oracle for feasibility problems.
+///
+/// Implementors provide `assess_feas`, which returns:
+/// - `None` if `xc` is feasible
+/// - `Some((gradient, cut_choice))` if a constraint is violated
+///
+/// The optional `update` method is called by `BSearchAdaptor` to set
+/// the current γ level before solving a subproblem.
 pub trait OracleFeas<ArrayType> {
-    type CutChoice; // f64 for single cut; (f64, Option<f64) for parallel cut
+    type CutChoice; // SingleCut for single cut; ParallelCut for parallel cut
     fn assess_feas(&mut self, xc: &ArrayType) -> Option<(ArrayType, Self::CutChoice)>;
-}
 
-/// Oracle for feasibility problems
-pub trait OracleFeas2<ArrayType>: OracleFeas<ArrayType> {
-    fn update(&mut self, gamma: f64);
+    /// Optional: called by BSearchAdaptor to set the current γ level.
+    /// Default implementation does nothing.
+    fn update(&mut self, _gamma: f64) {}
 }
 
 /// Oracle for optimization problems
 pub trait OracleOptim<ArrayType> {
-    type CutChoice; // f64 for single cut; (f64, Option<f64>) for parallel cut
+    type CutChoice; // SingleCut for single cut; ParallelCut for parallel cut
     fn assess_optim(
         &mut self,
         xc: &ArrayType,
@@ -89,7 +134,7 @@ pub trait OracleOptim<ArrayType> {
 
 /// Oracle for quantized optimization problems
 pub trait OracleOptimQ<ArrayType> {
-    type CutChoice; // f64 for single cut; (f64, Option<f64>) for parallel cut
+    type CutChoice; // SingleCut for single cut; ParallelCut for parallel cut
     fn assess_optim_q(
         &mut self,
         xc: &ArrayType,
@@ -120,20 +165,17 @@ pub trait SearchSpace {
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
         Self: Sized;
 
-    fn set_xc(&mut self, x: Self::ArrayType);
-}
-
-pub trait SearchSpaceQ {
-    type ArrayType; // f64 for 1D; Arr for general
-
-    fn xc(&self) -> Self::ArrayType;
-
-    fn tsq(&self) -> f64; // measure of the search space
-
+    /// Quantized update. Default implementation calls `update_bias_cut`.
+    /// Override this for custom quantized behavior.
     fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
-        Self: Sized;
+        Self: Sized,
+    {
+        self.update_bias_cut(cut)
+    }
+
+    fn set_xc(&mut self, x: Self::ArrayType);
 }
 
 /// The function `cutting_plane_feas` iteratively updates a search space using a cutting plane oracle
@@ -208,22 +250,22 @@ where
 ///
 /// ```
 /// use ellalgo_rs::arr::Arr;
-/// use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim};
+/// use ellalgo_rs::cutting_plane::{cutting_plane_optim, Options, OracleOptim, SingleCut};
 /// use ellalgo_rs::ell::Ell;
 ///
 /// struct MyOracle;
 ///
 /// impl OracleOptim<Arr> for MyOracle {
-///     type CutChoice = f64;
+///     type CutChoice = SingleCut;
 ///
-///     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, f64), bool) {
+///     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
 ///         let g = Arr::from(vec![2.0 * xc[0], 2.0 * xc[1]]);
 ///         let f = xc[0].powi(2) + xc[1].powi(2);
 ///         if f < *gamma {
 ///             *gamma = f;
-///             ((g, f), true)
+///             ((g, SingleCut(f)), true)
 ///         } else {
-///             ((g, f), false)
+///             ((g, SingleCut(f)), false)
 ///         }
 ///     }
 /// }
@@ -292,7 +334,7 @@ pub fn cutting_plane_optim_q<T, Oracle, Space>(
 where
     T: UpdateByCutChoice<Space, ArrayType = Space::ArrayType>,
     Oracle: OracleOptimQ<Space::ArrayType, CutChoice = T>,
-    Space: SearchSpaceQ,
+    Space: SearchSpace,
 {
     let mut x_best: Option<Space::ArrayType> = None;
     let mut retry = false;
@@ -331,7 +373,7 @@ where
 pub struct BSearchAdaptor<T, Oracle, Space>
 where
     T: UpdateByCutChoice<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleFeas2<Space::ArrayType, CutChoice = T>,
+    Oracle: OracleFeas<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace,
 {
     pub omega: Oracle,
@@ -343,7 +385,7 @@ where
 impl<T, Oracle, Space> BSearchAdaptor<T, Oracle, Space>
 where
     T: UpdateByCutChoice<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleFeas2<Space::ArrayType, CutChoice = T>,
+    Oracle: OracleFeas<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace + Clone,
 {
     pub fn new(omega: Oracle, space: Space, options: Options) -> Self {
@@ -358,7 +400,7 @@ where
 impl<T, Oracle, Space> OracleBS for BSearchAdaptor<T, Oracle, Space>
 where
     T: UpdateByCutChoice<Space, ArrayType = Space::ArrayType>,
-    Oracle: OracleFeas2<Space::ArrayType, CutChoice = T>,
+    Oracle: OracleFeas<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace + Clone,
 {
     fn assess_bs(&mut self, gamma: f64) -> bool {
