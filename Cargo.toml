@@ -31,3 +31,7 @@ log = { version = "0.4", optional = true }
 approx_eq = "0.1.8"
 quickcheck = "1.0"
 criterion = "0.5"
+
+[[bench]]
+name = "ellipsoid"
+harness = false
