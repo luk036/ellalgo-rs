@@ -128,4 +128,29 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_ell_initialization_with_array() {
+        let val = Arr::from(vec![1.0, 2.0, 3.0]);
+        let xc = Arr::new(3);
+        let ellip = Ell::new(val, xc);
+        assert_approx_eq!(ellip.kappa, 1.0);
+        assert_eq!(ellip.mq, Arr::from_diag(&Arr::from(vec![1.0, 2.0, 3.0])));
+        assert_eq!(ellip.xc, Arr::new(3));
+        assert_approx_eq!(ellip.tsq, 0.0);
+    }
+
+    #[test]
+    fn test_ell_xc_setter_and_getter() {
+        let mut ellip = Ell::new_with_scalar(1.0, Arr::from(vec![0.0, 0.0]));
+        let new_xc = Arr::from(vec![1.0, 2.0]);
+        ellip.set_xc(new_xc.clone());
+        assert_eq!(ellip.xc(), new_xc);
+    }
+
+    #[test]
+    fn test_ell_tsq_getter() {
+        let ellip = Ell::new_with_scalar(1.0, Arr::from(vec![0.0, 0.0]));
+        assert_approx_eq!(ellip.tsq(), 0.0);
+    }
 }

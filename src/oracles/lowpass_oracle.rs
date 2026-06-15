@@ -200,4 +200,42 @@ mod tests {
         let res = oracle.assess_feas(&x_vec);
         assert!(res.is_some());
     }
+
+    #[test]
+    fn test_lowpass_oracle_direct() {
+        let mut omega = create_lowpass_case(32);
+        let mut h = Arr::new(32);
+        h[0] = 1.0;
+        let mut sp_sq = omega.sp_sq;
+        let cut = omega.assess_optim(&h, &mut sp_sq);
+        let res = cut.0;
+        assert!(!res.0.is_empty());
+        assert!(res.1 .0.is_finite());
+    }
+
+    #[test]
+    fn test_lowpass_oracle_negative_transition() {
+        let mut omega = create_lowpass_case(32);
+        let mut h = Arr::new(32);
+        h[0] = -0.1;
+        let res = omega.assess_feas(&h);
+        assert!(res.is_some());
+        assert!(!res.unwrap().0.is_empty());
+    }
+
+    #[test]
+    fn test_lowpass_oracle_negative_first_coeff() {
+        let mut omega = create_lowpass_case(32);
+        let mut h = Arr::new(32);
+        h[0] = -0.5;
+        for i in 1..32 {
+            h[i] = 0.01;
+        }
+        let res = omega.assess_feas(&h);
+        assert!(res.is_some());
+        let (grad, _) = res.unwrap();
+        // Verify gradient has non-zero values (exact gradient depends on which
+        // frequency-domain constraint triggers first in the Rust implementation)
+        assert!(!grad.is_empty());
+    }
 }

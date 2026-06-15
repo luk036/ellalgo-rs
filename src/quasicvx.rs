@@ -56,6 +56,7 @@ mod tests {
     use crate::arr::Arr;
     use crate::cutting_plane::{cutting_plane_optim, Options};
     use crate::ell::Ell;
+    use crate::ell_stable::EllStable;
 
     #[test]
     pub fn test_feasible() {
@@ -74,5 +75,57 @@ mod tests {
             assert!(x[1].exp() >= 1.6 && x[1].exp() <= 1.7);
         }
         assert_eq!(num_iters, 35);
+    }
+
+    #[test]
+    pub fn test_infeasible1() {
+        let mut ell = Ell::new_with_scalar(10.0, Arr::from(vec![100.0, 100.0]));
+        let mut oracle = MyOracle::default();
+        let mut gamma = 0.0;
+        let options = Options::default();
+        let (x_opt, _) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
+        assert!(x_opt.is_none());
+    }
+
+    #[test]
+    pub fn test_infeasible2() {
+        let mut ell = Ell::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![0.0, 0.0]));
+        let mut oracle = MyOracle::default();
+        let options = Options::default();
+        let (x_opt, _) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100.0, &options);
+        assert!(x_opt.is_none());
+    }
+
+    #[test]
+    pub fn test_feasible_stable() {
+        let mut ell = EllStable::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![0.0, 0.0]));
+        let mut oracle = MyOracle::default();
+        let mut gamma = 0.0;
+        let options = Options {
+            max_iters: 2000,
+            tolerance: 1e-8,
+            verbose: false,
+        };
+        let (x_opt, _) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
+        assert!(x_opt.is_some());
+    }
+
+    #[test]
+    pub fn test_infeasible1_stable() {
+        let mut ell = EllStable::new_with_scalar(10.0, Arr::from(vec![100.0, 100.0]));
+        let mut oracle = MyOracle::default();
+        let mut gamma = 0.0;
+        let options = Options::default();
+        let (x_opt, _) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
+        assert!(x_opt.is_none());
+    }
+
+    #[test]
+    pub fn test_infeasible2_stable() {
+        let mut ell = EllStable::new(Arr::from(vec![10.0, 10.0]), Arr::from(vec![0.0, 0.0]));
+        let mut oracle = MyOracle::default();
+        let options = Options::default();
+        let (x_opt, _) = cutting_plane_optim(&mut oracle, &mut ell, &mut 100.0, &options);
+        assert!(x_opt.is_none());
     }
 }

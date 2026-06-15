@@ -25,6 +25,10 @@
 //! let oracle = ProfitOracle::new(params, elasticities, price_out);
 //! ```
 
+pub mod ldlt_mgr;
+pub mod lmi0_oracle;
+pub mod lmi_old_oracle;
+pub mod lmi_oracle;
 pub mod lowpass_oracle;
 pub mod maxcut_oracle;
 pub mod profit_oracle;

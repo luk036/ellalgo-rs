@@ -144,6 +144,12 @@ impl Arr {
         self.data.iter_mut()
     }
 
+    /// Build a 2-D matrix from a flat row-major data vector.
+    pub fn with_data(data: Vec<f64>, rows: usize, cols: usize) -> Self {
+        assert_eq!(data.len(), rows * cols);
+        Arr { data, rows, cols }
+    }
+
     #[inline]
     pub fn get(&self, i: usize, j: usize) -> f64 {
         debug_assert!(self.is_2d());
