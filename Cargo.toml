@@ -25,12 +25,12 @@ no-std = []
 
 [dependencies]
 svgbobdoc = { version = "0.3", features = ["enable"] }
-log = { version = "0.4", optional = true }
+log = { version = "0.4.32", optional = true }
 
 [dev-dependencies]
 approx_eq = "0.1.8"
 quickcheck = "1.0"
-criterion = "0.5"
+criterion = "0.8.2"
 
 [[bench]]
 name = "ellipsoid"
