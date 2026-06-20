@@ -81,6 +81,9 @@ impl EllCalcCore {
     /// The function calculates the core values for updating an ellipsoid with either a parallel-cut or
     /// a deep-cut.
     ///
+    /// $$ \eta = \tau^2 + n \beta_0 \beta_1, \quad \bar\beta = \frac{\beta_0+\beta_1}{2}, \quad h = \tfrac12(\tau^2 + \beta_0\beta_1) + n\bar\beta^2, \quad k = h + \sqrt{h^2 - (n+1)\eta\bar\beta^2} $$
+    /// $$ \sigma = \frac{\eta}{k}, \quad \rho = \bar\beta \sigma, \quad \frac{1}{\mu} = \frac{\eta}{k-\eta}, \quad \delta\tau^2 = \tau^2 + \frac{1}{\mu}(\bar\beta^2 \sigma - \beta_0\beta_1) $$
+    ///
     /// Arguments:
     ///
     /// * `beta0`: The parameter `beta0` represents the semi-minor axis of the ellipsoid before the cut. It is
@@ -171,6 +174,9 @@ impl EllCalcCore {
     /// The function calculates the core values for updating an ellipsoid with either a parallel-cut or
     /// a deep-cut.
     ///
+    /// $$ \zeta_0 = \tau^2 - \beta_0^2, \quad \zeta_1 = \tau^2 - \beta_1^2, \quad \xi = \sqrt{\zeta_0 \zeta_1 + \left( \tfrac{n}{2}(\beta_1^2 - \beta_0^2) \right)^2} $$
+    /// $$ \sigma = \frac{2\eta}{\tau^2 + \beta_0\beta_1 + \tfrac{n}{2}(\beta_0+\beta_1)^2 + \xi}, \quad \rho = \sigma\frac{\beta_0+\beta_1}{2}, \quad \delta = \frac{n^2}{n^2-1} \cdot \frac{(\zeta_0+\zeta_1)/2 + \xi/n}{\tau^2} $$
+    ///
     /// Arguments:
     ///
     /// * `beta0`: The parameter `beta0` represents the semi-minor axis of the ellipsoid before the cut. It is
@@ -178,8 +184,6 @@ impl EllCalcCore {
     /// * `beta1`: The parameter `beta1` represents the length of the semi-minor axis of the ellipsoid.
     /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
     ///            of the ellipsoid.
-    /// * `b0b1`: The product of beta0 and beta1, used in calculations.
-    /// * `eta`: A calculated value representing tsq + n_f * b0b1, used in the ellipsoid update.
     ///
     /// ```svgbob
     ///      _.-'''''''-._
@@ -238,6 +242,9 @@ impl EllCalcCore {
     #[doc = svgbobdoc::transform!(
     /// The function calculates the core values for updating an ellipsoid with either a parallel-cut or
     /// a deep-cut.
+    ///
+    /// $$ \eta = \tau^2 + n\,\beta_0\beta_1, \quad \bar\beta = \frac{\beta_0+\beta_1}{2}, \quad h = \tfrac12(\tau^2 + \beta_0\beta_1) + n\bar\beta^2, \quad k = h + \sqrt{h^2 - (n+1)\eta\bar\beta^2} $$
+    /// $$ \sigma = \frac{\eta}{k}, \quad \rho = \bar\beta\,\sigma, \quad \frac{1}{\mu} = \frac{\eta}{k-\eta}, \quad \delta\tau^2 = \tau^2 + \frac{1}{\mu}(\bar\beta^2\sigma - \beta_0\beta_1) $$
     ///
     /// Arguments:
     ///
@@ -313,13 +320,14 @@ impl EllCalcCore {
     }
 
     #[doc = svgbobdoc::transform!(
-    /// The function calculates the core values for updating an ellipsoid with the parallel-cut method.
+    /// The function calculates the core values for updating an ellipsoid with the central-cut.
+    ///
+    /// $$ \rho = \frac{\tau}{n+1}, \qquad \sigma = \frac{2}{n+1}, \qquad \delta = \frac{n^2}{n^2-1} $$
     ///
     /// Arguments:
     ///
-    /// * `beta1`: The parameter `beta1` represents the semi-minor axis of the ellipsoid. It is a floating-point
-    ///            number.
-    /// * `tsq`: The parameter `tsq` represents the square of the gamma semi-axis length of the ellipsoid.
+    /// * `tsq`: The parameter `tsq` represents the square of the time taken to update the ellipsoid with
+    ///          the central-cut.
     ///
     /// ```svgbob
     ///      _.-'''''''-._
@@ -388,6 +396,8 @@ impl EllCalcCore {
     #[doc = svgbobdoc::transform!(
     /// The function calculates the core values needed for updating an ellipsoid with the deep-cut method.
     ///
+    /// $$ \eta = \tau + n \beta, \qquad \rho = \frac{\eta}{n+1}, \qquad \sigma = \frac{2\eta}{(n+1)(\tau+\beta)}, \qquad \delta = \frac{n^2}{n^2-1} \cdot \frac{\tau^2 - \beta^2}{\tau^2} $$
+    ///
     /// Arguments:
     ///
     /// * `beta`: The `beta` parameter represents a value used in the calculation of the core of updating
@@ -449,17 +459,15 @@ impl EllCalcCore {
     }
 
     #[doc = svgbobdoc::transform!(
-    /// The function calculates the core values needed for updating an ellipsoid with the deep-cut method.
+    /// The function calculates the core values for updating an ellipsoid with the parallel-cut method.
+    ///
+    /// $$ \alpha = \frac{\beta_1}{\tau}, \quad k = \frac{n}{2}\alpha^2, \quad r = k + \sqrt{k^2 + 1 - \alpha^2}, \quad \rho = \frac{\beta_1}{r+1}, \quad \sigma = \frac{2}{r+1}, \quad \delta = \frac{r}{r - 1/n} $$
     ///
     /// Arguments:
     ///
-    /// * `beta`: The `beta` parameter represents a value used in the calculation of the core of updating
-    ///          the ellipsoid with the deep-cut. It is of type `f64`, which means it is a 64-bit floating-point
-    ///          number.
-    /// * `tau`: The parameter `tau` represents the time constant of the system. It is a measure of how
-    ///          quickly the system responds to changes.
-    /// * `eta`: The parameter `eta` represents the deep-cut factor. It is a measure of how much the
-    ///          ellipsoid is being updated or modified.
+    /// * `beta1`: The parameter `beta1` represents the semi-minor axis of the ellipsoid. It is a floating-point
+    ///            number.
+    /// * `tsq`: The parameter `tsq` represents the square of the gamma semi-axis length of the ellipsoid.
     ///
     /// ```svgbob
     ///       _.-'''''''-._
@@ -474,23 +482,56 @@ impl EllCalcCore {
     ///   |    '-.......-'    |
     ///   |       |           |
     ///  "-τ"     "-β"       +τ
+    ///        1
     ///
-    ///   η = τ + n ⋅ β
+    ///   2    2    2
+    ///  α  = β  / τ
     ///
-    ///         η
-    ///   ϱ = ─────
-    ///       n + 1
+    ///      n    2
+    ///  h = ─ ⋅ α
+    ///      2
+    ///             ___________
+    ///            ╱ 2        2
+    ///  r = h + ╲╱ h  + 1 - α
     ///
-    ///       2 ⋅ ϱ
-    ///   σ = ─────
-    ///       "τ + β"
+    ///        β
+    ///  ϱ = ─────
+    ///      r + 1
     ///
-    ///          2       2    2
-    ///         n       τ  - β
-    ///   δ = ────── ⋅  ───────
-    ///        2           2
-    ///       n  - 1      τ
+    ///        2
+    ///  σ = ─────
+    ///      r + 1
+    ///
+    ///          r
+    ///  δ = ─────────
+    ///      r - 1 / n
     /// ```
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use approx_eq::assert_approx_eq;
+    /// use ellalgo_rs::ell_calc::EllCalcCore;
+    ///
+    /// let ell_calc_core = EllCalcCore::new(4.0);
+    /// let (rho, sigma, delta) = ell_calc_core.calc_parallel_central_cut(1.0, 4.0);
+    /// assert_approx_eq!(rho, 0.4);
+    /// assert_approx_eq!(sigma, 0.8);
+    /// assert_approx_eq!(delta, 1.2);
+    /// ```
+    )]
+    #[doc = svgbobdoc::transform!(
+    /// The function calculates the core values needed for updating an ellipsoid with the deep-cut method (wrapper).
+    ///
+    /// $$ \eta = \tau + n \beta, \qquad \rho = \frac{\eta}{n+1}, \qquad \sigma = \frac{2\eta}{(n+1)(\tau+\beta)}, \qquad \delta = \frac{n^2}{n^2-1} \cdot \frac{\tau^2 - \beta^2}{\tau^2} $$
+    ///
+    /// Computes $$ \eta = \tau + n \beta $$ internally and delegates to `calc_bias_cut_fast`.
+    ///
+    /// Arguments:
+    ///
+    /// * `beta`: The `beta` parameter represents a value used in the calculation of the core of updating
+    ///          the ellipsoid with the deep-cut.
+    /// * `tau`: The parameter `tau` represents the time constant.
     ///
     /// # Example
     ///

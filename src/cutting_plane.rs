@@ -2,12 +2,15 @@
 
 use std::fmt;
 
-/// A single cutting plane: gᵀ(x - xc) + β ≤ 0
+/// A single cutting plane:
+///
+/// $$ g^T (x - x_c) + \beta \le 0 $$
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SingleCut(pub f64);
 
 /// A pair of parallel cutting planes:
-/// β₀ ≤ gᵀ(x - xc) ≤ β₁
+///
+/// $$ \beta_0 \le g^T (x - x_c) \le \beta_1 $$
 ///
 /// If `beta1` is `None`, falls back to single-cut behavior
 /// (only β₀ is used).

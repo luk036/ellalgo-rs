@@ -33,7 +33,13 @@ fn norm_l1(x: &Arr) -> f64 {
 
 /// Computes the dominant eigenvector of the given matrix `a` using the power iteration algorithm.
 ///
-/// The power iteration algorithm is an iterative method for finding the dominant eigenvector of a matrix.
+/// The power iteration algorithm finds the dominant eigenvector by repeated multiplication:
+///
+/// $$ x_{k+1} = \frac{A x_k}{\|A x_k\|}, \qquad \lambda = x^T A x $$
+///
+/// The algorithm terminates when $$ \|x_{k+1} - x_k\|_1 \le \text{tol} $$ or
+/// $$ \|x_{k+1} + x_k\|_1 \le \text{tol} $$ (convergence up to sign).
+///
 /// This function takes the matrix `a`, an initial guess for the eigenvector `x`, and a set of options
 /// controlling the algorithm's behavior.
 ///
@@ -68,7 +74,9 @@ pub fn power_iteration(a: &Arr, x: &mut Arr, options: &Options) -> (f64, usize) 
     (x.dot(&a.dot_mv(x)), options.max_iters)
 }
 
-/// Computes the dominant eigenvector of the given matrix `a` using a modified power iteration algorithm.
+/// Computes the dominant eigenvector using power iteration with L1 normalization.
+///
+/// $$ x_{k+1} = \frac{A x_k}{\|A x_k\|_1}, \qquad \lambda = x^T A x $$
 ///
 /// This function is similar to the `power_iteration` function, but uses a different normalization
 /// approach. Instead of normalizing the eigenvector by its L2 norm, it is normalized by its L1 norm.
@@ -93,7 +101,11 @@ pub fn power_iteration4(a: &Arr, x: &mut Arr, options: &Options) -> (f64, usize)
     (x.dot(&a.dot_mv(x)), options.max_iters)
 }
 
-/// Computes the dominant eigenvector of the given matrix `a` using a modified power iteration algorithm.
+/// Computes the dominant eigenvector using power iteration with eigenvalue convergence.
+///
+/// $$ x_{k+1} = \frac{A x_k}{\|A x_k\|}, \qquad \lambda_{k+1} = x_{k+1}^T A x_{k+1} $$
+///
+/// Converges when $$ |\lambda_{k+1} - \lambda_k| \le \text{tol} $$.
 ///
 /// This function is similar to the `power_iteration` function, but uses a different normalization
 /// approach. Instead of normalizing the eigenvector by its L2 norm, it is normalized by its L1 norm.
@@ -119,8 +131,12 @@ pub fn power_iteration2(a: &Arr, x: &mut Arr, options: &Options) -> (f64, usize)
     (eigenval, options.max_iters)
 }
 
-/// Computes the dominant eigenvector of the given matrix `a` using a modified power iteration
-/// algorithm.
+/// Computes the dominant eigenvector using power iteration with overflow protection.
+///
+/// $$ x_{k+1} = A x_k, \qquad \lambda_{k+1} = \frac{x_{k+1}^T A x_{k+1}}{x_{k+1}^T x_{k+1}} $$
+///
+/// Normalizes by $$ \|x\| $$ when values exceed $$ 10^{150} $$ to prevent overflow.
+/// Converges when $$ |\lambda_{k+1} - \lambda_k| \le \text{tol} $$.
 ///
 /// This function is similar to the `power_iteration` and `power_iteration2` functions, but uses a
 /// different normalization approach. It normalizes the eigenvector by its L2 norm, and also checks

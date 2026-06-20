@@ -1,5 +1,23 @@
 use crate::arr::Arr;
 
+/// Solve $$ Ax = b $$ using the Conjugate Gradient method.
+///
+/// The CG method generates $$ A $$-orthogonal (conjugate) search
+/// directions and converges in at most $$ n $$ iterations in exact arithmetic.
+///
+/// $$
+/// \begin{aligned}
+/// r_0 &= b - A x_0 \\\\
+/// p_0 &= r_0 \\\\
+/// \alpha_k &= \frac{r_k^T r_k}{p_k^T A p_k} \\\\
+/// x_{k+1} &= x_k + \alpha_k p_k \\\\
+/// r_{k+1} &= r_k - \alpha_k A p_k \\\\
+/// \beta_k &= \frac{r_{k+1}^T r_{k+1}}{r_k^T r_k} \\\\
+/// p_{k+1} &= r_{k+1} + \beta_k p_k
+/// \end{aligned}
+/// $$
+///
+/// The algorithm terminates when $$ \|r_k\| < \text{tol} $$.
 pub fn conjugate_gradient(
     a: &Arr,
     b: &Arr,
