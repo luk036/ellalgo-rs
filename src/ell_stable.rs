@@ -38,15 +38,15 @@ impl EllStable {
     ///
     /// The shape matrix is stored as $$ M = \kappa LDL^T $$.
     ///
-/// $$
-/// \begin{aligned}
-/// w &= L^{-1}g \\\\
-/// z &= D^{-1}w \\\\
-/// \omega &= w^T z = \sum_i w_i z_i \\\\
-/// q &= L^{-T}z \\\\
-/// x_c &\leftarrow x_c - \frac{\rho}{\omega}\,q
-/// \end{aligned}
-/// $$
+    /// $$
+    /// \begin{aligned}
+    /// w &= L^{-1}g \\\\
+    /// z &= D^{-1}w \\\\
+    /// \omega &= w^T z = \sum_i w_i z_i \\\\
+    /// q &= L^{-T}z \\\\
+    /// x_c &\leftarrow x_c - \frac{\rho}{\omega}\,q
+    /// \end{aligned}
+    /// $$
     ///
     /// The rank-one update modifies the $$ LDL^T $$ factors directly.
     fn update_core<T, F>(&mut self, grad: &Arr, beta: &T, f_core: F) -> CutStatus

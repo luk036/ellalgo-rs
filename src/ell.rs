@@ -82,16 +82,16 @@ impl Ell {
     /// Given a gradient $$g$$ and offset $$ \beta $$, the ellipsoid
     /// $$ \{ x : (x - x_c)^T M^{-1} (x - x_c) \le \kappa \} $$ is updated:
     ///
-/// $$
-/// \begin{aligned}
-/// \tilde{g} &= M\,g \\\\
-/// \omega &= g^T \tilde{g} \\\\
-/// \tau^2 &= \kappa\,\omega \\\\
-/// x_c &\leftarrow x_c - \frac{\rho}{\omega}\,\tilde{g} \\\\
-/// M &\leftarrow M - \frac{\sigma}{\omega}\,\tilde{g}\,\tilde{g}^T \\\\
-/// \kappa &\leftarrow \delta\,\kappa
-/// \end{aligned}
-/// $$
+    /// $$
+    /// \begin{aligned}
+    /// \tilde{g} &= M\,g \\\\
+    /// \omega &= g^T \tilde{g} \\\\
+    /// \tau^2 &= \kappa\,\omega \\\\
+    /// x_c &\leftarrow x_c - \frac{\rho}{\omega}\,\tilde{g} \\\\
+    /// M &\leftarrow M - \frac{\sigma}{\omega}\,\tilde{g}\,\tilde{g}^T \\\\
+    /// \kappa &\leftarrow \delta\,\kappa
+    /// \end{aligned}
+    /// $$
     ///
     /// where $$ \rho, \sigma, \delta $$ are returned by the cut strategy.
     fn update_core<T, F>(&mut self, grad: &Arr, beta: &T, cut_strategy: F) -> CutStatus
