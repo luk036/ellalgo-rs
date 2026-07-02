@@ -94,6 +94,16 @@ impl Ell {
     /// $$
     ///
     /// where $$ \rho, \sigma, \delta $$ are returned by the cut strategy.
+    #[doc = svgbobdoc::transform!(
+    /// ```svgbob
+    ///  .───────────.     .───────────.
+    ///  │   x_k     │────►│  x_{k+1}  │
+    ///  │   P_k     │     │  = x_k -  │
+    ///  '───────────'     │  P_k g_k/ │
+    ///                    │  √(gᵀPg)  │
+    ///                    '───────────'
+    /// ```
+    )]
     fn update_core<T, F>(&mut self, grad: &Arr, beta: &T, cut_strategy: F) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Arr>,

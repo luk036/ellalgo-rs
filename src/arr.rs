@@ -423,6 +423,7 @@ impl Neg for &Arr {
 }
 
 impl Arr {
+    /// $$ y_i = \sum_{j=1}^{n} A_{ij} x_j $$
     pub fn dot_mv(&self, x: &Arr) -> Arr {
         assert!(self.is_2d());
         assert!(!x.is_2d());
@@ -440,6 +441,7 @@ impl Arr {
             cols: 0,
         }
     }
+    /// $$ a \cdot b = \sum_{i=1}^{n} a_i b_i $$
     pub fn dot(&self, other: &Arr) -> f64 {
         assert!(!self.is_2d() && !other.is_2d());
         assert_eq!(self.len(), other.len());
@@ -449,6 +451,7 @@ impl Arr {
             .map(|(a, b)| a * b)
             .sum()
     }
+    /// $$ C_{ij} = a_i b_j $$
     pub fn outer(&self, other: &Arr) -> Arr {
         assert!(!self.is_2d() && !other.is_2d());
         let m = self.len();
@@ -466,6 +469,7 @@ impl Arr {
             cols: n,
         }
     }
+    /// $$ A \gets A + \alpha \, u u^T $$
     pub fn rank_one_update(&mut self, alpha: f64, u: &Arr) {
         assert!(self.is_2d());
         assert!(!u.is_2d());

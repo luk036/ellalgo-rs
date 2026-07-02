@@ -23,6 +23,10 @@ impl LMIOldOracle {
 impl OracleFeas<Arr> for LMIOldOracle {
     type CutChoice = SingleCut;
 
+    /// Assess LMI feasibility: $$ F(x) = B - \sum_{i=1}^{n} x_i F_i \succ 0 $$
+    ///
+    /// Returns `None` if $$ F(x) \succ 0 $$ (feasible).
+    /// Otherwise returns the gradient and offset.
     fn assess_feas(&mut self, xc: &Arr) -> Option<(Arr, SingleCut)> {
         let n = xc.len();
         let ndim = self.mat_b.rows();

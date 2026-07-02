@@ -21,6 +21,10 @@ impl SvmOracle {
 impl OracleOptim<Arr> for SvmOracle {
     type CutChoice = SingleCut;
 
+    /// Assess SVM margin: $$ y_i (w^T x_i + b) \ge 1 $$
+    ///
+    /// Maximizes the margin by minimizing $$ \|w\| $$ subject to
+    /// correct classification. Returns the gradient of the most violated constraint.
     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
         let n = self.nfeat;
         let w = Arr::from_fn(n, |i| xc[i]);

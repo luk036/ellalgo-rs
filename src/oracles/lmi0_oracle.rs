@@ -13,6 +13,10 @@ impl LMI0Oracle {
         LMI0Oracle { mat_f, ldlt_mgr }
     }
 
+    /// Assess LMI feasibility: $$ F(x) = \sum_{i=1}^{n} x_i F_i \succ 0 $$
+    ///
+    /// Returns `None` if $$ F(x) \succ 0 $$ (feasible).
+    /// Otherwise returns the gradient and offset.
     pub fn assess_feas(&mut self, x: &Arr) -> Option<(Arr, f64)> {
         let n = x.len();
         let feas = self.ldlt_mgr.factor(|i, j| {

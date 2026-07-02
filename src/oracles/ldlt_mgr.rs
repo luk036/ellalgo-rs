@@ -18,12 +18,18 @@ impl LDLTMgr {
     }
 
     /// Performs LDL^T factorization from a full matrix.
+    ///
+    /// $$ A = LDL^T $$
+    ///
     /// Returns `true` if the matrix is positive definite.
     pub fn factorize(&mut self, mat: &Arr) -> bool {
         self.factor(|i, j| mat.at(i, j))
     }
 
     /// Performs LDL^T factorization using lazy element access.
+    ///
+    /// $$ A = LDL^T $$
+    ///
     /// `get_elem(i, j)` returns the matrix element at row `i`, column `j`.
     /// Returns `true` if the matrix is positive definite (all diagonal entries positive).
     pub fn factor(&mut self, get_elem: impl Fn(usize, usize) -> f64) -> bool {
@@ -55,6 +61,9 @@ impl LDLTMgr {
     }
 
     /// Performs LDL^T factorization allowing for positive semi-definite matrices.
+    ///
+    /// $$ A = LDL^T, \quad D_{ii} \ge 0 $$
+    ///
     /// Returns `true` if the matrix is positive semi-definite (no negative diagonal entries).
     pub fn factor_with_allow_semidefinite(
         &mut self,
@@ -94,7 +103,10 @@ impl LDLTMgr {
     }
 
     /// Computes a witness vector proving the matrix is not positive definite.
-    /// Returns the negative eigenvalue `ep` showing v^T A v = -ep < 0.
+    ///
+    /// $$ v^T A v = -e_p < 0 $$
+    ///
+    /// Returns the negative eigenvalue `ep`.
     pub fn witness(&mut self) -> f64 {
         assert!(!self.is_spd(), "witness called on SPD matrix");
         let (start, pos) = self.pos;
@@ -110,7 +122,7 @@ impl LDLTMgr {
         -self.storage[m * self.ndim + m]
     }
 
-    /// Computes the quadratic form v^T M v using the witness vector.
+    /// Computes the quadratic form $$ v^T M v $$ using the witness vector.
     /// `witness()` must be called first.
     pub fn sym_quad(&self, mat: &Arr) -> f64 {
         let (start, end) = self.pos;
@@ -123,7 +135,7 @@ impl LDLTMgr {
         result
     }
 
-    /// Computes the upper triangular square root matrix R where A = R^T R.
+    /// Computes the upper triangular square root matrix R where $$ A = R^T R $$.
     /// Panics if the matrix is not positive definite.
     pub fn sqrt(&self) -> Arr {
         assert!(self.is_spd(), "sqrt called on non-SPD matrix");

@@ -18,6 +18,9 @@ impl MaxcutOracle {
 impl OracleOptim<Arr> for MaxcutOracle {
     type CutChoice = SingleCut;
 
+    /// Assess max-cut SDP relaxation: maximize cut value $$ \sum_{i<j} w_{ij} (1 - x_i x_j) / 2 $$
+    ///
+    /// where $$ x_i \in \{-1, 1\} $$ are the partition assignments.
     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
         let x = xc.map(|v| if v >= 0.0 { 1.0 } else { -1.0 });
 

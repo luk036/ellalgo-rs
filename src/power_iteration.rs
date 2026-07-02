@@ -21,7 +21,7 @@ pub struct Options {
     pub tolerance: f64,
 }
 
-/// Computes the L1 norm (sum of absolute values) of the elements in the given array.
+/// Computes the L1 norm: $$ \|x\|_1 = \sum_{i} |x_i| $$
 ///
 /// This function is an inline helper function used internally by the power iteration algorithm.
 /// It calculates the L1 norm of the input array `x` by iterating through the elements and

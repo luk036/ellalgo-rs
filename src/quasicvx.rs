@@ -16,6 +16,11 @@ impl Default for MyOracle {
 impl OracleOptim<Arr> for MyOracle {
     type CutChoice = SingleCut;
 
+    /// Assess quasi-convex constraints:
+    ///
+    /// $$ \sqrt{x}^2 - \log y \le 0, \quad -\sqrt{x} + \gamma e^{\log y} \le 0 $$
+    ///
+    /// Objective: $$ \gamma = \sqrt{x} / e^{\log y} $$
     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
         let sqrtx = xc[0];
         let logy = xc[1];

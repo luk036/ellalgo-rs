@@ -442,8 +442,7 @@ pub fn bsearch<Oracle>(omega: &mut Oracle, intrvl: &mut (f64, f64), options: &Op
 where
     Oracle: OracleBS,
 {
-    // assume monotone
-    // auto& [lower, upper] = I;
+    // $$ \tau = (u - l) / 2, \quad \gamma = l + \tau $$
     let &mut (mut lower, mut upper) = intrvl;
     assert!(lower <= upper);
     let u_orig = upper;

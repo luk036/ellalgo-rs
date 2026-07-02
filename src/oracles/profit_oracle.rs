@@ -32,6 +32,13 @@ impl ProfitOracle {
         }
     }
 
+    /// Assess feasibility of profit maximization.
+    ///
+    /// Cobb-Douglas constraint: $$ y_1 \le \log K $$ (log capacity)
+    ///
+    /// Profit: $$ \Pi = e^{c_0 + \alpha \cdot y} - p_{\text{out}} \cdot e^{y} $$
+    ///
+    /// where $$ c_0 = \log(p \cdot s) $$ and $$ \alpha $$ are elasticities.
     fn assess_feas(&mut self, y: &Arr, gamma: &mut f64) -> Option<(Arr, f64)> {
         let num_constraints = 2;
         for _ in 0..num_constraints {
@@ -67,6 +74,10 @@ impl ProfitOracle {
 impl OracleOptim<Arr> for ProfitOracle {
     type CutChoice = SingleCut;
 
+    /// Assess profit optimization: $$ \Pi(y) = e^{c_0 + \alpha \cdot y} - p_{\text{out}} \cdot e^{y} $$
+    ///
+    /// Maximizes profit subject to $$ y_1 \le \log K $$.
+    /// Returns (gradient, cut) and whether gamma was improved.
     fn assess_optim(&mut self, y: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
         if let Some((g, fj)) = self.assess_feas(y, gamma) {
             return ((g, SingleCut(fj)), false);

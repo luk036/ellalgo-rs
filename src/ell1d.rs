@@ -52,6 +52,12 @@ impl Ell1D {
 
     /// The function `update_single` updates an ellipsoid core using a single cut.
     ///
+    /// $$ \tau = |g| \cdot r, \qquad
+    ///     x_c \gets \frac{u+l}{2}, \qquad
+    ///     r \gets \frac{u-l}{2} $$
+    ///
+    /// where $$ u, l $$ are the updated upper and lower bounds.
+    ///
     /// Arguments:
     ///
     /// * `grad`: The `grad` parameter is the gradient value, which is of type `f64`. It represents the
