@@ -151,8 +151,8 @@ impl SearchSpace for Ell {
     type ArrayType = Arr;
 
     #[inline]
-    fn xc(&self) -> Self::ArrayType {
-        self.xc.clone()
+    fn xc(&self) -> &Self::ArrayType {
+        &self.xc
     }
 
     #[inline]

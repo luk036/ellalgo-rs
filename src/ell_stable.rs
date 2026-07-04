@@ -12,17 +12,28 @@ pub struct EllStable {
     kappa: f64,
     helper: EllCalc,
     tsq: f64,
+    /// Scratch buffers for update_core (avoid per-call allocation)
+    inv_ml_g: Arr,
+    inv_md_inv_ml_g: Arr,
+    gg_t: Arr,
+    g_t: Arr,
 }
 
 impl EllStable {
     pub fn new_with_matrix(kappa: f64, mq: Arr, xc: Arr) -> EllStable {
-        let helper = EllCalc::new(xc.len());
+        let n = xc.len();
+        let helper = EllCalc::new(n);
+        let scratch = Arr::new(n);
         EllStable {
             kappa,
             mq,
             xc,
             helper,
             tsq: 0.0,
+            inv_ml_g: scratch.clone(),
+            inv_md_inv_ml_g: scratch.clone(),
+            gg_t: scratch.clone(),
+            g_t: scratch,
         }
     }
 
@@ -57,29 +68,29 @@ impl EllStable {
         let ndim = self.xc.len();
         let n = ndim;
 
-        // calculate inv(L)*grad
-        let mut inv_ml_g = grad.clone();
+        // calculate inv(L)*grad — reuse inv_ml_g scratch
+        self.inv_ml_g.copy_from(grad);
         for i in 1..ndim {
             let row_start_i = i * n;
             for j in 0..i {
-                let val = self.mq.at(j, i) * inv_ml_g[j];
+                let val = self.mq.at(j, i) * self.inv_ml_g[j];
                 self.mq.data_mut()[row_start_i + j] = val;
-                inv_ml_g[i] -= val;
+                self.inv_ml_g[i] -= val;
             }
         }
 
-        // calculate inv(D)*inv(L)*grad
-        let mut inv_md_inv_ml_g = inv_ml_g.clone();
+        // calculate inv(D)*inv(L)*grad — reuse inv_md_inv_ml_g
+        self.inv_md_inv_ml_g.copy_from(&self.inv_ml_g);
         for i in 0..ndim {
-            inv_md_inv_ml_g[i] *= self.mq.at(i, i);
+            self.inv_md_inv_ml_g[i] *= self.mq.at(i, i);
         }
 
-        // calculate omega
-        let mut gg_t = inv_md_inv_ml_g.clone();
+        // calculate omega — reuse gg_t scratch
+        self.gg_t.copy_from(&self.inv_md_inv_ml_g);
         let mut omega = 0.0;
         for i in 0..ndim {
-            gg_t[i] *= inv_ml_g[i];
-            omega += gg_t[i];
+            self.gg_t[i] *= self.inv_ml_g[i];
+            omega += self.gg_t[i];
         }
 
         self.tsq = self.kappa * omega;
@@ -89,18 +100,18 @@ impl EllStable {
             return status;
         }
 
-        // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad
-        let mut g_t = inv_md_inv_ml_g.clone();
+        // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad — reuse g_t scratch
+        self.g_t.copy_from(&self.inv_md_inv_ml_g);
         for i in (1..ndim).rev() {
             for j in i..ndim {
-                g_t[i - 1] -= self.mq.at(j, i - 1) * g_t[j];
+                self.g_t[i - 1] -= self.mq.at(j, i - 1) * self.g_t[j];
             }
         }
 
         // calculate xc
         let rho_over_omega = rho / omega;
         for i in 0..ndim {
-            self.xc[i] -= rho_over_omega * g_t[i];
+            self.xc[i] -= rho_over_omega * self.g_t[i];
         }
 
         // Rank-one update
@@ -108,8 +119,8 @@ impl EllStable {
         let mut oldt = omega / mu_val;
         let last_idx = ndim - 1;
         for j in 0..last_idx {
-            let temp = oldt + gg_t[j];
-            let beta2 = inv_md_inv_ml_g[j] / temp;
+            let temp = oldt + self.gg_t[j];
+            let beta2 = self.inv_md_inv_ml_g[j] / temp;
             self.mq.data_mut()[j * n + j] *= oldt / temp;
             let row_start_j = j * n;
             for l in (j + 1)..ndim {
@@ -117,7 +128,7 @@ impl EllStable {
             }
             oldt = temp;
         }
-        let temp = oldt + gg_t[last_idx];
+        let temp = oldt + self.gg_t[last_idx];
         self.mq.data_mut()[last_idx * n + last_idx] *= oldt / temp;
         self.kappa *= delta;
 
@@ -128,8 +139,8 @@ impl EllStable {
 impl SearchSpace for EllStable {
     type ArrayType = Arr;
 
-    fn xc(&self) -> Self::ArrayType {
-        self.xc.clone()
+    fn xc(&self) -> &Self::ArrayType {
+        &self.xc
     }
 
     fn tsq(&self) -> f64 {

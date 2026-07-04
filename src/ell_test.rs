@@ -145,7 +145,7 @@ mod tests {
         let mut ellip = Ell::new_with_scalar(1.0, Arr::from(vec![0.0, 0.0]));
         let new_xc = Arr::from(vec![1.0, 2.0]);
         ellip.set_xc(new_xc.clone());
-        assert_eq!(ellip.xc(), new_xc);
+        assert_eq!(*ellip.xc(), new_xc);
     }
 
     #[test]

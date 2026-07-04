@@ -375,5 +375,5 @@ fn test_bsearch_adaptor_x_best() {
     let options = Options::default();
     let adaptor = BSearchAdaptor::new(omega, ellip, options);
     let x_best = adaptor.space.xc();
-    assert_eq!(x_best, Arr::from(vec![0.0, 0.0]));
+    assert_eq!(*x_best, Arr::from(vec![0.0, 0.0]));
 }

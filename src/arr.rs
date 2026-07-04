@@ -87,6 +87,20 @@ impl Arr {
         Arr { data, rows, cols }
     }
 
+    /// Copy a row into a pre-allocated 1D output buffer (no allocation).
+    ///
+    /// # Panics
+    ///
+    /// Panics if `i >= self.rows`, the array is not 2D, or `out` size doesn't match `self.cols`.
+    pub fn row_to(&self, i: usize, out: &mut Arr) {
+        assert!(self.is_2d());
+        assert!(i < self.rows);
+        assert_eq!(out.size(), self.cols);
+        let start = i * self.cols;
+        out.data
+            .copy_from_slice(&self.data[start..start + self.cols]);
+    }
+
     /// Extract a row as a 1D array.
     ///
     /// # Panics

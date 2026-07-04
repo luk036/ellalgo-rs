@@ -5,12 +5,14 @@ pub struct SvmOracle {
     data: Arr,
     labels: Vec<i32>,
     nfeat: usize,
+    row_buf: Arr,
 }
 
 impl SvmOracle {
     pub fn new(data: Arr, labels: Vec<i32>) -> Self {
         let nfeat = data.cols();
         Self {
+            row_buf: Arr::new(nfeat),
             data,
             labels,
             nfeat,
@@ -21,10 +23,6 @@ impl SvmOracle {
 impl OracleOptim<Arr> for SvmOracle {
     type CutChoice = SingleCut;
 
-    /// Assess SVM margin: $$ y_i (w^T x_i + b) \ge 1 $$
-    ///
-    /// Maximizes the margin by minimizing $$ \|w\| $$ subject to
-    /// correct classification. Returns the gradient of the most violated constraint.
     fn assess_optim(&mut self, xc: &Arr, gamma: &mut f64) -> ((Arr, SingleCut), bool) {
         let n = self.nfeat;
         let w = Arr::from_fn(n, |i| xc[i]);
@@ -35,8 +33,8 @@ impl OracleOptim<Arr> for SvmOracle {
 
         for i in 0..self.data.rows() {
             let y_i = self.labels[i] as f64;
-            let xi_arr = self.data.row(i);
-            let margin = y_i * (w.dot(&xi_arr) + b);
+            self.data.row_to(i, &mut self.row_buf);
+            let margin = y_i * (w.dot(&self.row_buf) + b);
             if margin < min_val {
                 min_val = margin;
                 min_idx = i;
@@ -49,8 +47,9 @@ impl OracleOptim<Arr> for SvmOracle {
         }
 
         let y_i = self.labels[min_idx] as f64;
-        let x_i = self.data.row(min_idx);
-        let grad_vec: Vec<f64> = x_i
+        self.data.row_to(min_idx, &mut self.row_buf);
+        let grad_vec: Vec<f64> = self
+            .row_buf
             .iter()
             .map(|&x| -y_i * x)
             .chain(std::iter::once(-y_i))

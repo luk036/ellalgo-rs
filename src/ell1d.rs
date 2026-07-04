@@ -106,8 +106,8 @@ impl SearchSpace for Ell1D {
     /// let center = ell1d.xc();
     /// assert_eq!(center, 5.0);
     /// ```
-    fn xc(&self) -> f64 {
-        self.xc
+    fn xc(&self) -> &f64 {
+        &self.xc
     }
 
     /// The `update` function updates the decision variable based on the given cut.

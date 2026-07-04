@@ -154,7 +154,7 @@ pub trait OracleBS {
 pub trait SearchSpace {
     type ArrayType; // f64 for 1D; Arr for general
 
-    fn xc(&self) -> Self::ArrayType;
+    fn xc(&self) -> &Self::ArrayType;
 
     fn tsq(&self) -> f64; // measure of the search space
 
@@ -211,12 +211,13 @@ where
     T: UpdateByCutChoice<Space, ArrayType = Space::ArrayType>,
     Oracle: OracleFeas<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace,
+    Space::ArrayType: Clone,
 {
     for niter in 0..options.max_iters {
-        let cut = omega.assess_feas(&space.xc()); // query the oracle at &space.xc()
+        let cut = omega.assess_feas(space.xc());
         if cut.is_none() {
             // feasible sol'n obtained
-            return (Some(space.xc()), niter);
+            return (Some((*space.xc()).clone()), niter);
         }
         let status = space.update_bias_cut::<T>(&cut.unwrap()); // update space
         if status != CutStatus::Success || space.tsq() < options.tolerance {
@@ -293,14 +294,15 @@ where
     T: UpdateByCutChoice<Space, ArrayType = Space::ArrayType>,
     Oracle: OracleOptim<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace,
+    Space::ArrayType: Clone,
 {
     let mut x_best: Option<Space::ArrayType> = None;
 
     for niter in 0..options.max_iters {
-        let (cut, shrunk) = omega.assess_optim(&space.xc(), gamma); // query the oracle at &space.xc()
+        let (cut, shrunk) = omega.assess_optim(space.xc(), gamma);
         let status = if shrunk {
             // better gamma obtained
-            x_best = Some(space.xc());
+            x_best = Some((*space.xc()).clone());
             space.update_central_cut::<T>(&cut) // update space
         } else {
             space.update_bias_cut::<T>(&cut) // update space
@@ -343,7 +345,7 @@ where
     let mut retry = false;
 
     for niter in 0..options.max_iters {
-        let (cut, shrunk, x_q, more_alt) = omega.assess_optim_q(&space_q.xc(), gamma, retry); // query the oracle at &space.xc()
+        let (cut, shrunk, x_q, more_alt) = omega.assess_optim_q(space_q.xc(), gamma, retry);
         if shrunk {
             // best gamma obtained
             x_best = Some(x_q);
@@ -405,6 +407,7 @@ where
     T: UpdateByCutChoice<Space, ArrayType = Space::ArrayType>,
     Oracle: OracleFeas<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace + Clone,
+    Space::ArrayType: Clone,
 {
     fn assess_bs(&mut self, gamma: f64) -> bool {
         let mut space = self.space.clone();
