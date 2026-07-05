@@ -897,7 +897,7 @@ impl EllCalc {
         }
 
         let eta = tau + self.n_f * beta;
-        if eta < 0.0 {
+        if eta <= 0.0 {
             return (CutStatus::NoEffect, (0.0, 0.0, 1.0)); // no effect
         }
 

@@ -93,6 +93,10 @@ impl EllStable {
             omega += self.gg_t[i];
         }
 
+        if omega <= f64::MIN_POSITIVE {
+            return CutStatus::NoEffect;
+        }
+
         self.tsq = self.kappa * omega;
         let (status, (rho, sigma, delta)) = f_core(beta, self.tsq);
 

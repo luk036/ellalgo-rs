@@ -112,6 +112,10 @@ impl Ell {
         let grad_t = self.mq.dot_mv(grad);
         let omega = grad.dot(&grad_t);
 
+        if omega <= f64::MIN_POSITIVE {
+            return CutStatus::NoEffect;
+        }
+
         self.tsq = self.kappa * omega;
         let (status, (rho, sigma, delta)) = cut_strategy(beta, self.tsq);
         if status != CutStatus::Success {
