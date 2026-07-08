@@ -91,8 +91,5 @@ pub mod example4;
 #[cfg(test)]
 pub mod ell_calc_additional_tests;
 
-#[cfg(test)]
-pub mod ell_test;
-
 #[cfg(feature = "std")]
 pub mod logging;

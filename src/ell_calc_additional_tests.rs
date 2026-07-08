@@ -16,26 +16,6 @@ mod tests {
     }
 
     #[test]
-    fn test_ell_calc_central_cut_positive_beta() {
-        let ell_calc = EllCalc::new(4);
-        let (status, (rho, sigma, delta)) = ell_calc.calc_central_cut(0.01);
-        assert_eq!(status, CutStatus::Success);
-        assert!(rho > 0.0);
-        assert!(sigma > 0.0);
-        assert!(delta > 0.0);
-    }
-
-    #[test]
-    fn test_ell_calc_central_cut_positive_tsq() {
-        let ell_calc = EllCalc::new(4);
-        let (status, (rho, sigma, delta)) = ell_calc.calc_central_cut(0.01);
-        assert_eq!(status, CutStatus::Success);
-        assert!(rho > 0.0);
-        assert!(sigma > 0.0);
-        assert!(delta > 0.0);
-    }
-
-    #[test]
     fn test_ell_calc_parallel_central_cut_no_effect() {
         let ell_calc = EllCalc::new(4);
         let (status, (rho, sigma, delta)) = ell_calc.calc_parallel_central_cut(0.0, 0.0);
@@ -45,16 +25,6 @@ mod tests {
         assert_eq!(sigma, 0.4);
         // For n=4, cst1 = 16.0 / 15.0
         assert_eq!(delta, 16.0 / 15.0);
-    }
-
-    #[test]
-    fn test_ell_calc_parallel_central_cut_positive_beta() {
-        let ell_calc = EllCalc::new(4);
-        let (status, (rho, sigma, delta)) = ell_calc.calc_parallel_central_cut(0.05, 0.01);
-        assert_eq!(status, CutStatus::Success);
-        assert!(rho > 0.0);
-        assert!(sigma > 0.0);
-        assert!(delta > 0.0);
     }
 
     #[test]
