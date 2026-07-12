@@ -128,13 +128,13 @@ impl EllStable {
         // Storage: L[i,j] (i>j) at mq(j,i) [upper triangle]; scratch at mq(i,j) [lower].
         let mu_val = sigma / (1.0 - sigma);
         let mut oldt = omega / mu_val;
-        self.g_t.copy_from(grad);  // reuse g_t as working vector v (no longer needed as g_t)
+        self.g_t.copy_from(grad); // reuse g_t as working vector v (no longer needed as g_t)
         for j in 0..ndim {
-            let p = self.g_t[j];                     // v[j] = w_j (evolved from g_j)
-            let temp = self.inv_md_inv_ml_g[j];       // z_j = D_j^{-1}·w_j
+            let p = self.g_t[j]; // v[j] = w_j (evolved from g_j)
+            let temp = self.inv_md_inv_ml_g[j]; // z_j = D_j^{-1}·w_j
             let newt = oldt + p * temp;
             let beta2 = temp / newt;
-            self.mq.data_mut()[j * n + j] *= oldt / newt;  // D_j update
+            self.mq.data_mut()[j * n + j] *= oldt / newt; // D_j update
             let row_start_j = j * n;
             for l in (j + 1)..ndim {
                 // lower triangle at (l, j) holds L[l,j]·w_j (from forward substitution)
