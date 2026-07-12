@@ -104,11 +104,12 @@ impl EllStable {
             return status;
         }
 
-        // calculate mq*grad = inv(L')*inv(D)*inv(L)*grad — reuse g_t scratch
+        // calculate g_t = L^{-T} * z (where z = D^{-1} * w)
+        // L[i,j] is stored in the upper triangle at (j,i); lower triangle is scratch.
         self.g_t.copy_from(&self.inv_md_inv_ml_g);
         for i in (1..ndim).rev() {
             for j in i..ndim {
-                self.g_t[i - 1] -= self.mq.at(j, i - 1) * self.g_t[j];
+                self.g_t[i - 1] -= self.mq.at(i - 1, j) * self.g_t[j];
             }
         }
 
@@ -118,22 +119,31 @@ impl EllStable {
             self.xc[i] -= rho_over_omega * self.g_t[i];
         }
 
-        // Rank-one update
+        // Rank-one LDL^T update (Gauss-Seidel style, matching Python EllStable)
+        //
+        // The update M ← M - (σ/ω)·(Mg)(Mg)^T is applied to the LDL^T factors.
+        // We use a working vector v that starts as the gradient g and gets
+        // progressively transformed to track w = L^{-1}g as we sweep columns.
+        //
+        // Storage: L[i,j] (i>j) at mq(j,i) [upper triangle]; scratch at mq(i,j) [lower].
         let mu_val = sigma / (1.0 - sigma);
         let mut oldt = omega / mu_val;
-        let last_idx = ndim - 1;
-        for j in 0..last_idx {
-            let temp = oldt + self.gg_t[j];
-            let beta2 = self.inv_md_inv_ml_g[j] / temp;
-            self.mq.data_mut()[j * n + j] *= oldt / temp;
+        self.g_t.copy_from(grad);  // reuse g_t as working vector v (no longer needed as g_t)
+        for j in 0..ndim {
+            let p = self.g_t[j];                     // v[j] = w_j (evolved from g_j)
+            let temp = self.inv_md_inv_ml_g[j];       // z_j = D_j^{-1}·w_j
+            let newt = oldt + p * temp;
+            let beta2 = temp / newt;
+            self.mq.data_mut()[j * n + j] *= oldt / newt;  // D_j update
             let row_start_j = j * n;
             for l in (j + 1)..ndim {
-                self.mq.data_mut()[row_start_j + l] += beta2 * self.mq.at(l, j);
+                // lower triangle at (l, j) holds L[l,j]·w_j (from forward substitution)
+                self.g_t[l] -= self.mq.at(l, j);
+                // upper triangle at (j, l) stores L[l,j]
+                self.mq.data_mut()[row_start_j + l] += beta2 * self.g_t[l];
             }
-            oldt = temp;
+            oldt = newt;
         }
-        let temp = oldt + self.gg_t[last_idx];
-        self.mq.data_mut()[last_idx * n + last_idx] *= oldt / temp;
         self.kappa *= delta;
 
         status
