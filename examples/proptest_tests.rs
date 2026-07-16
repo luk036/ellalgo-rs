@@ -3,8 +3,6 @@
 //! Run with: `cargo test --example proptest_tests`
 
 use proptest::prelude::*;
-use ellalgo_rs::ell::Ell;
-use ellalgo_rs::arr::Arr;
 
 proptest! {
     #[test]
