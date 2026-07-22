@@ -1,5 +1,5 @@
 use ellalgo_rs::arr::Arr;
-use ellalgo_rs::cutting_plane::{SingleCut};
+use ellalgo_rs::cutting_plane::SingleCut;
 use ellalgo_rs::ell::Ell;
 use ellalgo_rs::SearchSpace;
 use std::hint::black_box;
