@@ -1,6 +1,7 @@
 use crate::arr::Arr;
-use crate::cutting_plane::{CutStatus, ParallelCut, SearchSpace, SingleCut, UpdateByCutChoice};
+use crate::cutting_plane::{CutStatus, ParallelCut, SingleCut, UpdateByCutChoice};
 use crate::ell_calc::EllCalc;
+use crate::ell_common::impl_search_space;
 
 /// Ellipsoid Search Space
 ///
@@ -151,47 +152,7 @@ impl Ell {
     }
 }
 
-impl SearchSpace for Ell {
-    type ArrayType = Arr;
-
-    #[inline]
-    fn xc(&self) -> &Self::ArrayType {
-        &self.xc
-    }
-
-    #[inline]
-    fn tsq(&self) -> f64 {
-        self.tsq
-    }
-
-    fn update_bias_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
-    where
-        T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
-    {
-        let (grad, beta) = cut;
-        beta.update_bias_cut_by(self, grad)
-    }
-
-    fn update_central_cut<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
-    where
-        T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
-    {
-        let (grad, beta) = cut;
-        beta.update_central_cut_by(self, grad)
-    }
-
-    fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
-    where
-        T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
-    {
-        let (grad, beta) = cut;
-        beta.update_q_by(self, grad)
-    }
-
-    fn set_xc(&mut self, x: Self::ArrayType) {
-        self.xc = x;
-    }
-}
+impl_search_space!(Ell);
 
 trait CutType {
     fn call_bias_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64));
@@ -245,6 +206,7 @@ impl<T: CutType> UpdateByCutChoice<Ell> for T {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cutting_plane::SearchSpace;
     use approx_eq::assert_approx_eq;
 
     #[test]
