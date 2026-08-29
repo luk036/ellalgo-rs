@@ -1,6 +1,7 @@
 use crate::arr::Arr;
 use crate::cutting_plane::{OracleFeas, SingleCut};
 use crate::oracles::ldlt_mgr::LDLTMgr;
+use crate::oracles::lmi_oracle_base::assess_feas_impl;
 
 pub struct LMIOracle {
     mat_f: Vec<Arr>,
@@ -29,21 +30,13 @@ impl OracleFeas<Arr> for LMIOracle {
     /// Otherwise returns the gradient and offset.
     fn assess_feas(&mut self, xc: &Arr) -> Option<(Arr, SingleCut)> {
         let n = xc.len();
-        let feas = self.ldlt_mgr.factor(|i, j| {
+        let result = assess_feas_impl(&mut self.ldlt_mgr, &self.mat_f, xc, 1.0, |i, j| {
             let mut s = self.mat_b.at(i, j);
             for k in 0..n {
                 s -= self.mat_f[k].at(i, j) * xc[k];
             }
             s
         });
-        if feas {
-            return None;
-        }
-        let ep = self.ldlt_mgr.witness();
-        let mut g = Arr::new(n);
-        for k in 0..n {
-            g[k] = self.ldlt_mgr.sym_quad(&self.mat_f[k]);
-        }
-        Some((g, SingleCut(ep)))
+        result.map(|(g, ep)| (g, SingleCut(ep)))
     }
 }

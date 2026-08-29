@@ -1,6 +1,7 @@
 use crate::arr::Arr;
 use crate::cutting_plane::{OracleFeas, SingleCut};
 use crate::oracles::ldlt_mgr::LDLTMgr;
+use crate::oracles::lmi_oracle_base::assess_feas_impl;
 
 pub struct LMIOldOracle {
     mat_f: Vec<Arr>,
@@ -41,14 +42,7 @@ impl OracleFeas<Arr> for LMIOldOracle {
                 }
             }
         }
-        if self.ldlt_mgr.factorize(&a) {
-            return None;
-        }
-        let ep = self.ldlt_mgr.witness();
-        let mut g = Arr::new(n);
-        for k in 0..n {
-            g[k] = self.ldlt_mgr.sym_quad(&self.mat_f[k]);
-        }
-        Some((g, SingleCut(ep)))
+        let result = assess_feas_impl(&mut self.ldlt_mgr, &self.mat_f, xc, 1.0, |i, j| a.at(i, j));
+        result.map(|(g, ep)| (g, SingleCut(ep)))
     }
 }

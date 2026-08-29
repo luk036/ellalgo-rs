@@ -27,8 +27,10 @@
 
 pub mod ldlt_mgr;
 pub mod lmi0_oracle;
+pub mod lmi_factory;
 pub mod lmi_old_oracle;
 pub mod lmi_oracle;
+mod lmi_oracle_base;
 pub mod lowpass_oracle;
 pub mod maxcut_oracle;
 pub mod profit_oracle;
