@@ -314,6 +314,95 @@ where
     (x_best, options.max_iters)
 } // END
 
+/// Outcome of an `OptimQState::on_update` transition.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OptimQOutcome {
+    /// Keep iterating the discrete cutting-plane loop.
+    Continue,
+    /// Stop the loop (NoSoln, or NoEffect with no more alternative cuts).
+    Stop,
+}
+
+/// State machine for the discrete cutting-plane method.
+///
+/// Encapsulates the mutable state of [`cutting_plane_optim_q`]: the
+/// best-so-far solution `x_best` and the `retry` phase flag. The `on_update`
+/// transition maps a [`CutStatus`] (plus the oracle's `more_alt` hint) onto
+/// a control-flow outcome.
+///
+/// # Note
+///
+/// State pattern: the driver loop asks the machine for its current phase
+/// (retry), feeds it each oracle/space result, and stops when `on_update`
+/// returns `OptimQOutcome::Stop`. The retry/termination bookkeeping that used
+/// to be scattered through the loop now lives in one place.
+///
+/// # Type Parameters
+///
+/// * `A` - The array type of the decision variables.
+pub struct OptimQState<A> {
+    x_best: Option<A>,
+    retry: bool,
+}
+
+impl<A> OptimQState<A> {
+    /// Create a new state with no best solution and `retry = false`.
+    pub fn new() -> Self {
+        OptimQState {
+            x_best: None,
+            retry: false,
+        }
+    }
+
+    /// Whether the next assessment is a retry (reuse cached point).
+    pub fn retry(&self) -> bool {
+        self.retry
+    }
+
+    /// Take the best-so-far solution, leaving `None` in its place.
+    pub fn take_x_best(&mut self) -> Option<A> {
+        self.x_best.take()
+    }
+
+    /// Transition on a newly obtained (shrunk) best solution.
+    pub fn on_shrunk(&mut self, x: A) {
+        self.x_best = Some(x);
+        self.retry = false;
+    }
+
+    /// Transition on the space update result.
+    ///
+    /// * `CutStatus::Success` - reset retry, continue
+    /// * `CutStatus::NoSoln` - stop
+    /// * `CutStatus::NoEffect` - continue with retry if `more_alt`, else stop
+    /// * `CutStatus::Unknown` - continue
+    pub fn on_update(&mut self, status: &CutStatus, more_alt: bool) -> OptimQOutcome {
+        match status {
+            CutStatus::Success => {
+                self.retry = false;
+                OptimQOutcome::Continue
+            }
+            CutStatus::NoSoln => OptimQOutcome::Stop,
+            CutStatus::NoEffect => {
+                if !more_alt {
+                    // no more alternative cut
+                    OptimQOutcome::Stop
+                } else {
+                    self.retry = true;
+                    OptimQOutcome::Continue
+                }
+            }
+            CutStatus::Unknown => OptimQOutcome::Continue,
+        }
+    }
+}
+
+impl<A> Default for OptimQState<A> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// The function implements the cutting-plane method for solving a convex discrete optimization problem.
 ///
 /// Arguments:
@@ -341,38 +430,23 @@ where
     Oracle: OracleOptimQ<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace,
 {
-    let mut x_best: Option<Space::ArrayType> = None;
-    let mut retry = false;
+    let mut state = OptimQState::new();
 
     for niter in 0..options.max_iters {
-        let (cut, shrunk, x_q, more_alt) = omega.assess_optim_q(space_q.xc(), gamma, retry);
+        let (cut, shrunk, x_q, more_alt) = omega.assess_optim_q(space_q.xc(), gamma, state.retry());
         if shrunk {
             // best gamma obtained
-            x_best = Some(x_q);
-            retry = false;
+            state.on_shrunk(x_q);
         }
         let status = space_q.update_q::<T>(&cut); // update space
-        match &status {
-            CutStatus::Success => {
-                retry = false;
-            }
-            CutStatus::NoSoln => {
-                return (x_best, niter);
-            }
-            CutStatus::NoEffect => {
-                if !more_alt {
-                    // no more alternative cut
-                    return (x_best, niter);
-                }
-                retry = true;
-            }
-            _ => {}
+        if state.on_update(&status, more_alt) == OptimQOutcome::Stop {
+            return (state.take_x_best(), niter);
         }
         if space_q.tsq() < options.tolerance {
-            return (x_best, niter);
+            return (state.take_x_best(), niter);
         }
     }
-    (x_best, options.max_iters)
+    (state.take_x_best(), options.max_iters)
 } // END
 
 pub struct BSearchAdaptor<T, Oracle, Space>
