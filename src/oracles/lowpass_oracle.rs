@@ -1,5 +1,6 @@
 use crate::arr::{linspace, Arr};
 use crate::cutting_plane::{OracleFeas, OracleOptim, ParallelCut};
+use crate::round_robin::RoundRobin;
 use std::f64::consts::PI;
 
 pub type Cut = (Arr, ParallelCut);
@@ -17,6 +18,9 @@ pub struct LowpassOracle {
     pub idx3: i32,
     pub fmax: f64,
     pub kmax: i32,
+    rr1: RoundRobin,
+    rr2: RoundRobin,
+    rr3: RoundRobin,
 }
 
 impl LowpassOracle {
@@ -48,6 +52,9 @@ impl LowpassOracle {
             idx3: nwstop - 1,
             fmax: f64::NEG_INFINITY,
             kmax: -1,
+            rr1: RoundRobin::new_range(0, nwpass),
+            rr2: RoundRobin::new_range(nwpass, nwstop),
+            rr3: RoundRobin::new_range(nwstop, mdim as i32),
         }
     }
 }
@@ -61,10 +68,7 @@ impl OracleFeas<Arr> for LowpassOracle {
         let mdim = self.spectrum.len();
         let ndim = self.spectrum[0].len();
         for _ in 0..self.nwpass {
-            self.idx1 += 1;
-            if self.idx1 == self.nwpass {
-                self.idx1 = 0;
-            }
+            self.idx1 = self.rr1.advance();
             let col_k = &self.spectrum[self.idx1 as usize];
             let val = col_k.dot(x);
             if val > self.up_sq {
@@ -83,10 +87,7 @@ impl OracleFeas<Arr> for LowpassOracle {
         self.fmax = f64::NEG_INFINITY;
         self.kmax = -1;
         for _ in self.nwstop..mdim as i32 {
-            self.idx3 += 1;
-            if self.idx3 == mdim as i32 {
-                self.idx3 = self.nwstop;
-            }
+            self.idx3 = self.rr3.advance();
             let col_k = &self.spectrum[self.idx3 as usize];
             let val = col_k.dot(x);
             if val > self.sp_sq {
@@ -105,10 +106,7 @@ impl OracleFeas<Arr> for LowpassOracle {
         }
 
         for _ in self.nwpass..self.nwstop {
-            self.idx2 += 1;
-            if self.idx2 == self.nwstop {
-                self.idx2 = self.nwpass;
-            }
+            self.idx2 = self.rr2.advance();
             let col_k = &self.spectrum[self.idx2 as usize];
             let val = col_k.dot(x);
             if val < 0.0 {

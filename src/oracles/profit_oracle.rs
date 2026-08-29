@@ -1,11 +1,12 @@
 use crate::arr::Arr;
 use crate::cutting_plane::{OracleOptim, OracleOptimQ, SingleCut};
+use crate::round_robin::RoundRobin;
 
 type Cut = (Arr, SingleCut);
 
 #[derive(Debug)]
 pub struct ProfitOracle {
-    idx: i32,
+    idx: RoundRobin,
     log_p_scale: f64,
     log_k: f64,
     price_out: Arr,
@@ -21,7 +22,7 @@ impl ProfitOracle {
         let log_p_scale = (unit_price * scale).ln();
         let log_k = limit.ln();
         ProfitOracle {
-            idx: -1,
+            idx: RoundRobin::new(2),
             log_p_scale,
             log_k,
             price_out,
@@ -42,11 +43,8 @@ impl ProfitOracle {
     fn assess_feas(&mut self, y: &Arr, gamma: &mut f64) -> Option<(Arr, f64)> {
         let num_constraints = 2;
         for _ in 0..num_constraints {
-            self.idx += 1;
-            if self.idx == num_constraints {
-                self.idx = 0;
-            }
-            let fj = match self.idx {
+            let i = self.idx.advance() as usize;
+            let fj = match i {
                 0 => y[0] - self.log_k,
                 1 => {
                     self.log_cobb = self.log_p_scale + self.elasticities.dot(y);
@@ -58,7 +56,7 @@ impl ProfitOracle {
             };
             if fj > 0.0 {
                 return Some((
-                    match self.idx {
+                    match i {
                         0 => Arr::from(vec![1.0, 0.0]),
                         1 => &self.q / (*gamma + self.vx) - &self.elasticities,
                         _ => unreachable!(),
