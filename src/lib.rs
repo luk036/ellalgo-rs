@@ -70,11 +70,14 @@ pub use crate::cutting_plane::{
 
 pub mod ell;
 pub mod ell_calc;
+mod ell_common;
 pub mod ell_stable;
 pub mod error;
+pub mod lmi_problem;
 pub mod oracles;
 pub mod power_iteration;
 pub mod quasicvx;
+pub mod round_robin;
 
 #[cfg(test)]
 pub mod example1;
