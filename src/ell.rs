@@ -53,6 +53,7 @@ impl Ell {
     /// let ellip = Ell::new(val, xc);
     /// assert_eq!(ellip.kappa, 1.0);
     /// ```
+    #[inline]
     pub fn new(val: Arr, xc: Arr) -> Ell {
         Ell::new_with_matrix(1.0, Arr::from_diag(&val), xc)
     }
@@ -69,11 +70,13 @@ impl Ell {
     /// let ellip = Ell::new_with_scalar(val, xc);
     /// assert_eq!(ellip.kappa, 1.0);
     /// ```
+    #[inline]
     pub fn new_with_scalar(val: f64, xc: Arr) -> Ell {
         Ell::new_with_matrix(val, Arr::eye(xc.len()), xc)
     }
 
     /// Construct from a covariance matrix.
+    #[inline]
     pub fn from_covariance(cov: Arr, xc: Arr) -> Ell {
         Ell::new_with_matrix(1.0, cov, xc)
     }
@@ -161,24 +164,30 @@ trait CutType {
 }
 
 impl CutType for SingleCut {
+    #[inline]
     fn call_bias_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
         helper.calc_bias_cut(self.0, tsq)
     }
+    #[inline]
     fn call_central_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
         helper.calc_central_cut(tsq)
     }
+    #[inline]
     fn call_q_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
         helper.calc_bias_cut_q(self.0, tsq)
     }
 }
 
 impl CutType for ParallelCut {
+    #[inline]
     fn call_bias_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
         helper.calc_single_or_parallel_bias_cut(self, tsq)
     }
+    #[inline]
     fn call_central_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
         helper.calc_single_or_parallel_central_cut(self, tsq)
     }
+    #[inline]
     fn call_q_cut(&self, helper: &EllCalc, tsq: f64) -> (CutStatus, (f64, f64, f64)) {
         helper.calc_single_or_parallel_q(self, tsq)
     }

@@ -38,10 +38,12 @@ impl EllStable {
         }
     }
 
+    #[inline]
     pub fn new(val: Arr, xc: Arr) -> EllStable {
         EllStable::new_with_matrix(1.0, Arr::from_diag(&val), xc)
     }
 
+    #[inline]
     pub fn new_with_scalar(val: f64, xc: Arr) -> EllStable {
         EllStable::new_with_matrix(val, Arr::eye(xc.len()), xc)
     }

@@ -75,10 +75,12 @@ mod tests {
     use super::*;
     use approx_eq::assert_approx_eq;
 
+    #[inline]
     fn a_matrix() -> Arr {
         Arr::with_data(vec![4.0, 1.0, 1.0, 3.0], 2, 2)
     }
 
+    #[inline]
     fn b_vector() -> Arr {
         Arr::from(vec![1.0, 2.0])
     }

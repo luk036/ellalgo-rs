@@ -54,6 +54,7 @@ impl OracleFeas<Arr> for MyOracle3 {
         None
     }
 
+    #[inline]
     fn update(&mut self, gamma: f64) {
         self.target = gamma;
     }

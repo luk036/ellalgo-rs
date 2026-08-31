@@ -15,6 +15,7 @@ use crate::oracles::lmi_oracle::LMIOracle;
 ///
 /// * `mat_f` - List of symmetric coefficient matrices `[F₁, F₂, ..., Fₙ]`
 /// * `mat_b` - Constant matrix `B` defining the LMI constraint `B − ΣFₖxₖ ⪰ 0`
+#[inline]
 pub fn make_lmi_oracle(mat_f: Vec<Arr>, mat_b: Arr) -> LMIOracle {
     LMIOracle::new(mat_f, mat_b)
 }
@@ -24,6 +25,7 @@ pub fn make_lmi_oracle(mat_f: Vec<Arr>, mat_b: Arr) -> LMIOracle {
 /// # Arguments
 ///
 /// * `mat_f` - List of symmetric coefficient matrices `[F₁, F₂, ..., Fₙ]`
+#[inline]
 pub fn make_lmi0_oracle(mat_f: Vec<Arr>) -> LMI0Oracle {
     LMI0Oracle::new(mat_f)
 }
@@ -34,6 +36,7 @@ pub fn make_lmi0_oracle(mat_f: Vec<Arr>) -> LMI0Oracle {
 ///
 /// * `mat_f` - List of symmetric coefficient matrices `[F₁, F₂, ..., Fₙ]`
 /// * `mat_b` - Constant matrix `B` defining the LMI constraint `B − ΣFₖxₖ ⪰ 0`
+#[inline]
 pub fn make_lmi_old_oracle(mat_f: Vec<Arr>, mat_b: Arr) -> LMIOldOracle {
     LMIOldOracle::new(mat_f, mat_b)
 }

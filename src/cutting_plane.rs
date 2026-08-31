@@ -20,9 +20,11 @@ pub struct ParallelCut(pub f64, pub Option<f64>);
 impl ParallelCut {
     /// Extract the lower and upper bound.
     /// If `beta1` is `None`, behaves as a single cut with `beta0`.
+    #[inline]
     pub fn beta0(&self) -> f64 {
         self.0
     }
+    #[inline]
     pub fn beta1(&self) -> Option<f64> {
         self.1
     }
@@ -94,6 +96,7 @@ impl Default for Options {
     /// assert_eq!(options.max_iters, 2000);
     /// assert_eq!(options.tolerance, 1e-20);
     /// ```
+    #[inline]
     fn default() -> Options {
         Options::new(2000, 1e-20)
     }
@@ -170,6 +173,7 @@ pub trait SearchSpace {
 
     /// Quantized update. Default implementation calls `update_bias_cut`.
     /// Override this for custom quantized behavior.
+    #[inline]
     fn update_q<T>(&mut self, cut: &(Self::ArrayType, T)) -> CutStatus
     where
         T: UpdateByCutChoice<Self, ArrayType = Self::ArrayType>,
@@ -355,11 +359,13 @@ impl<A> OptimQState<A> {
     }
 
     /// Whether the next assessment is a retry (reuse cached point).
+    #[inline]
     pub fn retry(&self) -> bool {
         self.retry
     }
 
     /// Take the best-so-far solution, leaving `None` in its place.
+    #[inline]
     pub fn take_x_best(&mut self) -> Option<A> {
         self.x_best.take()
     }
@@ -398,6 +404,7 @@ impl<A> OptimQState<A> {
 }
 
 impl<A> Default for OptimQState<A> {
+    #[inline]
     fn default() -> Self {
         Self::new()
     }

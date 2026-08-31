@@ -46,6 +46,7 @@ impl Ell1D {
     /// Arguments:
     ///
     /// * `xc`: The parameter `xc` is of type `f64`, which means it is a floating-point number.
+    #[inline]
     fn set_xc(&mut self, xc: f64) {
         self.xc = xc;
     }
@@ -106,6 +107,7 @@ impl SearchSpace for Ell1D {
     /// let center = ell1d.xc();
     /// assert_eq!(center, 5.0);
     /// ```
+    #[inline]
     fn xc(&self) -> &f64 {
         &self.xc
     }

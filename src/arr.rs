@@ -212,17 +212,20 @@ impl IndexMut<(usize, usize)> for Arr {
 }
 
 impl PartialEq for Arr {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.rows == other.rows && self.cols == other.cols && self.data == other.data
     }
 }
 
 impl From<Vec<f64>> for Arr {
+    #[inline]
     fn from(v: Vec<f64>) -> Self {
         Arr::from(v)
     }
 }
 impl From<&[f64]> for Arr {
+    #[inline]
     fn from(s: &[f64]) -> Self {
         Arr::from(s.to_vec())
     }
@@ -505,6 +508,7 @@ impl Arr {
         assert_eq!(self.size(), other.size());
         self.data.copy_from_slice(&other.data);
     }
+    #[inline]
     pub fn sum(&self) -> f64 {
         self.data.iter().sum()
     }

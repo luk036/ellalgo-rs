@@ -8,6 +8,7 @@ pub struct MyOracle {
 }
 
 impl Default for MyOracle {
+    #[inline]
     fn default() -> Self {
         MyOracle { idx: -1 }
     }

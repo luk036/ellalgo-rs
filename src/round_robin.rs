@@ -30,6 +30,7 @@ pub struct RoundRobin {
 
 impl RoundRobin {
     /// Round-robin over `[0, hi)`.
+    #[inline]
     pub fn new(hi: i32) -> Self {
         Self::new_range(0, hi)
     }
@@ -53,6 +54,7 @@ impl RoundRobin {
     }
 
     /// The current index (as last returned by `advance`).
+    #[inline]
     pub fn current(&self) -> i32 {
         self.cur
     }

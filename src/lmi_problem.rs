@@ -86,11 +86,13 @@ impl LMIProblem {
     }
 
     /// Access the coefficient matrices (for inspection).
+    #[inline]
     pub fn mat_f(&self) -> &[Arr] {
         &self.mat_f
     }
 
     /// Access the constant term matrix.
+    #[inline]
     pub fn mat_b(&self) -> &Arr {
         &self.mat_b
     }

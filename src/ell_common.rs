@@ -52,6 +52,7 @@ macro_rules! impl_search_space {
                 beta.update_q_by(self, grad)
             }
 
+            #[inline]
             fn set_xc(&mut self, x: Self::ArrayType) {
                 self.xc = x;
             }

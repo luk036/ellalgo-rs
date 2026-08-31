@@ -22,6 +22,7 @@ impl LDLTMgr {
     /// $$ A = LDL^T $$
     ///
     /// Returns `true` if the matrix is positive definite.
+    #[inline]
     pub fn factorize(&mut self, mat: &Arr) -> bool {
         self.factor(|i, j| mat.at(i, j))
     }
@@ -98,6 +99,7 @@ impl LDLTMgr {
     }
 
     /// Checks if the matrix is symmetric positive definite.
+    #[inline]
     pub fn is_spd(&self) -> bool {
         self.pos.1 == 0
     }
@@ -166,6 +168,7 @@ mod tests {
         Arr::with_data(flat, rows, cols)
     }
 
+    #[inline]
     fn chol1_matrix() -> Arr {
         arr_from_2d(&[&[25.0, 15.0, -5.0], &[15.0, 18.0, 0.0], &[-5.0, 0.0, 11.0]])
     }
@@ -179,14 +182,17 @@ mod tests {
         ])
     }
 
+    #[inline]
     fn chol3_matrix() -> Arr {
         arr_from_2d(&[&[0.0, 15.0, -5.0], &[15.0, 18.0, 0.0], &[-5.0, 0.0, 11.0]])
     }
 
+    #[inline]
     fn chol7_matrix() -> Arr {
         arr_from_2d(&[&[0.0, 15.0, -5.0], &[15.0, 18.0, 0.0], &[-5.0, 0.0, -20.0]])
     }
 
+    #[inline]
     fn chol8_matrix() -> Arr {
         arr_from_2d(&[&[0.0, 15.0, -5.0], &[15.0, 18.0, 0.0], &[-5.0, 0.0, 20.0]])
     }
