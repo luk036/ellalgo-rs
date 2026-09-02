@@ -94,7 +94,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 ### Polyglot Implementations
 
 - [**ellalgo-cpp**](https://github.com/luk036/ellalgo-cpp) - C++ version
-- [**ellpy**](https://github.com/luk036/ellpy) - Python version (archived, superseded by ellalgo-rs)
+- [**ellalgo**](https://github.com/luk036/ellalgo) - Python version
 
 ### Algorithm Polyglot
 
