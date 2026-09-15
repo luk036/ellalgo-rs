@@ -14,6 +14,7 @@ pub struct Ell {
     pub kappa: f64,
     helper: EllCalc,
     pub tsq: f64,
+    grad_t: Arr,
 }
 
 impl Ell {
@@ -31,6 +32,7 @@ impl Ell {
     /// ```
     pub fn new_with_matrix(kappa: f64, mq: Arr, xc: Arr) -> Ell {
         let helper = EllCalc::new(xc.len());
+        let grad_t = Arr::new(xc.len());
         Ell {
             kappa,
             mq,
@@ -38,6 +40,7 @@ impl Ell {
             helper,
             no_defer_trick: false,
             tsq: 0.0,
+            grad_t,
         }
     }
 
@@ -113,8 +116,8 @@ impl Ell {
         T: UpdateByCutChoice<Self, ArrayType = Arr>,
         F: FnOnce(&T, f64) -> (CutStatus, (f64, f64, f64)),
     {
-        let grad_t = self.mq.dot_mv(grad);
-        let omega = grad.dot(&grad_t);
+        self.mq.dot_mv_into(grad, &mut self.grad_t);
+        let omega = grad.dot(&self.grad_t);
 
         if omega <= f64::MIN_POSITIVE {
             return CutStatus::NoEffect;
@@ -129,14 +132,14 @@ impl Ell {
         let n = self.xc.len();
         let rho_over_omega = rho / omega;
         for i in 0..n {
-            self.xc[i] -= rho_over_omega * grad_t[i];
+            self.xc[i] -= rho_over_omega * self.grad_t[i];
         }
 
         let ratio = sigma / omega;
         for i in 0..n {
-            let r_qg = ratio * grad_t[i];
+            let r_qg = ratio * self.grad_t[i];
             for j in 0..=i {
-                let update = r_qg * grad_t[j];
+                let update = r_qg * self.grad_t[j];
                 let idx = i * n + j;
                 self.mq.data_mut()[idx] -= update;
                 if i != j {

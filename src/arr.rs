@@ -458,6 +458,21 @@ impl Arr {
             cols: 0,
         }
     }
+    /// $$ y_i = \sum_{j=1}^{n} A_{ij} x_j $$, written into a pre-allocated output.
+    pub fn dot_mv_into(&self, x: &Arr, out: &mut Arr) {
+        assert!(self.is_2d());
+        assert!(!x.is_2d());
+        assert_eq!(self.cols, x.len());
+        assert_eq!(out.size(), self.rows);
+        for i in 0..self.rows {
+            let rs = i * self.cols;
+            let mut s = 0.0;
+            for j in 0..self.cols {
+                s += self.data[rs + j] * x[j];
+            }
+            out[i] = s;
+        }
+    }
     /// $$ a \cdot b = \sum_{i=1}^{n} a_i b_i $$
     pub fn dot(&self, other: &Arr) -> f64 {
         assert!(!self.is_2d() && !other.is_2d());

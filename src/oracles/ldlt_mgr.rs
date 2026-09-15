@@ -130,9 +130,11 @@ impl LDLTMgr {
         let (start, end) = self.pos;
         let mut result = 0.0;
         for i in start..end {
-            for j in start..end {
-                result += self.wit[i] * mat.at(i, j) * self.wit[j];
+            let mut s = 0.0;
+            for j in (i + 1)..end {
+                s += mat.at(i, j) * self.wit[j];
             }
+            result += self.wit[i] * (mat.at(i, i) * self.wit[i] + 2.0 * s);
         }
         result
     }
