@@ -1,7 +1,6 @@
 use crate::arr::{linspace, Arr};
 use crate::cutting_plane::{OracleFeas, OracleOptim, ParallelCut};
 use crate::round_robin::RoundRobin;
-use std::f64::consts::PI;
 
 pub type Cut = (Arr, ParallelCut);
 
@@ -149,10 +148,10 @@ impl OracleOptim<Arr> for LowpassOracle {
 }
 
 pub fn create_lowpass_case(ndim: usize) -> LowpassOracle {
-    let delta0_wpass = 0.025;
-    let delta0_wstop = 0.125;
-    let delta1 = 20.0 * (delta0_wpass * PI).log10();
-    let delta2 = 20.0 * (delta0_wstop * PI).log10();
+    let delta0_wpass = 0.025_f64;
+    let delta0_wstop = 0.125_f64;
+    let delta1 = 20.0 * (1.0 + delta0_wpass).log10();
+    let delta2 = 20.0 * delta0_wstop.log10();
 
     let low_pass = 10.0f64.powf(-delta1 / 20.0);
     let up_pass = 10.0f64.powf(delta1 / 20.0);
