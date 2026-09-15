@@ -136,14 +136,15 @@ impl Ell {
         }
 
         let ratio = sigma / omega;
+        let mq = self.mq.data_mut();
+        let gt = self.grad_t.data();
         for i in 0..n {
-            let r_qg = ratio * self.grad_t[i];
+            let r_qg = ratio * gt[i];
             for j in 0..=i {
-                let update = r_qg * self.grad_t[j];
                 let idx = i * n + j;
-                self.mq.data_mut()[idx] -= update;
+                mq[idx] -= r_qg * gt[j];
                 if i != j {
-                    self.mq.data_mut()[j * n + i] = self.mq.data()[idx];
+                    mq[j * n + i] = mq[idx];
                 }
             }
         }
