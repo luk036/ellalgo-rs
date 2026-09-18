@@ -326,6 +326,33 @@ fn test_bsearch_no_soln() {
     assert_eq!(num_iters, 20);
 }
 
+/// Binary-search oracle whose threshold is far from zero.
+#[derive(Debug, Default)]
+struct MyOracleBSOffset;
+
+impl ellalgo_rs::cutting_plane::OracleBS for MyOracleBSOffset {
+    fn assess_bs(&mut self, gamma: f64) -> bool {
+        gamma > 500.0
+    }
+}
+
+#[test]
+fn test_bsearch_stops_at_float_resolution() {
+    // The threshold is far from zero, so the bracket collapses around it and
+    // `tau` bottoms out at the ulp of that value (~1e-13), where the default
+    // tolerance of 1e-20 is unreachable. Without a stall guard the loop spins
+    // until `max_iters` without refining anything.
+    let mut omega = MyOracleBSOffset;
+    let mut intrvl = (0.0, 1e6);
+    let options = Options::new(2000, 1e-20);
+    let (feasible, num_iters) = bsearch(&mut omega, &mut intrvl, &options);
+    assert!(feasible);
+    assert!(
+        num_iters < 200,
+        "expected a floating-point stall, got {num_iters} iterations"
+    );
+}
+
 // ---------------------------------------------------------------------------
 // BSearchAdaptor tests
 // ---------------------------------------------------------------------------

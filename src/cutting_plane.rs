@@ -538,6 +538,14 @@ where
         }
         let mut gamma = lower; // l may be `i32` or `Fraction`
         gamma += tau;
+        // The midpoint stops moving once the bracket reaches floating-point
+        // resolution. `tau < options.tolerance` is then unreachable for any
+        // realistic scale (tolerance defaults to 1e-20, while the interval
+        // underflows at ~1e-16 of its own magnitude), so without this guard the
+        // loop would spin until `max_iters` without refining anything.
+        if !(lower < gamma && gamma < upper) {
+            return (upper != u_orig, niter);
+        }
         if omega.assess_bs(gamma) {
             // feasible sol'n obtained
             upper = gamma;

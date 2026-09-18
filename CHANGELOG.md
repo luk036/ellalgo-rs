@@ -20,8 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Resolved clippy warnings in lowpass_oracle.rs
 - Fixed attribute placement for clippy lint suppression
+- `bsearch` now stops when the bracket reaches floating-point resolution. The
+  `tau < options.tolerance` test compared a scale-dependent width against an
+  absolute constant, so once the bracket underflowed at its own magnitude the
+  test was unreachable and the loop spun to `max_iters` without refining
+  anything.
 
 ### Testing
 - Added 5 property-based tests covering edge cases and invariants
 - All 32 unit tests passing
 - Integration with standard Rust testing workflow
+- `test_bsearch_stops_at_float_resolution`: fails with 2000 iterations without
+  the stall guard
