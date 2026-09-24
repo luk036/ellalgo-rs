@@ -22,6 +22,67 @@ pub struct LowpassOracle {
     rr3: RoundRobin,
 }
 
+/// Scan one frequency band for the first violated constraint.
+///
+/// Advances `rr` over the `hi - lo` points of the band and returns the first
+/// violation as `(index, value, is_over)` — `is_over` distinguishes an
+/// upper-bound violation from a lower-bound one — together with the running
+/// peak `(fmax, kmax)` and the last cursor index reached. The latter keeps the
+/// legacy `idx1`/`idx2`/`idx3` mirrors in sync with the round-robin cursor.
+fn scan_band(
+    spectrum: &[Arr],
+    x: &Arr,
+    rr: &mut RoundRobin,
+    lo: i32,
+    hi: i32,
+    lower: f64,
+    upper: Option<f64>,
+) -> (Option<(usize, f64, bool)>, f64, i32, i32) {
+    let mut fmax = f64::NEG_INFINITY;
+    let mut kmax = -1;
+    let mut last = rr.current();
+    for _ in lo..hi {
+        let idx = rr.advance();
+        last = idx;
+        let val = spectrum[idx as usize].dot(x);
+        if let Some(u) = upper {
+            if val > u {
+                return (Some((idx as usize, val, true)), fmax, kmax, last);
+            }
+        }
+        if val < lower {
+            return (Some((idx as usize, val, false)), fmax, kmax, last);
+        }
+        if val > fmax {
+            fmax = val;
+            kmax = idx;
+        }
+    }
+    (None, fmax, kmax, last)
+}
+
+/// Build the cut for a band violation at `idx` with response `val`.
+#[inline]
+fn band_cut(
+    spectrum: &[Arr],
+    idx: usize,
+    val: f64,
+    is_over: bool,
+    lower: f64,
+    upper: Option<f64>,
+) -> Cut {
+    let col = &spectrum[idx];
+    if is_over {
+        let u = upper.expect("upper-bound violation requires an upper bound");
+        (col.clone(), ParallelCut(val - u, Some(val - lower)))
+    } else {
+        (
+            Arr::from(col.iter().map(|&a| -a).collect::<Vec<_>>()),
+            ParallelCut(lower - val, upper.map(|u| u - val)),
+        )
+    }
+}
+
 impl LowpassOracle {
     pub fn new(ndim: usize, wpass: f64, wstop: f64, lp_sq: f64, up_sq: f64, sp_sq: f64) -> Self {
         let mdim = 15 * ndim;
@@ -63,57 +124,67 @@ impl OracleFeas<Arr> for LowpassOracle {
 
     fn assess_feas(&mut self, x: &Arr) -> Option<Cut> {
         self.more_alt = true;
-
-        let mdim = self.spectrum.len();
         let ndim = self.spectrum[0].len();
-        for _ in 0..self.nwpass {
-            self.idx1 = self.rr1.advance();
-            let col_k = &self.spectrum[self.idx1 as usize];
-            let val = col_k.dot(x);
-            if val > self.up_sq {
-                let func_val = ParallelCut(val - self.up_sq, Some(val - self.lp_sq));
-                return Some((col_k.clone(), func_val));
-            }
-            if val < self.lp_sq {
-                let func_val = ParallelCut(-val + self.lp_sq, Some(-val + self.up_sq));
-                return Some((
-                    Arr::from(col_k.iter().map(|&a| -a).collect::<Vec<_>>()),
-                    func_val,
-                ));
-            }
+        let mdim = self.spectrum.len() as i32;
+
+        let (viol, _fmax, _kmax, last) = scan_band(
+            &self.spectrum,
+            x,
+            &mut self.rr1,
+            0,
+            self.nwpass,
+            self.lp_sq,
+            Some(self.up_sq),
+        );
+        self.idx1 = last;
+        if let Some((idx, val, is_over)) = viol {
+            return Some(band_cut(
+                &self.spectrum,
+                idx,
+                val,
+                is_over,
+                self.lp_sq,
+                Some(self.up_sq),
+            ));
         }
 
         self.fmax = f64::NEG_INFINITY;
         self.kmax = -1;
-        for _ in self.nwstop..mdim as i32 {
-            self.idx3 = self.rr3.advance();
-            let col_k = &self.spectrum[self.idx3 as usize];
-            let val = col_k.dot(x);
-            if val > self.sp_sq {
-                return Some((col_k.clone(), ParallelCut(val - self.sp_sq, Some(val))));
-            }
-            if val < 0.0 {
-                return Some((
-                    Arr::from(col_k.iter().map(|&a| -a).collect::<Vec<_>>()),
-                    ParallelCut(-val, Some(-val + self.sp_sq)),
-                ));
-            }
-            if val > self.fmax {
-                self.fmax = val;
-                self.kmax = self.idx3;
-            }
+        let (viol, fmax, kmax, last) = scan_band(
+            &self.spectrum,
+            x,
+            &mut self.rr3,
+            self.nwstop,
+            mdim,
+            0.0,
+            Some(self.sp_sq),
+        );
+        self.idx3 = last;
+        if let Some((idx, val, is_over)) = viol {
+            return Some(band_cut(
+                &self.spectrum,
+                idx,
+                val,
+                is_over,
+                0.0,
+                Some(self.sp_sq),
+            ));
         }
+        self.fmax = fmax;
+        self.kmax = kmax;
 
-        for _ in self.nwpass..self.nwstop {
-            self.idx2 = self.rr2.advance();
-            let col_k = &self.spectrum[self.idx2 as usize];
-            let val = col_k.dot(x);
-            if val < 0.0 {
-                return Some((
-                    Arr::from(col_k.iter().map(|&a| -a).collect::<Vec<_>>()),
-                    ParallelCut(-val, None),
-                ));
-            }
+        let (viol, _fmax, _kmax, last) = scan_band(
+            &self.spectrum,
+            x,
+            &mut self.rr2,
+            self.nwpass,
+            self.nwstop,
+            0.0,
+            None,
+        );
+        self.idx2 = last;
+        if let Some((idx, val, is_over)) = viol {
+            return Some(band_cut(&self.spectrum, idx, val, is_over, 0.0, None));
         }
 
         self.more_alt = false;

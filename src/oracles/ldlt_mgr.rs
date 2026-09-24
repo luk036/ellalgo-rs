@@ -27,14 +27,20 @@ impl LDLTMgr {
         self.factor(|i, j| mat.at(i, j))
     }
 
-    /// Performs LDL^T factorization using lazy element access.
+    /// Shared LDL^T row-sweep skeleton (Template Method).
     ///
-    /// $$ A = LDL^T $$
-    ///
-    /// `get_elem(i, j)` returns the matrix element at row `i`, column `j`.
-    /// Returns `true` if the matrix is positive definite (all diagonal entries positive).
-    pub fn factor(&mut self, get_elem: impl Fn(usize, usize) -> f64) -> bool {
-        let start = 0;
+    /// [`factor`](Self::factor) and
+    /// [`factor_with_allow_semidefinite`](Self::factor_with_allow_semidefinite)
+    /// share this sweep; `allow_semidefinite` selects the pivot policy: when
+    /// `false`, any `diag <= 0` stops the sweep (positive definite); when
+    /// `true`, a zero pivot advances `start` and only `diag < 0` stops it
+    /// (positive semi-definite).
+    fn factor_impl(
+        &mut self,
+        get_elem: impl Fn(usize, usize) -> f64,
+        allow_semidefinite: bool,
+    ) -> bool {
+        let mut start = 0;
         self.pos = (0, 0);
         for i in 0..self.ndim {
             let mut diag = get_elem(i, start);
@@ -53,12 +59,31 @@ impl LDLTMgr {
                 diag = get_elem(i, stop) - s;
             }
             self.storage[i * self.ndim + i] = diag;
-            if diag <= 0.0 {
+            if diag < 0.0 {
                 self.pos = (start, i + 1);
                 break;
             }
+            if diag == 0.0 {
+                if allow_semidefinite {
+                    start = i + 1;
+                } else {
+                    self.pos = (start, i + 1);
+                    break;
+                }
+            }
         }
         self.is_spd()
+    }
+
+    /// Performs LDL^T factorization using lazy element access.
+    ///
+    /// $$ A = LDL^T $$
+    ///
+    /// `get_elem(i, j)` returns the matrix element at row `i`, column `j`.
+    /// Returns `true` if the matrix is positive definite (all diagonal entries positive).
+    #[inline]
+    pub fn factor(&mut self, get_elem: impl Fn(usize, usize) -> f64) -> bool {
+        self.factor_impl(get_elem, false)
     }
 
     /// Performs LDL^T factorization allowing for positive semi-definite matrices.
@@ -66,36 +91,12 @@ impl LDLTMgr {
     /// $$ A = LDL^T, \quad D_{ii} \ge 0 $$
     ///
     /// Returns `true` if the matrix is positive semi-definite (no negative diagonal entries).
+    #[inline]
     pub fn factor_with_allow_semidefinite(
         &mut self,
         get_elem: impl Fn(usize, usize) -> f64,
     ) -> bool {
-        let mut start = 0;
-        self.pos = (0, 0);
-        for i in 0..self.ndim {
-            let mut diag = get_elem(i, start);
-            for j in start..i {
-                let idx_ji = j * self.ndim + i;
-                let idx_ij = i * self.ndim + j;
-                self.storage[idx_ji] = diag;
-                let val = diag / self.storage[j * self.ndim + j];
-                self.storage[idx_ij] = val;
-                let stop = j + 1;
-                let mut s = 0.0;
-                for k in start..stop {
-                    s += self.storage[i * self.ndim + k] * self.storage[k * self.ndim + stop];
-                }
-                diag = get_elem(i, stop) - s;
-            }
-            self.storage[i * self.ndim + i] = diag;
-            if diag < 0.0 {
-                self.pos = (start, i + 1);
-                break;
-            } else if diag == 0.0 {
-                start = i + 1;
-            }
-        }
-        self.is_spd()
+        self.factor_impl(get_elem, true)
     }
 
     /// Checks if the matrix is symmetric positive definite.
