@@ -81,99 +81,6 @@ impl EllCalcCore {
     /// The function calculates the core values for updating an ellipsoid with either a parallel-cut or
     /// a deep-cut.
     ///
-    /// $$ \eta = \tau^2 + n \beta_0 \beta_1, \quad \bar\beta = \frac{\beta_0+\beta_1}{2}, \quad h = \tfrac12(\tau^2 + \beta_0\beta_1) + n\bar\beta^2, \quad k = h + \sqrt{h^2 - (n+1)\eta\bar\beta^2} $$
-    /// $$ \sigma = \frac{\eta}{k}, \quad \rho = \bar\beta \sigma, \quad \frac{1}{\mu} = \frac{\eta}{k-\eta}, \quad \delta\tau^2 = \tau^2 + \frac{1}{\mu}(\bar\beta^2 \sigma - \beta_0\beta_1) $$
-    ///
-    /// Arguments:
-    ///
-    /// * `beta0`: The parameter `beta0` represents the semi-minor axis of the ellipsoid before the cut. It is
-    ///            a floating-point number.
-    /// * `beta1`: The parameter `beta1` represents the length of the semi-minor axis of the ellipsoid.
-    /// * `tsq`: tsq is a reference to a f64 value, which represents the square of the semi-major axis
-    ///            of the ellipsoid.
-    /// * `b0b1`: The product of beta0 and beta1, used in calculations.
-    /// * `eta`: A calculated value representing tsq + n_f * b0b1, used in the ellipsoid update.
-    ///
-    /// ```svgbob
-    ///      _.-'''''''-._
-    ///    ,'     |       `.
-    ///   /  |    |         \
-    ///  .   |    |          .
-    ///  |   |    |          |
-    ///  |   |    |.         |
-    ///  |   |    |          |
-    ///  :\  |    |         /:
-    ///  | `._    |      _.' |
-    ///  |   |'-.......-'    |
-    ///  |   |    |          |
-    /// "-τ" "-β" "-β"      +τ
-    ///        1    0
-    ///
-    ///      β  + β
-    ///       0    1
-    ///  β = ───────
-    ///         2
-    ///
-    ///      1   ⎛ 2          ⎞        2
-    ///  h = ─ ⋅ ⎜τ  + β  ⋅ β ⎟ + n ⋅ β
-    ///      2   ⎝      0    1⎠
-    ///             _____________________
-    ///            ╱ 2                  2
-    ///  k = h + ╲╱ h  - (n + 1) ⋅ η ⋅ β
-    ///
-    ///        1     η
-    ///  σ = ───── = ─
-    ///      μ + 1   k
-    ///
-    ///  1     η
-    ///  ─ = ─────
-    ///  μ   k - η
-    ///
-    ///  ϱ = β ⋅ σ
-    ///
-    ///       2    2   1   ⎛ 2              ⎞
-    ///  δ ⋅ τ  = τ  + ─ ⋅ ⎜β  ⋅ σ - β  ⋅ β ⎟
-    ///                μ   ⎝          0    1⎠
-    /// ```
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use approx_eq::assert_approx_eq;
-    /// use ellalgo_rs::ell_calc::EllCalcCore;
-    ///
-    /// let ell_calc_core = EllCalcCore::new(4.0);
-    /// let (rho, sigma, delta) = ell_calc_core.calc_parallel_bias_cut_fast_old(1.0, 2.0, 4.0, 2.0, 12.0);
-    /// assert_approx_eq!(rho, 1.2);
-    /// assert_approx_eq!(sigma, 0.8);
-    /// assert_approx_eq!(delta, 0.8);
-    /// ```
-    )]
-    pub fn calc_parallel_bias_cut_fast_old(
-        &self,
-        beta0: f64,
-        beta1: f64,
-        tsq: f64,
-        b0b1: f64,
-        eta: f64,
-    ) -> (f64, f64, f64) {
-        let bavg = (beta0 + beta1) * 0.5;
-        let bavgsq = bavg * bavg;
-        let half_sum = (tsq + b0b1) * 0.5 + self.n_f * bavgsq;
-        let kappa = half_sum + (half_sum * half_sum - eta * self.n_plus_1 * bavgsq).sqrt();
-        let inv_mu_plus_1 = eta / kappa;
-        let inv_mu = eta / (kappa - eta);
-        let rho = bavg * inv_mu_plus_1;
-        let sigma = inv_mu_plus_1;
-        let delta = (tsq + inv_mu * (bavgsq * inv_mu_plus_1 - b0b1)) / tsq;
-
-        (rho, sigma, delta)
-    }
-
-    #[doc = svgbobdoc::transform!(
-    /// The function calculates the core values for updating an ellipsoid with either a parallel-cut or
-    /// a deep-cut.
-    ///
     /// $$ \zeta_0 = \tau^2 - \beta_0^2, \quad \zeta_1 = \tau^2 - \beta_1^2, \quad \xi = \sqrt{\zeta_0 \zeta_1 + \left( \tfrac{n}{2}(\beta_1^2 - \beta_0^2) \right)^2} $$
     /// $$ \sigma = \frac{2\eta}{\tau^2 + \beta_0\beta_1 + \tfrac{n}{2}(\beta_0+\beta_1)^2 + \xi}, \quad \rho = \sigma\frac{\beta_0+\beta_1}{2}, \quad \delta = \frac{n^2}{n^2-1} \cdot \frac{(\zeta_0+\zeta_1)/2 + \xi/n}{\tau^2} $$
     ///
@@ -717,6 +624,42 @@ impl EllCalc {
         }
     }
 
+    /// Shared parallel-bias dispatch for the normal and discrete (Q) variants.
+    ///
+    /// `discrete` selects the fallback cut (`calc_bias_cut` vs `calc_bias_cut_q`)
+    /// and the `eta <= 0` no-effect policy of the Q variant.
+    fn calc_parallel_impl(
+        &self,
+        beta0: f64,
+        beta1: f64,
+        tsq: f64,
+        discrete: bool,
+    ) -> (CutStatus, (f64, f64, f64)) {
+        if beta1 < beta0 {
+            return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
+        }
+
+        if (beta1 > 0.0 && tsq <= beta1 * beta1) || !self.use_parallel_cut {
+            return if discrete {
+                self.calc_bias_cut_q(beta0, tsq)
+            } else {
+                self.calc_bias_cut(beta0, tsq)
+            };
+        }
+
+        let b0b1 = beta0 * beta1;
+        let eta = tsq + self.n_f * b0b1;
+        if discrete && eta <= 0.0 {
+            return (CutStatus::NoEffect, (0.0, 0.0, 1.0)); // no effect
+        }
+
+        (
+            CutStatus::Success,
+            self.helper
+                .calc_parallel_bias_cut_fast(beta0, beta1, tsq, b0b1, eta),
+        )
+    }
+
     /// Parallel Deep Cut
     ///
     /// # Examples:
@@ -754,18 +697,7 @@ impl EllCalc {
         beta1: f64,
         tsq: f64,
     ) -> (CutStatus, (f64, f64, f64)) {
-        if beta1 < beta0 {
-            return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
-        }
-
-        if (beta1 > 0.0 && tsq <= beta1 * beta1) || !self.use_parallel_cut {
-            return self.calc_bias_cut(beta0, tsq);
-        }
-
-        (
-            CutStatus::Success,
-            self.helper.calc_parallel_bias_cut(beta0, beta1, tsq),
-        )
+        self.calc_parallel_impl(beta0, beta1, tsq, false)
     }
 
     /// Discrete Parallel Deep Cut
@@ -790,25 +722,7 @@ impl EllCalc {
         beta1: f64,
         tsq: f64,
     ) -> (CutStatus, (f64, f64, f64)) {
-        if beta1 < beta0 {
-            return (CutStatus::NoSoln, (0.0, 0.0, 0.0)); // no sol'n
-        }
-
-        if (beta1 > 0.0) && beta1 * beta1 >= tsq || !self.use_parallel_cut {
-            return self.calc_bias_cut_q(beta0, tsq);
-        }
-
-        let b0b1 = beta0 * beta1;
-        let eta = tsq + self.n_f * b0b1;
-        if eta <= 0.0 {
-            return (CutStatus::NoEffect, (0.0, 0.0, 1.0)); // no effect
-        }
-
-        (
-            CutStatus::Success,
-            self.helper
-                .calc_parallel_bias_cut_fast(beta0, beta1, tsq, b0b1, eta),
-        )
+        self.calc_parallel_impl(beta0, beta1, tsq, true)
     }
 
     /// Parallel Central Cut
