@@ -129,8 +129,10 @@ impl OracleOptim<Arr> for ProfitRbOracle {
                 self.uie[i]
             };
         }
-        self.omega.elasticities = a_rb;
-        self.omega.assess_optim(y, gamma)
+        let saved = std::mem::replace(&mut self.omega.elasticities, a_rb);
+        let result = self.omega.assess_optim(y, gamma);
+        self.omega.elasticities = saved;
+        result
     }
 }
 
