@@ -404,3 +404,84 @@ fn test_bsearch_adaptor_x_best() {
     let x_best = adaptor.space.xc();
     assert_eq!(*x_best, Arr::from(vec![0.0, 0.0]));
 }
+
+// ---------------------------------------------------------------------------
+// SolverResult status classification (additive, non-breaking API)
+// ---------------------------------------------------------------------------
+
+/// Always returns a (successful) cut so the loop runs to the iteration cap.
+#[derive(Debug, Default)]
+struct MyOracleZeroCut;
+
+impl OracleFeas<Arr> for MyOracleZeroCut {
+    type CutChoice = SingleCut;
+
+    fn assess_feas(&mut self, _xc: &Arr) -> Option<(Arr, SingleCut)> {
+        Some((Arr::from(vec![1.0, 0.0]), SingleCut(0.0)))
+    }
+}
+
+#[test]
+fn test_solver_result_success() {
+    use ellalgo_rs::cutting_plane::{cutting_plane_feas_result, SolverStatus};
+    let mut ellip = Ell::new_with_scalar(10.0, Arr::from(vec![0.0, 0.0]));
+    let mut omega = MyOracleFeas;
+    let options = Options::new(200, 1e-20);
+    let r = cutting_plane_feas_result(&mut omega, &mut ellip, &options);
+    assert!(r.x.is_some());
+    assert_eq!(r.status, SolverStatus::Success);
+    assert_eq!(r.niter, 0);
+    // the historical tuple view is recoverable
+    let (x, n) = r.split();
+    assert!(x.is_some());
+    assert_eq!(n, 0);
+}
+
+#[test]
+fn test_solver_result_infeasible() {
+    use ellalgo_rs::cutting_plane::{cutting_plane_feas_result, SolverStatus};
+    let mut ellip = Ell::new_with_scalar(10.0, Arr::from(vec![0.0, 0.0]));
+    let mut omega = MyOracleInfeas;
+    let options = Options::new(5, 1e-20);
+    let r = cutting_plane_feas_result(&mut omega, &mut ellip, &options);
+    assert!(r.x.is_none());
+    // the infeasible oracle terminates after 2 iterations, before the cap of 5
+    assert_eq!(r.status, SolverStatus::Infeasible);
+    assert_eq!(r.niter, 2);
+}
+
+#[test]
+fn test_solver_result_max_iters() {
+    use ellalgo_rs::cutting_plane::{cutting_plane_feas_result, SolverStatus};
+    let mut ellip = Ell::new_with_scalar(10.0, Arr::from(vec![0.0, 0.0]));
+    let mut omega = MyOracleZeroCut;
+    let options = Options::new(5, 0.0); // tolerance 0 keeps the loop running
+    let r = cutting_plane_feas_result(&mut omega, &mut ellip, &options);
+    assert_eq!(r.status, SolverStatus::MaxIters);
+    assert_eq!(r.niter, 5);
+}
+
+#[test]
+fn test_solver_result_classify() {
+    use ellalgo_rs::cutting_plane::{SolverResult, SolverStatus};
+    assert_eq!(
+        SolverResult::<i32>::classify(Some(1), 3, 5).status,
+        SolverStatus::Success
+    );
+    assert_eq!(
+        SolverResult::<i32>::classify(None, 3, 5).status,
+        SolverStatus::Infeasible
+    );
+    assert_eq!(
+        SolverResult::<i32>::classify(None, 5, 5).status,
+        SolverStatus::MaxIters
+    );
+    assert_eq!(
+        SolverResult::<i32>::classify(Some(1), 5, 5).status,
+        SolverStatus::MaxIters
+    );
+    assert_eq!(
+        SolverResult::<i32>::classify(Some(1), 3, 5).split(),
+        (Some(1), 3)
+    );
+}

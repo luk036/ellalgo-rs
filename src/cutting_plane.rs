@@ -49,12 +49,78 @@ impl fmt::Display for CutStatus {
     }
 }
 
+/// Termination status of a cutting-plane / binary-search solve.
+///
+/// Distinguishes an exhausted search space (`Infeasible`) from an iteration-cap
+/// stop (`MaxIters`); both appear as `None` in the historical `(Option, usize)`
+/// return. The tuple-returning drivers remain for backward compatibility — the
+/// `*_result` variants return this richer type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SolverStatus {
+    /// A solution (or converged bracket) was produced.
+    Success,
+    /// The search space was exhausted; no solution exists.
+    Infeasible,
+    /// The iteration cap was reached before terminating.
+    MaxIters,
+}
+
+/// Result of a cutting-plane / binary-search solve.
+///
+/// Wraps the historical `(x, niter)` tuple with a [`SolverStatus`]; use
+/// [`SolverResult::split`] to recover the tuple.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SolverResult<A> {
+    /// Solution / best-so-far value (`None` when unsuccessful).
+    pub x: Option<A>,
+    /// Number of iterations performed.
+    pub niter: usize,
+    /// Why the loop stopped.
+    pub status: SolverStatus,
+}
+
+impl<A> SolverResult<A> {
+    /// Construct a result from its parts.
+    #[inline]
+    pub fn new(x: Option<A>, niter: usize, status: SolverStatus) -> Self {
+        SolverResult { x, niter, status }
+    }
+
+    /// Classify a `(x, niter)` outcome against `max_iters`.
+    ///
+    /// An iteration-cap stop (`niter >= max_iters`) takes precedence, matching
+    /// the drivers' post-loop return.
+    #[inline]
+    pub fn classify(x: Option<A>, niter: usize, max_iters: usize) -> Self {
+        let status = if niter >= max_iters {
+            SolverStatus::MaxIters
+        } else if x.is_some() {
+            SolverStatus::Success
+        } else {
+            SolverStatus::Infeasible
+        };
+        SolverResult { x, niter, status }
+    }
+
+    /// Recover the historical `(x, niter)` tuple.
+    #[inline]
+    pub fn split(self) -> (Option<A>, usize) {
+        (self.x, self.niter)
+    }
+}
+
+impl<A> From<SolverResult<A>> for (Option<A>, usize) {
+    #[inline]
+    fn from(r: SolverResult<A>) -> Self {
+        r.split()
+    }
+}
+
 pub struct Options {
     pub max_iters: usize, // maximum number of iterations
     pub tolerance: f64,   // error tolerrance
     pub verbose: bool,    // enable iteration logging
 }
-
 impl Options {
     /// Creates a new `Options` struct with the specified maximum iterations and tolerance.
     ///
@@ -231,6 +297,25 @@ where
     (None, options.max_iters)
 }
 
+/// Status-aware variant of [`cutting_plane_feas`].
+///
+/// Returns a [`SolverResult`] so callers can tell an exhausted search space
+/// (`Infeasible`) apart from an iteration-cap stop (`MaxIters`).
+pub fn cutting_plane_feas_result<T, Oracle, Space>(
+    omega: &mut Oracle,
+    space: &mut Space,
+    options: &Options,
+) -> SolverResult<Space::ArrayType>
+where
+    T: UpdateByCutChoice<Space, ArrayType = Space::ArrayType>,
+    Oracle: OracleFeas<Space::ArrayType, CutChoice = T>,
+    Space: SearchSpace,
+    Space::ArrayType: Clone,
+{
+    let (x, niter) = cutting_plane_feas::<T, Oracle, Space>(omega, space, options);
+    SolverResult::classify(x, niter, options.max_iters)
+}
+
 /// The function `cutting_plane_optim` performs cutting plane optimization on a given search space using
 /// an oracle.
 ///
@@ -317,6 +402,26 @@ where
     }
     (x_best, options.max_iters)
 } // END
+
+/// Status-aware variant of [`cutting_plane_optim`].
+///
+/// Returns a [`SolverResult`] so callers can tell an exhausted search space
+/// (`Infeasible`) apart from an iteration-cap stop (`MaxIters`).
+pub fn cutting_plane_optim_result<T, Oracle, Space>(
+    omega: &mut Oracle,
+    space: &mut Space,
+    gamma: &mut f64,
+    options: &Options,
+) -> SolverResult<Space::ArrayType>
+where
+    T: UpdateByCutChoice<Space, ArrayType = Space::ArrayType>,
+    Oracle: OracleOptim<Space::ArrayType, CutChoice = T>,
+    Space: SearchSpace,
+    Space::ArrayType: Clone,
+{
+    let (x, niter) = cutting_plane_optim::<T, Oracle, Space>(omega, space, gamma, options);
+    SolverResult::classify(x, niter, options.max_iters)
+}
 
 /// Outcome of an `OptimQState::on_update` transition.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -455,6 +560,25 @@ where
     }
     (state.take_x_best(), options.max_iters)
 } // END
+
+/// Status-aware variant of [`cutting_plane_optim_q`].
+///
+/// Returns a [`SolverResult`] so callers can tell an exhausted search space
+/// (`Infeasible`) apart from an iteration-cap stop (`MaxIters`).
+pub fn cutting_plane_optim_q_result<T, Oracle, Space>(
+    omega: &mut Oracle,
+    space_q: &mut Space,
+    gamma: &mut f64,
+    options: &Options,
+) -> SolverResult<Space::ArrayType>
+where
+    T: UpdateByCutChoice<Space, ArrayType = Space::ArrayType>,
+    Oracle: OracleOptimQ<Space::ArrayType, CutChoice = T>,
+    Space: SearchSpace,
+{
+    let (x, niter) = cutting_plane_optim_q::<T, Oracle, Space>(omega, space_q, gamma, options);
+    SolverResult::classify(x, niter, options.max_iters)
+}
 
 pub struct BSearchAdaptor<T, Oracle, Space>
 where

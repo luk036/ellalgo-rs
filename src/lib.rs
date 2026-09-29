@@ -65,7 +65,7 @@ pub mod conjugate_gradient;
 pub mod cutting_plane;
 pub use crate::cutting_plane::{
     CutStatus, OracleBS, OracleFeas, OracleOptim, OracleOptimQ, ParallelCut, SearchSpace,
-    SingleCut, UpdateByCutChoice,
+    SingleCut, SolverResult, SolverStatus, UpdateByCutChoice,
 };
 
 pub mod ell;
