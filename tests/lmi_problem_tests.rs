@@ -63,3 +63,15 @@ fn test_lmi_problem_facade_exposes_data() {
     assert_eq!(problem.mat_f().len(), 3);
     assert_eq!(*problem.mat_b(), mat_b);
 }
+
+#[test]
+fn test_lmi_problem_solve_feas_with_injected_space() {
+    use ellalgo_rs::ell::Ell;
+    let (mat_f, mat_b) = sample_problem();
+    let mut problem = LMIProblem::new(mat_f, mat_b);
+    let mut space = Ell::new_with_scalar(10.0, Arr::new(3));
+    let options = Options::default();
+    let (x, niter) = problem.solve_feas_with(&mut space, &options);
+    assert!(x.is_some());
+    assert!(niter < 2000);
+}

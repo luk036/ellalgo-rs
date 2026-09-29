@@ -6,7 +6,9 @@
 //! driver) behind a single call.
 
 use crate::arr::Arr;
-use crate::cutting_plane::{cutting_plane_feas, Options, SingleCut};
+use crate::cutting_plane::{
+    cutting_plane_feas, Options, SearchSpace, SingleCut, UpdateByCutChoice,
+};
 use crate::ell_stable::EllStable;
 use crate::oracles::lmi_oracle::LMIOracle;
 
@@ -82,7 +84,33 @@ impl LMIProblem {
         options: Options,
     ) -> (Option<Arr>, usize) {
         let mut space = EllStable::new_with_scalar(val, x_center);
-        cutting_plane_feas::<SingleCut, _, _>(&mut self.omega, &mut space, &options)
+        self.solve_feas_with(&mut space, &options)
+    }
+
+    /// Solve the LMI feasibility problem with a caller-provided search space.
+    ///
+    /// Injects the search space (for example [`Ell`](crate::ell::Ell) for the
+    /// classic Q-update) instead of hard-coding [`EllStable`].
+    ///
+    /// # Arguments
+    ///
+    /// * `space` - The search space to drive
+    /// * `options` - Algorithm control parameters
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(solution, number of iterations)` where the solution is
+    /// `None` if no feasible point was found.
+    pub fn solve_feas_with<S>(
+        &mut self,
+        space: &mut S,
+        options: &Options,
+    ) -> (Option<S::ArrayType>, usize)
+    where
+        S: SearchSpace<ArrayType = Arr>,
+        SingleCut: UpdateByCutChoice<S, ArrayType = Arr>,
+    {
+        cutting_plane_feas::<SingleCut, _, _>(&mut self.omega, space, options)
     }
 
     /// Access the coefficient matrices (for inspection).
