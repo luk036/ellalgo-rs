@@ -1,4 +1,5 @@
 use crate::arr::Arr;
+use crate::error::{EllipsoidError, EllipsoidResult};
 
 /// Solve $$ Ax = b $$ using the Conjugate Gradient method.
 ///
@@ -24,7 +25,7 @@ pub fn conjugate_gradient(
     x0: Option<&Arr>,
     tol: f64,
     max_iter: usize,
-) -> Result<Arr, &'static str> {
+) -> EllipsoidResult<Arr> {
     let n = b.len();
     let mut x = match x0 {
         Some(x0) => x0.clone(),
@@ -35,12 +36,16 @@ pub fn conjugate_gradient(
     let mut direction = residual.clone();
     let mut residual_norm_sq = residual.dot(&residual);
 
-    for _iter in 0..max_iter {
+    for iter in 0..max_iter {
         let a_dir = a.dot_mv(&direction);
         let dir_dot_a_dir = direction.dot(&a_dir);
 
         if dir_dot_a_dir == 0.0 {
-            return Err("Conj Grad did not converge");
+            return Err(EllipsoidError::NonConvergence {
+                iterations: iter,
+                max_iters: max_iter,
+                final_value: None,
+            });
         }
 
         let step_size = residual_norm_sq / dir_dot_a_dir;
@@ -67,7 +72,11 @@ pub fn conjugate_gradient(
         residual_norm_sq = residual_norm_sq_new;
     }
 
-    Err("Conj Grad did not converge after max iterations")
+    Err(EllipsoidError::NonConvergence {
+        iterations: max_iter,
+        max_iters: max_iter,
+        final_value: None,
+    })
 }
 
 #[cfg(test)]
