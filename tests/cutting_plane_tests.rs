@@ -485,3 +485,122 @@ fn test_solver_result_classify() {
         (Some(1), 3)
     );
 }
+
+// ===========================================================================
+// Stall guard: a space whose `tsq` never decreases beyond float resolution.
+// ===========================================================================
+
+use ellalgo_rs::cutting_plane::{
+    half_nonnegative, stalled, CutStatus, SearchSpace, UpdateByCutChoice,
+};
+
+#[derive(Clone)]
+struct StuckSpace {
+    xc: Arr,
+}
+
+impl SearchSpace for StuckSpace {
+    type ArrayType = Arr;
+
+    fn xc(&self) -> &Arr {
+        &self.xc
+    }
+
+    fn tsq(&self) -> f64 {
+        1e-3
+    }
+
+    fn update_bias_cut<T>(&mut self, _cut: &(Arr, T)) -> CutStatus
+    where
+        T: UpdateByCutChoice<Self, ArrayType = Arr>,
+        Self: Sized,
+    {
+        CutStatus::Success
+    }
+
+    fn update_central_cut<T>(&mut self, _cut: &(Arr, T)) -> CutStatus
+    where
+        T: UpdateByCutChoice<Self, ArrayType = Arr>,
+        Self: Sized,
+    {
+        CutStatus::Success
+    }
+
+    fn set_xc(&mut self, x: Arr) {
+        self.xc = x;
+    }
+}
+
+struct NoopCut;
+
+impl UpdateByCutChoice<StuckSpace> for NoopCut {
+    type ArrayType = Arr;
+
+    fn update_bias_cut_by(&self, _space: &mut StuckSpace, _grad: &Arr) -> CutStatus {
+        CutStatus::Success
+    }
+
+    fn update_central_cut_by(&self, _space: &mut StuckSpace, _grad: &Arr) -> CutStatus {
+        CutStatus::Success
+    }
+
+    fn update_q_by(&self, _space: &mut StuckSpace, _grad: &Arr) -> CutStatus {
+        CutStatus::Success
+    }
+}
+
+struct StuckOracle;
+
+impl OracleFeas<Arr> for StuckOracle {
+    type CutChoice = NoopCut;
+
+    fn assess_feas(&mut self, _xc: &Arr) -> Option<(Arr, NoopCut)> {
+        Some((Arr::from(vec![1.0, 0.0]), NoopCut))
+    }
+}
+
+#[test]
+fn test_half_nonnegative() {
+    assert_eq!(half_nonnegative(0.0), 0.0);
+    assert_eq!(half_nonnegative(5.0), 2.5);
+    assert_eq!(half_nonnegative(-4.0), -2.0);
+}
+
+#[test]
+fn test_stalled_helper() {
+    assert!(!stalled(1.0, None));
+    assert!(!stalled(0.0, Some(1.0)));
+    assert!(stalled(1.0, Some(1.0)));
+    assert!(stalled(1.0, Some(1.0 + 1e-18)));
+    assert!(!stalled(1.0, Some(1.5)));
+}
+
+#[test]
+fn test_stall_guard_reports_stalled() {
+    use ellalgo_rs::cutting_plane::{cutting_plane_feas_result, SolverStatus};
+    let mut space = StuckSpace {
+        xc: Arr::from(vec![0.0, 0.0]),
+    };
+    let mut omega = StuckOracle;
+    let options = Options::new(200, 1e-20);
+    let r = cutting_plane_feas_result::<NoopCut, StuckOracle, StuckSpace>(
+        &mut omega, &mut space, &options,
+    );
+    assert_eq!(r.status, SolverStatus::Stalled);
+}
+
+#[test]
+fn test_stall_guard_can_be_disabled() {
+    use ellalgo_rs::cutting_plane::{cutting_plane_feas_result, SolverStatus};
+    let mut space = StuckSpace {
+        xc: Arr::from(vec![0.0, 0.0]),
+    };
+    let mut omega = StuckOracle;
+    let mut options = Options::new(5, 1e-20);
+    options.stall_guard = false;
+    let r = cutting_plane_feas_result::<NoopCut, StuckOracle, StuckSpace>(
+        &mut omega, &mut space, &options,
+    );
+    assert_eq!(r.status, SolverStatus::MaxIters);
+    assert_eq!(r.niter, 5);
+}

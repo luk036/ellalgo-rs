@@ -251,6 +251,7 @@ mod tests {
             max_iters: 50000,
             tolerance: 1e-14,
             verbose: false,
+            stall_guard: true,
         };
         let (h, num_iters) = cutting_plane_optim(&mut omega, &mut ellip, &mut sp_sq, &options);
         (h.is_some(), num_iters)

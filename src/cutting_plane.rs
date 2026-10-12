@@ -63,6 +63,9 @@ pub enum SolverStatus {
     Infeasible,
     /// The iteration cap was reached before terminating.
     MaxIters,
+    /// `tsq` stopped shrinking at floating-point resolution before the
+    /// tolerance was met. This is a converged stop, not a failure.
+    Stalled,
 }
 
 /// Result of a cutting-plane / binary-search solve.
@@ -120,6 +123,9 @@ pub struct Options {
     pub max_iters: usize, // maximum number of iterations
     pub tolerance: f64,   // error tolerrance
     pub verbose: bool,    // enable iteration logging
+    /// Stop with [`SolverStatus::Stalled`] once `tsq` fails to decrease beyond
+    /// floating-point resolution.
+    pub stall_guard: bool,
 }
 impl Options {
     /// Creates a new `Options` struct with the specified maximum iterations and tolerance.
@@ -142,6 +148,7 @@ impl Options {
             max_iters,
             tolerance,
             verbose: false,
+            stall_guard: true,
         }
     }
 }
@@ -169,6 +176,37 @@ impl Default for Options {
 }
 
 type CInfo = (bool, usize);
+
+/// Return `n / 2` for a non-negative `n`.
+///
+/// Mirrors the C++/Python `half_nonnegative` helper; used by [`bsearch`] to
+/// halve the bracket without accumulating rounding drift.
+///
+/// # Examples
+///
+/// ```
+/// use ellalgo_rs::cutting_plane::half_nonnegative;
+/// assert_eq!(half_nonnegative(5.0), 2.5);
+/// ```
+#[inline]
+pub fn half_nonnegative(n: f64) -> f64 {
+    n / 2.0
+}
+
+/// Report whether `tsq` has stopped decreasing beyond float resolution.
+///
+/// An absolute threshold on `tsq` (which scales with the problem data) can be
+/// unreachable once the search space shrinks to the representable limit; the
+/// quantity then stalls above the tolerance and the loop would spin to
+/// `max_iters` without refining anything. This companion test detects that
+/// stagnation, mirroring the bracket guard already used by [`bsearch`].
+#[inline]
+pub fn stalled(tsq: f64, tsq_prev: Option<f64>) -> bool {
+    match tsq_prev {
+        Some(prev) if tsq > 0.0 => (prev - tsq).abs() <= f64::EPSILON * tsq,
+        _ => false,
+    }
+}
 
 pub trait UpdateByCutChoice<SearchSpace> {
     type ArrayType; // f64 for 1D; Arr for general
@@ -283,24 +321,14 @@ where
     Space: SearchSpace,
     Space::ArrayType: Clone,
 {
-    for niter in 0..options.max_iters {
-        let cut = omega.assess_feas(space.xc());
-        if cut.is_none() {
-            // feasible sol'n obtained
-            return (Some((*space.xc()).clone()), niter);
-        }
-        let status = space.update_bias_cut::<T>(&cut.unwrap()); // update space
-        if status != CutStatus::Success || space.tsq() < options.tolerance {
-            return (None, niter);
-        }
-    }
-    (None, options.max_iters)
+    cutting_plane_feas_result::<T, Oracle, Space>(omega, space, options).split()
 }
 
 /// Status-aware variant of [`cutting_plane_feas`].
 ///
 /// Returns a [`SolverResult`] so callers can tell an exhausted search space
-/// (`Infeasible`) apart from an iteration-cap stop (`MaxIters`).
+/// (`Infeasible`) apart from an iteration-cap stop (`MaxIters`) or a
+/// float-resolution stall (`Stalled`).
 pub fn cutting_plane_feas_result<T, Oracle, Space>(
     omega: &mut Oracle,
     space: &mut Space,
@@ -312,8 +340,27 @@ where
     Space: SearchSpace,
     Space::ArrayType: Clone,
 {
-    let (x, niter) = cutting_plane_feas::<T, Oracle, Space>(omega, space, options);
-    SolverResult::classify(x, niter, options.max_iters)
+    let mut tsq_prev: Option<f64> = None;
+    for niter in 0..options.max_iters {
+        let cut = omega.assess_feas(space.xc());
+        if cut.is_none() {
+            // feasible sol'n obtained
+            return SolverResult::new(Some((*space.xc()).clone()), niter, SolverStatus::Success);
+        }
+        let status = space.update_bias_cut::<T>(&cut.unwrap()); // update space
+        if status != CutStatus::Success {
+            return SolverResult::new(None, niter, SolverStatus::Infeasible);
+        }
+        let tsq = space.tsq();
+        if tsq < options.tolerance {
+            return SolverResult::new(None, niter, SolverStatus::Infeasible);
+        }
+        if options.stall_guard && stalled(tsq, tsq_prev) {
+            return SolverResult::new(None, niter, SolverStatus::Stalled);
+        }
+        tsq_prev = Some(tsq);
+    }
+    SolverResult::new(None, options.max_iters, SolverStatus::MaxIters)
 }
 
 /// The function `cutting_plane_optim` performs cutting plane optimization on a given search space using
@@ -385,28 +432,14 @@ where
     Space: SearchSpace,
     Space::ArrayType: Clone,
 {
-    let mut x_best: Option<Space::ArrayType> = None;
-
-    for niter in 0..options.max_iters {
-        let (cut, shrunk) = omega.assess_optim(space.xc(), gamma);
-        let status = if shrunk {
-            // better gamma obtained
-            x_best = Some((*space.xc()).clone());
-            space.update_central_cut::<T>(&cut) // update space
-        } else {
-            space.update_bias_cut::<T>(&cut) // update space
-        };
-        if status != CutStatus::Success || space.tsq() < options.tolerance {
-            return (x_best, niter);
-        }
-    }
-    (x_best, options.max_iters)
-} // END
+    cutting_plane_optim_result::<T, Oracle, Space>(omega, space, gamma, options).split()
+}
 
 /// Status-aware variant of [`cutting_plane_optim`].
 ///
 /// Returns a [`SolverResult`] so callers can tell an exhausted search space
-/// (`Infeasible`) apart from an iteration-cap stop (`MaxIters`).
+/// (`Infeasible`) apart from an iteration-cap stop (`MaxIters`) or a
+/// float-resolution stall (`Stalled`).
 pub fn cutting_plane_optim_result<T, Oracle, Space>(
     omega: &mut Oracle,
     space: &mut Space,
@@ -419,9 +452,47 @@ where
     Space: SearchSpace,
     Space::ArrayType: Clone,
 {
-    let (x, niter) = cutting_plane_optim::<T, Oracle, Space>(omega, space, gamma, options);
-    SolverResult::classify(x, niter, options.max_iters)
-}
+    let mut x_best: Option<Space::ArrayType> = None;
+    let mut tsq_prev: Option<f64> = None;
+
+    for niter in 0..options.max_iters {
+        let (cut, shrunk) = omega.assess_optim(space.xc(), gamma);
+        let status = if shrunk {
+            // better gamma obtained
+            x_best = Some((*space.xc()).clone());
+            space.update_central_cut::<T>(&cut) // update space
+        } else {
+            space.update_bias_cut::<T>(&cut) // update space
+        };
+        if status != CutStatus::Success {
+            let outcome = if x_best.is_some() {
+                SolverStatus::Success
+            } else {
+                SolverStatus::Infeasible
+            };
+            return SolverResult::new(x_best, niter, outcome);
+        }
+        let tsq = space.tsq();
+        if tsq < options.tolerance {
+            let outcome = if x_best.is_some() {
+                SolverStatus::Success
+            } else {
+                SolverStatus::Infeasible
+            };
+            return SolverResult::new(x_best, niter, outcome);
+        }
+        if options.stall_guard && stalled(tsq, tsq_prev) {
+            let outcome = if x_best.is_some() {
+                SolverStatus::Success
+            } else {
+                SolverStatus::Stalled
+            };
+            return SolverResult::new(x_best, niter, outcome);
+        }
+        tsq_prev = Some(tsq);
+    }
+    SolverResult::new(x_best, options.max_iters, SolverStatus::MaxIters)
+} // END
 
 /// Outcome of an `OptimQState::on_update` transition.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -542,29 +613,14 @@ where
     Oracle: OracleOptimQ<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace,
 {
-    let mut state = OptimQState::new();
-
-    for niter in 0..options.max_iters {
-        let (cut, shrunk, x_q, more_alt) = omega.assess_optim_q(space_q.xc(), gamma, state.retry());
-        if shrunk {
-            // best gamma obtained
-            state.on_shrunk(x_q);
-        }
-        let status = space_q.update_q::<T>(&cut); // update space
-        if state.on_update(&status, more_alt) == OptimQOutcome::Stop {
-            return (state.take_x_best(), niter);
-        }
-        if space_q.tsq() < options.tolerance {
-            return (state.take_x_best(), niter);
-        }
-    }
-    (state.take_x_best(), options.max_iters)
-} // END
+    cutting_plane_optim_q_result::<T, Oracle, Space>(omega, space_q, gamma, options).split()
+}
 
 /// Status-aware variant of [`cutting_plane_optim_q`].
 ///
 /// Returns a [`SolverResult`] so callers can tell an exhausted search space
-/// (`Infeasible`) apart from an iteration-cap stop (`MaxIters`).
+/// (`Infeasible`) apart from an iteration-cap stop (`MaxIters`) or a
+/// float-resolution stall (`Stalled`).
 pub fn cutting_plane_optim_q_result<T, Oracle, Space>(
     omega: &mut Oracle,
     space_q: &mut Space,
@@ -576,9 +632,52 @@ where
     Oracle: OracleOptimQ<Space::ArrayType, CutChoice = T>,
     Space: SearchSpace,
 {
-    let (x, niter) = cutting_plane_optim_q::<T, Oracle, Space>(omega, space_q, gamma, options);
-    SolverResult::classify(x, niter, options.max_iters)
-}
+    let mut state = OptimQState::new();
+    let mut tsq_prev: Option<f64> = None;
+
+    for niter in 0..options.max_iters {
+        let (cut, shrunk, x_q, more_alt) = omega.assess_optim_q(space_q.xc(), gamma, state.retry());
+        if shrunk {
+            // best gamma obtained
+            state.on_shrunk(x_q);
+        }
+        let status = space_q.update_q::<T>(&cut); // update space
+        if state.on_update(&status, more_alt) == OptimQOutcome::Stop {
+            let x = state.take_x_best();
+            let outcome = if x.is_some() {
+                SolverStatus::Success
+            } else {
+                SolverStatus::Infeasible
+            };
+            return SolverResult::new(x, niter, outcome);
+        }
+        let tsq = space_q.tsq();
+        if tsq < options.tolerance {
+            let x = state.take_x_best();
+            let outcome = if x.is_some() {
+                SolverStatus::Success
+            } else {
+                SolverStatus::Infeasible
+            };
+            return SolverResult::new(x, niter, outcome);
+        }
+        if options.stall_guard && stalled(tsq, tsq_prev) {
+            let x = state.take_x_best();
+            let outcome = if x.is_some() {
+                SolverStatus::Success
+            } else {
+                SolverStatus::Stalled
+            };
+            return SolverResult::new(x, niter, outcome);
+        }
+        tsq_prev = Some(tsq);
+    }
+    SolverResult::new(
+        state.take_x_best(),
+        options.max_iters,
+        SolverStatus::MaxIters,
+    )
+} // END
 
 pub struct BSearchAdaptor<T, Oracle, Space>
 where
@@ -656,7 +755,7 @@ where
     let u_orig = upper;
 
     for niter in 0..options.max_iters {
-        let tau = (upper - lower) / 2.0;
+        let tau = half_nonnegative(upper - lower);
         if tau < options.tolerance {
             return (upper != u_orig, niter);
         }

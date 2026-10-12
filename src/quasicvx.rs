@@ -73,6 +73,7 @@ mod tests {
             max_iters: 2000,
             tolerance: 1e-8,
             verbose: false,
+            stall_guard: true,
         };
         let (x_opt, num_iters) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
         assert!(x_opt.is_some());
@@ -111,6 +112,7 @@ mod tests {
             max_iters: 2000,
             tolerance: 1e-8,
             verbose: false,
+            stall_guard: true,
         };
         let (x_opt, _) = cutting_plane_optim(&mut oracle, &mut ell, &mut gamma, &options);
         assert!(x_opt.is_some());
